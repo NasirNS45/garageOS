@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+/* Class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Legacy aliases kept for any existing consumers */
+  --brand-blue: #1D4ED8;
+  --brand-blue-dark: #1E3A8A;
+  --brand-amber: #F59E0B;
+  --brand-amber-dark: #D97706;
+  --bg: #F1F5F9;
+  --surface: #FFFFFF;
+  --text: #0F172A;
+  --muted: #64748B;
+
+  /* Theme-aware brand variables — overridden by data-theme attribute */
+  --brand:       #1D4ED8;
+  --brand-hover: #1E40AF;
+  --brand-panel: #1E3A8A;
+}
+
+[data-theme="emerald"] {
+  --brand:       #059669;
+  --brand-hover: #047857;
+  --brand-panel: #065F46;
+}
+
+[data-theme="purple"] {
+  --brand:       #7C3AED;
+  --brand-hover: #6D28D9;
+  --brand-panel: #4C1D95;
+}
+
+[data-theme="rose"] {
+  --brand:       #E11D48;
+  --brand-hover: #BE123C;
+  --brand-panel: #881337;
+}
+
+[data-theme="teal"] {
+  --brand:       #0D9488;
+  --brand-hover: #0F766E;
+  --brand-panel: #134E4A;
+}
+
+/* Dark mode semantic overrides */
+.dark {
+  --bg:   #0F172A;
+  --text: #F1F5F9;
+  --muted: #94A3B8;
+  color-scheme: dark;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Thin scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+
+/* Hide scrollbar but keep scrolling (StatusStrip, etc.) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Shimmer skeleton animation */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 800px 100%;
+}
+
+/* Safe-area padding for bottom nav (iPhone home bar) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Line clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── react-international-phone theming ──────────────────────────────────── */
+:root {
+  --react-international-phone-background-color: #ffffff;
+  --react-international-phone-border-color: #e2e8f0;
+  --react-international-phone-text-color: #0f172a;
+  --react-international-phone-border-radius: 0.75rem;
+  --react-international-phone-height: 44px;
+  --react-international-phone-font-size: 0.875rem;
+  --react-international-phone-country-selector-background-color-hover: #f1f5f9;
+  --react-international-phone-selected-dropdown-item-background-color: #e2e8f0;
+  --react-international-phone-dropdown-item-background-color: #ffffff;
+  --react-international-phone-dropdown-item-dial-code-color: #64748b;
+  --react-international-phone-dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --react-international-phone-dropdown-z-index: 9999;
+  --react-international-phone-country-selector-arrow-color: #94a3b8;
+  --react-international-phone-disabled-background-color: #f1f5f9;
+  --react-international-phone-disabled-text-color: #94a3b8;
+}
+
+.dark {
+  --react-international-phone-background-color: #1e293b;
+  --react-international-phone-border-color: #475569;
+  --react-international-phone-text-color: #f1f5f9;
+  --react-international-phone-country-selector-background-color-hover: #334155;
+  --react-international-phone-selected-dropdown-item-background-color: #334155;
+  --react-international-phone-dropdown-item-background-color: #1e293b;
+  --react-international-phone-dropdown-item-dial-code-color: #94a3b8;
+  --react-international-phone-country-selector-arrow-color: #64748b;
+  --react-international-phone-disabled-background-color: #0f172a;
+  --react-international-phone-disabled-text-color: #475569;
+}
+
+/* Full width — stretch to match sibling inputs */
+.phone-field {
+  width: 100%;
+}
+
+/* Text input fills remaining space after the flag selector */
+.phone-field .react-international-phone-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 12px;
+}
+
+/* Country selector left padding */
+.phone-field .react-international-phone-country-selector-button {
+  padding: 0 8px 0 12px;
+}
+
+/* Focus ring on the whole field */
+.phone-field:focus-within {
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 25%, transparent);
+}
+
+/* Error state — red borders on both child elements */
+.phone-field-error .react-international-phone-country-selector-button,
+.phone-field-error .react-international-phone-input {
+  border-color: #f87171 !important;
+}
+.phone-field-error:focus-within {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* ── Landing page animations ─────────────────────────────────────────────── */
+@keyframes lp-fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes lp-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes lp-slide-right {
+  from { opacity: 0; transform: translateX(34px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes lp-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-9px); }
+}
+@keyframes lp-scale-in {
+  from { opacity: 0; transform: scale(0.93); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes lp-glow-cta {
+  0%, 100% { box-shadow: 0 8px 24px rgba(245,158,11,0.3); }
+  50%       { box-shadow: 0 8px 36px rgba(245,158,11,0.55); }
+}
+
+.lp-fade-up     { animation: lp-fade-up     0.65s cubic-bezier(0.16,1,0.3,1) both; }
+.lp-fade-in     { animation: lp-fade-in     0.55s ease both; }
+.lp-slide-right { animation: lp-slide-right 0.75s cubic-bezier(0.16,1,0.3,1) both; }
+.lp-float       { animation: lp-float       3.8s ease-in-out infinite; }
+.lp-scale-in    { animation: lp-scale-in    0.55s cubic-bezier(0.16,1,0.3,1) both; }
+.lp-glow-cta    { animation: lp-glow-cta    2.4s ease-in-out infinite; }
+
+/* Scroll reveal — JS adds .in-view when element enters viewport */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
+              transform 0.65s cubic-bezier(0.16,1,0.3,1);
+}
+.lp-reveal.in-view { opacity: 1; transform: translateY(0); }
+
+/* Remove browser number input spinners globally */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }

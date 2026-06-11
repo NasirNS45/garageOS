@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="11" fill="#1D4ED8"/>
+  <!-- Wrench body -->
+  <path d="M30.5 10a7 7 0 0 0-6.9 8.2L14 27.8A3 3 0 1 0 18.2 32l9.6-9.6A7 7 0 1 0 30.5 10Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" fill="#F59E0B"/>
+  <!-- Dot on handle end -->
+  <circle cx="16.1" cy="30" r="1.5" fill="#1D4ED8"/>
+</svg>

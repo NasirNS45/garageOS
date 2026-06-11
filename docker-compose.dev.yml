@@ -1,0 +1,27 @@
+# Development overrides — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Adds --reload, exposes DB port, and skips the frontend build.
+
+version: "3.9"
+
+services:
+  db:
+    ports:
+      - "5432:5432"
+
+  api:
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # In dev, the frontend is served by vite dev server (npm run dev), not nginx.
+  # Override the frontend service to be a no-op placeholder.
+  frontend:
+    image: alpine
+    command: echo "Run 'npm run dev' in the frontend directory for local development."
+    ports: []
+    depends_on: []

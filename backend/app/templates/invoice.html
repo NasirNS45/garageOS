@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Invoice {{ invoice_number }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; color: #1a1a1a; background: #f5f5f5; padding: 24px 16px; }
+    .card { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    .header { background: #1d4ed8; color: #fff; padding: 24px; }
+    .header h1 { font-size: 22px; font-weight: 700; }
+    .header p { font-size: 13px; opacity: .8; margin-top: 4px; }
+    .body { padding: 24px; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 15px; }
+    .row:last-child { border-bottom: none; }
+    .label { color: #6b7280; }
+    .value { font-weight: 500; }
+    /* Parts table */
+    .parts-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 4px; }
+    .parts-table th { text-align: left; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; padding: 6px 0; border-bottom: 1px solid #e5e7eb; }
+    .parts-table th:last-child { text-align: right; }
+    .parts-table td { padding: 7px 0; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+    .parts-table td:last-child { text-align: right; font-weight: 500; }
+    .parts-table tr:last-child td { border-bottom: none; }
+    .parts-qty { color: #6b7280; font-size: 12px; }
+    /* Charges summary */
+    .charge-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+    .charge-row .label { color: #6b7280; }
+    .total-row { display: flex; justify-content: space-between; padding: 14px 0; font-size: 18px; font-weight: 700; color: #1d4ed8; border-top: 2px solid #1d4ed8; margin-top: 8px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge-completed { background: #d1fae5; color: #065f46; }
+    /* Bank details */
+    .bank-section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-top: 4px; }
+    .bank-section p { font-size: 13px; color: #374151; line-height: 1.6; white-space: pre-wrap; }
+    /* Footer */
+    .footer { text-align: center; padding: 16px; font-size: 12px; color: #9ca3af; border-top: 1px solid #f3f4f6; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>{{ workshop_name }}</h1>
+      <p>Tax Invoice</p>
+    </div>
+    <div class="body">
+      <div class="section">
+        <div class="section-title">Invoice Details</div>
+        <div class="row"><span class="label">Invoice No.</span><span class="value">{{ invoice_number }}</span></div>
+        <div class="row"><span class="label">Date</span><span class="value">{{ completed_at }}</span></div>
+        <div class="row"><span class="label">Status</span><span class="badge badge-completed">Completed</span></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Customer &amp; Vehicle</div>
+        <div class="row"><span class="label">Customer</span><span class="value">{{ customer_name }}</span></div>
+        <div class="row"><span class="label">Phone</span><span class="value">{{ customer_phone }}</span></div>
+        <div class="row"><span class="label">Vehicle No.</span><span class="value">{{ vehicle_number }}</span></div>
+        {% if description %}
+        <div class="row"><span class="label">Work Done</span><span class="value">{{ description }}</span></div>
+        {% endif %}
+      </div>
+
+      <div class="section">
+        <div class="section-title">Charges</div>
+
+        {% if parts %}
+        <table class="parts-table">
+          <thead>
+            <tr>
+              <th>Part / Item</th>
+              <th style="text-align:center">Qty</th>
+              <th style="text-align:right">Unit</th>
+              <th style="text-align:right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in parts %}
+            <tr>
+              <td>{{ p.name }}</td>
+              <td style="text-align:center" class="parts-qty">{{ p.quantity | int if p.quantity == (p.quantity | int) else p.quantity }}</td>
+              <td style="text-align:right" class="parts-qty">{{ p.unit_price | int }}</td>
+              <td>{{ p.line_total | int }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div style="margin-top:10px">
+        {% endif %}
+
+        <div class="charge-row"><span class="label">Labour</span><span>PKR {{ labour_charge | int }}</span></div>
+        <div class="charge-row"><span class="label">Parts</span><span>PKR {{ parts_charge | int }}</span></div>
+
+        {% if parts %}
+        </div>
+        {% endif %}
+
+        <div class="total-row"><span>Total</span><span>PKR {{ total_amount | int }}</span></div>
+      </div>
+
+      {% if workshop_bank_details %}
+      <div class="section">
+        <div class="section-title">Payment Details</div>
+        <div class="bank-section"><p>{{ workshop_bank_details }}</p></div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="footer">
+      {% if workshop_invoice_footer %}
+        {{ workshop_invoice_footer }}
+      {% else %}
+        {% if workshop_address %}{{ workshop_address }}{% endif %}
+        {% if workshop_address and workshop_whatsapp %} &nbsp;|&nbsp; {% endif %}
+        {% if workshop_whatsapp %}WhatsApp: {{ workshop_whatsapp }}{% endif %}
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
