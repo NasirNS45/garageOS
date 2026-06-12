@@ -1,9 +1,18 @@
-import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+import os
 
-from app.core.database import Base, get_session
-from app.main import app
+# Must be set before app modules import settings
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+
+import pytest_asyncio  # noqa: E402
+from httpx import ASGITransport, AsyncClient  # noqa: E402
+from sqlalchemy.ext.asyncio import (  # noqa: E402
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+from app.core.database import Base, get_session  # noqa: E402
+from app.main import app  # noqa: E402
 
 # In-memory SQLite for fast tests
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"

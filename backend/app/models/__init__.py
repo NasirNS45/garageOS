@@ -5,4 +5,13 @@ from app.models.service_preset import ServicePreset
 from app.models.user import User, UserRole
 from app.models.workshop import Workshop
 
-__all__ = ["Workshop", "User", "UserRole", "JobCard", "JobStatus", "JobPart", "PartCatalogItem", "ServicePreset"]
+__all__ = [
+    "Workshop",
+    "User",
+    "UserRole",
+    "JobCard",
+    "JobStatus",
+    "JobPart",
+    "PartCatalogItem",
+    "ServicePreset",
+]

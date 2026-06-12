@@ -9,6 +9,8 @@ import {
   FileText,
   Clock,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Star,
   Users,
   TrendingUp,
@@ -133,6 +135,47 @@ const TESTIMONIALS = [
     body: "Mechanics ko pata rehta hai kaunsa kaam unka hai. No confusion, no missed jobs. Best decision for our workshop.",
     rating: 5,
   },
+];
+
+const FAQS = [
+  {
+    question: "How much does GarageOS cost?",
+    answer:
+      "It is free to start with no credit card required. You can set up your workshop, create job cards, and send invoices right away. Paid plans with advanced features will come later, and early users will get a discount.",
+  },
+  {
+    question: "Will it work on my phone?",
+    answer:
+      "Yes. GarageOS is a mobile-first web app, so it runs in the browser on any Android or iPhone, even a budget PKR 15,000 device. There is nothing to download and no app store account needed.",
+  },
+  {
+    question: "How do WhatsApp notifications work?",
+    answer:
+      "When a car checks in, your customer automatically gets a WhatsApp message confirming the job. When the job is completed, they receive the final bill with a link to the invoice. You do not have to type anything.",
+  },
+  {
+    question: "Is my workshop data safe?",
+    answer:
+      "Yes. Every workshop's data is fully isolated to its own account, connections are encrypted, and only you and the staff you add can see your jobs, customers, and revenue.",
+  },
+  {
+    question: "Can my mechanics use it too?",
+    answer:
+      "Yes. You can add mechanic accounts from settings. Mechanics see the jobs assigned to them and can update job status, while owner-only screens like daily revenue and workshop settings stay private to you.",
+  },
+];
+
+const MARQUEE_ITEMS = [
+  "Oil change",
+  "Brake service",
+  "AC regas",
+  "Engine diagnostics",
+  "Wheel alignment",
+  "Battery replacement",
+  "Suspension work",
+  "Tuning",
+  "Denting & painting",
+  "Car wash",
 ];
 
 const STATS = [
@@ -410,6 +453,22 @@ function WorkshopFloorIllustration() {
 
 export default function Landing() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [scrollPct, setScrollPct] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [showTop, setShowTop] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollPct(max > 0 ? (window.scrollY / max) * 100 : 0);
+      setScrolled(window.scrollY > 8);
+      setShowTop(window.scrollY > 600);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -430,9 +489,34 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white text-slate-900 antialiased">
 
+      {/* ── Scroll progress bar ── */}
+      <div className="fixed top-0 left-0 right-0 z-[60] h-[3px] bg-transparent pointer-events-none">
+        <div
+          className="h-full bg-gradient-to-r from-amber-500 to-amber-300"
+          style={{ width: `${scrollPct}%` }}
+        />
+      </div>
+
+      {/* ── Back to top ── */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label="Back to top"
+        className={`lp-top-btn ${showTop ? "show" : ""} fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30`}
+      >
+        <ChevronUp size={20} />
+      </button>
+
       {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <header
+        className={`sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-shadow duration-300 ${
+          scrolled ? "shadow-md shadow-slate-900/5" : ""
+        }`}
+      >
+        <div
+          className={`max-w-6xl mx-auto px-6 flex items-center justify-between transition-all duration-300 ${
+            scrolled ? "h-14" : "h-16"
+          }`}
+        >
           <Logo variant="full" size="sm" to="/" />
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
             <a href="#features" className="hover:text-slate-900 transition">Features</a>
@@ -496,8 +580,12 @@ export default function Landing() {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0ibTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NGgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-40" />
 
         {/* Gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-3xl translate-y-1/2" />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] -translate-y-1/2">
+          <div className="lp-orb w-full h-full bg-blue-600/20 rounded-full blur-3xl" />
+        </div>
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] translate-y-1/2">
+          <div className="lp-orb w-full h-full bg-amber-500/10 rounded-full blur-3xl" style={{ animationDelay: "-7s" }} />
+        </div>
 
         <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-20 lg:pt-20 lg:pb-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -565,6 +653,26 @@ export default function Landing() {
               </div>
             </div>
           </div>
+
+          {/* Scroll indicator */}
+          <div className="hidden lg:flex absolute bottom-5 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-blue-300/70">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">Scroll to explore</span>
+            <div className="w-5 h-8 rounded-full border-2 border-blue-300/40 flex justify-center pt-1.5">
+              <div className="lp-scroll-dot w-1 h-1.5 rounded-full bg-blue-300/80" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Services marquee ── */}
+      <section className="bg-slate-900 border-y border-white/5 py-4 overflow-hidden" aria-label="Services workshops manage with GarageOS">
+        <div className="lp-marquee flex w-max items-center gap-10">
+          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
+            <span key={`${item}-${i}`} className="flex items-center gap-10 shrink-0">
+              <span className="text-sm font-semibold text-slate-400 whitespace-nowrap">{item}</span>
+              <Wrench size={13} className="text-amber-500/60 shrink-0" />
+            </span>
+          ))}
         </div>
       </section>
 
@@ -741,6 +849,53 @@ export default function Landing() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{body}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section id="faq" className="py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-6">
+          <div className="lp-reveal text-center mb-12">
+            <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
+              Common questions
+            </span>
+            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 mb-4">
+              Frequently asked questions.
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {FAQS.map(({ question, answer }, i) => {
+              const isOpen = openFaq === i;
+              return (
+                <div
+                  key={question}
+                  className={`lp-reveal rounded-2xl border ${
+                    isOpen ? "border-blue-200 bg-blue-50/40" : "border-slate-100 bg-white hover:border-slate-200"
+                  }`}
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+                  >
+                    <span className="text-sm font-bold text-slate-900">{question}</span>
+                    <ChevronDown
+                      size={18}
+                      className={`shrink-0 text-slate-400 transition-transform duration-300 ${
+                        isOpen ? "rotate-180 text-[var(--brand)]" : ""
+                      }`}
+                    />
+                  </button>
+                  <div className={`lp-faq-body ${isOpen ? "open" : ""}`}>
+                    <div>
+                      <p className="px-5 pb-4 text-sm text-slate-500 leading-relaxed">{answer}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

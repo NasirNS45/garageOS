@@ -55,7 +55,7 @@ npm run dev
 
 ```bash
 cd backend
-SECRET_KEY=test DATABASE_URL=sqlite+aiosqlite:///:memory: pytest --tb=short -q
+SECRET_KEY=test-key-0123456789abcdef0123456789 DATABASE_URL=sqlite+aiosqlite:///:memory: pytest --tb=short -q
 ```
 
 ## Linting

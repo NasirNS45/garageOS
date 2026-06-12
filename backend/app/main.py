@@ -1,4 +1,5 @@
 import logging
+import uuid
 from contextlib import asynccontextmanager
 from datetime import UTC
 from pathlib import Path
@@ -7,12 +8,15 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select, text
 
 from app.api.v1.router import v1_router
 from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.exceptions import AppException
+from app.core.logging import configure_logging, request_id_var
+from app.core.ratelimit import limiter
 from app.models.job_card import JobCard, JobStatus
 from app.models.job_part import JobPart
 from app.models.workshop import Workshop
@@ -25,7 +29,7 @@ _TEMPLATES = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     settings = get_settings()
-    logging.basicConfig(level=settings.log_level)
+    configure_logging(settings.log_level, settings.environment)
     logger.info("GarageOS starting", extra={"env": settings.environment})
     yield
     logger.info("GarageOS shutting down")
@@ -40,6 +44,34 @@ def create_app() -> FastAPI:
         redoc_url=None,
         lifespan=lifespan,
     )
+
+    # Rate limiting (slowapi)
+    app.state.limiter = limiter
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many attempts. Please try again in a minute."},
+        )
+
+    # Request ID + security headers
+    @app.middleware("http")
+    async def request_context_middleware(request: Request, call_next):  # type: ignore[no-untyped-def]
+        request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:16]
+        token = request_id_var.set(request_id)
+        try:
+            response = await call_next(request)
+        finally:
+            request_id_var.reset(token)
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        if settings.environment == "production":
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
+        return response
 
     # Exception handler for all domain exceptions
     @app.exception_handler(AppException)
@@ -96,17 +128,14 @@ def create_app() -> FastAPI:
                 )
             )
             card = result.scalar_one_or_none()
+            if card is None:
+                return HTMLResponse("<h2>Invoice not found</h2>", status_code=404)
 
-        if card is None:
-            return HTMLResponse("<h2>Invoice not found</h2>", status_code=404)
-
-        async for session in get_session():
             ws_result = await session.execute(
                 select(Workshop).where(Workshop.id == card.workshop_id)
             )
             workshop = ws_result.scalar_one_or_none()
 
-        async for session in get_session():
             parts_result = await session.execute(
                 select(JobPart)
                 .where(JobPart.job_card_id == card.id)

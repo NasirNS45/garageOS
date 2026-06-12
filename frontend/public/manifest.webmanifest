@@ -1,0 +1,19 @@
+{
+  "name": "GarageOS — Smart Workshop Management",
+  "short_name": "GarageOS",
+  "description": "Digital job cards, mechanic assignment, WhatsApp notifications, and daily revenue tracking for auto workshops.",
+  "start_url": "/jobs",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F1F5F9",
+  "theme_color": "#1D4ED8",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

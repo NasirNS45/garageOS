@@ -4,6 +4,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 export const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 15000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -51,7 +52,9 @@ api.interceptors.response.use(
     }
 
     try {
-      const { data } = await axios.post("/api/v1/auth/refresh", {
+      // Raw axios (not `api`) to avoid interceptor recursion, but the URL
+      // must respect BASE_URL so split deployments (e.g. Vercel + Railway) work.
+      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
         refresh_token: refreshToken,
       });
       localStorage.setItem("access_token", data.access_token);

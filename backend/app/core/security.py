@@ -1,3 +1,4 @@
+import asyncio
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -7,12 +8,21 @@ from jose import JWTError, jwt
 from app.core.config import get_settings
 
 
-def hash_password(plain: str) -> str:
+def _hash_password_sync(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 
-def verify_password(plain: str, hashed: str) -> bool:
+def _verify_password_sync(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(plain.encode(), hashed.encode())
+
+
+async def hash_password(plain: str) -> str:
+    # bcrypt is CPU-bound (~100ms+); keep it off the event loop
+    return await asyncio.to_thread(_hash_password_sync, plain)
+
+
+async def verify_password(plain: str, hashed: str) -> bool:
+    return await asyncio.to_thread(_verify_password_sync, plain, hashed)
 
 
 def _build_token(data: dict[str, Any], expires_delta: timedelta) -> str:

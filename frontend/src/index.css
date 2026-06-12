@@ -193,6 +193,55 @@ body {
 .lp-scale-in    { animation: lp-scale-in    0.55s cubic-bezier(0.16,1,0.3,1) both; }
 .lp-glow-cta    { animation: lp-glow-cta    2.4s ease-in-out infinite; }
 
+/* Infinite marquee — list is duplicated in markup for a seamless loop */
+@keyframes lp-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.lp-marquee {
+  animation: lp-marquee 30s linear infinite;
+  will-change: transform;
+}
+.lp-marquee:hover { animation-play-state: paused; }
+
+/* Hero gradient orbs — slow drift */
+@keyframes lp-orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -20px) scale(1.08); }
+  66%      { transform: translate(-20px, 24px) scale(0.95); }
+}
+.lp-orb { animation: lp-orb-drift 14s ease-in-out infinite; }
+
+/* Scroll-to-explore mouse dot */
+@keyframes lp-scroll-dot {
+  0%   { transform: translateY(0); opacity: 1; }
+  70%  { transform: translateY(12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 0; }
+}
+.lp-scroll-dot { animation: lp-scroll-dot 1.8s ease-in-out infinite; }
+
+/* Back-to-top button show/hide */
+.lp-top-btn {
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.lp-top-btn.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* FAQ accordion height animation via grid rows */
+.lp-faq-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.lp-faq-body.open { grid-template-rows: 1fr; }
+.lp-faq-body > div { overflow: hidden; }
+
 /* Scroll reveal — JS adds .in-view when element enters viewport */
 .lp-reveal {
   opacity: 0;

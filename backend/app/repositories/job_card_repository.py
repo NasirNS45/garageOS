@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.job_card import JobCard, JobStatus, PaymentStatus
 from app.models.user import User
+from app.utils.sql import escape_like
 
 
 class JobCardRepository:
@@ -104,7 +105,7 @@ class JobCardRepository:
             select(JobCard)
             .where(
                 JobCard.workshop_id == workshop_id,
-                JobCard.vehicle_number.ilike(f"%{vehicle_number}%"),
+                JobCard.vehicle_number.ilike(f"%{escape_like(vehicle_number)}%", escape="\\"),
             )
             .order_by(JobCard.created_at.desc())
             .limit(50)

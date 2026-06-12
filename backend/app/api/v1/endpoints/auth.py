@@ -1,6 +1,7 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 
 from app.core.dependencies import DbSession, OwnerClaims
+from app.core.ratelimit import limiter
 from app.schemas.auth import (
     LoginRequest,
     MechanicCreate,
@@ -16,14 +17,16 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def signup(payload: SignupRequest, session: DbSession) -> TokenResponse:
+@limiter.limit("5/minute")
+async def signup(request: Request, payload: SignupRequest, session: DbSession) -> TokenResponse:
     """Register a new workshop and owner account."""
     async with session.begin():
         return await AuthService(session).signup(payload)
 
 
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
-async def login(payload: LoginRequest, session: DbSession) -> TokenResponse:
+@limiter.limit("5/minute")
+async def login(request: Request, payload: LoginRequest, session: DbSession) -> TokenResponse:
     """Login with mobile number and password."""
     async with session.begin():
         return await AuthService(session).login(payload)

@@ -11,10 +11,17 @@ class Settings(BaseSettings):
     database_url: str = Field(..., description="Async PostgreSQL DSN")
 
     # JWT
-    secret_key: str = Field(..., description="Secret key for JWT signing")
+    secret_key: str = Field(
+        ...,
+        min_length=32,
+        description="Secret key for JWT signing (generate with: openssl rand -hex 32)",
+    )
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+
+    # Rate limiting (disabled in tests)
+    rate_limit_enabled: bool = True
 
     # Twilio WhatsApp (optional — disabled if SID is blank)
     twilio_account_sid: str = ""

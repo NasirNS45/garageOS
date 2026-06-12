@@ -55,7 +55,7 @@ class AuthService:
         user = await self._user_repo.create(
             workshop_id=workshop.id,
             mobile=mobile,
-            password_hash=hash_password(payload.password),
+            password_hash=await hash_password(payload.password),
             full_name=payload.full_name,
             role=UserRole.owner,
         )
@@ -76,7 +76,7 @@ class AuthService:
             raise UnauthorizedError("Invalid mobile number or password") from exc
 
         user = await self._user_repo.get_by_mobile(mobile)
-        if user is None or not verify_password(payload.password, user.password_hash):
+        if user is None or not await verify_password(payload.password, user.password_hash):
             raise UnauthorizedError("Invalid mobile number or password")
 
         logger.info("User logged in", extra={"user_id": user.id})
@@ -125,7 +125,7 @@ class AuthService:
         user = await self._user_repo.create(
             workshop_id=workshop_id,
             mobile=mobile,
-            password_hash=hash_password(payload.password),
+            password_hash=await hash_password(payload.password),
             full_name=payload.full_name,
             role=UserRole.mechanic,
         )

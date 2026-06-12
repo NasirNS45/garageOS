@@ -1,17 +1,28 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "./stores/authStore";
 import { useThemeStore } from "./stores/themeStore";
 import { ToastProvider } from "./context/ToastContext";
 import ErrorBoundary from "./components/ErrorBoundary";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
-import Landing from "./pages/Landing";
+
+// Route-level code splitting — each page ships as its own chunk
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Landing = lazy(() => import("./pages/Landing"));
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 });
+
+function PageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
+      <div className="w-8 h-8 rounded-full border-[3px] border-slate-200 border-t-[var(--brand)] animate-spin" />
+    </div>
+  );
+}
 
 /** Redirects unauthenticated users to /login. */
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -34,6 +45,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
           <BrowserRouter>
+            <Suspense fallback={<PageFallback />}>
             <Routes>
               {/* Public landing — logged-in users skip to dashboard */}
               <Route path="/" element={<GuestRoute><Landing /></GuestRoute>} />
@@ -51,6 +63,7 @@ export default function App() {
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </ToastProvider>
       </QueryClientProvider>

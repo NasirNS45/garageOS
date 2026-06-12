@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import httpx
@@ -6,11 +7,14 @@ from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
+_MAX_ATTEMPTS = 3
+
 
 class WhatsAppService:
     """Adapter for Twilio WhatsApp sandbox (v1). Swap for Meta BSP in v2."""
 
     async def send_message(self, to: str, body: str) -> None:
+        """Best-effort send with retries. Never raises into the request path."""
         settings = get_settings()
         if not settings.whatsapp_enabled:
             logger.warning("WhatsApp not configured; message not sent", extra={"to": to})
@@ -20,20 +24,43 @@ class WhatsAppService:
         to_wa = to if to.startswith("whatsapp:") else f"whatsapp:{to}"
         url = f"https://api.twilio.com/2010-04-01/Accounts/{settings.twilio_account_sid}/Messages.json"
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(
-                url,
-                data={"From": settings.twilio_whatsapp_from, "To": to_wa, "Body": body},
-                auth=(settings.twilio_account_sid, settings.twilio_auth_token),
-            )
+        for attempt in range(_MAX_ATTEMPTS):
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.post(
+                        url,
+                        data={
+                            "From": settings.twilio_whatsapp_from,
+                            "To": to_wa,
+                            "Body": body,
+                        },
+                        auth=(settings.twilio_account_sid, settings.twilio_auth_token),
+                    )
+                # 4xx is a permanent failure (bad number, auth) — retrying won't help
+                if response.status_code < 400:
+                    logger.info("WhatsApp message sent", extra={"to": to})
+                    return
+                if response.status_code < 500:
+                    logger.error(
+                        "WhatsApp send rejected",
+                        extra={"status": response.status_code, "body": response.text[:200]},
+                    )
+                    return
+                last_error = f"HTTP {response.status_code}"
+            except httpx.HTTPError as exc:
+                last_error = str(exc)
 
-        if response.status_code >= 400:
-            logger.error(
-                "WhatsApp send failed",
-                extra={"status": response.status_code, "body": response.text[:200]},
-            )
-        else:
-            logger.info("WhatsApp message sent", extra={"to": to})
+            if attempt < _MAX_ATTEMPTS - 1:
+                logger.warning(
+                    "WhatsApp send failed, retrying",
+                    extra={"attempt": attempt + 1, "error": last_error},
+                )
+                await asyncio.sleep(2**attempt)
+
+        logger.error(
+            "WhatsApp send failed after retries",
+            extra={"attempts": _MAX_ATTEMPTS, "error": last_error},
+        )
 
     async def send_checkin_notification(
         self,

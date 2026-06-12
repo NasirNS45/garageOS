@@ -1,6 +1,12 @@
 from collections.abc import AsyncGenerator
+from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import get_settings
@@ -10,16 +16,20 @@ class Base(DeclarativeBase):
     pass
 
 
-def _make_engine() -> any:  # type: ignore[return]
+def _make_engine() -> AsyncEngine:
     settings = get_settings()
-    return create_async_engine(
-        settings.database_url,
-        echo=settings.environment == "development",
-        pool_pre_ping=True,
-        pool_size=20,
-        max_overflow=10,
-        pool_recycle=3600,  # recycle connections every hour to avoid stale handles
-    )
+    kwargs: dict[str, Any] = {
+        "echo": settings.environment == "development",
+        "pool_pre_ping": True,
+    }
+    # SQLite (tests) uses StaticPool and rejects sizing options
+    if not settings.database_url.startswith("sqlite"):
+        kwargs.update(
+            pool_size=20,
+            max_overflow=10,
+            pool_recycle=3600,  # recycle connections every hour to avoid stale handles
+        )
+    return create_async_engine(settings.database_url, **kwargs)
 
 
 _engine = _make_engine()
