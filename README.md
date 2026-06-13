@@ -1,5 +1,7 @@
 # GarageOS
 
+[![CI](https://github.com/NasirNS45/garageOS/actions/workflows/ci.yml/badge.svg)](https://github.com/NasirNS45/garageOS/actions/workflows/ci.yml)
+
 Mobile-first auto workshop management app. FastAPI backend + React frontend, Dockerized.
 
 ## Stack
