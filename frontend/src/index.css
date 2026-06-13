@@ -57,6 +57,8 @@ body {
   background-color: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  /* Prevent the browser's own pull-to-refresh so our custom one can run */
+  overscroll-behavior-y: contain;
 }
 
 /* Urdu mode — Nastaliq script needs extra line height */

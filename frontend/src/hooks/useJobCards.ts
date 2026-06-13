@@ -90,7 +90,15 @@ export function useUpdateJobCard() {
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<JobCard> & { id: string }) =>
       api.put<JobCard>(`/job-cards/${id}`, data).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["job-cards"] }),
+    onMutate: async ({ id, ...data }) => {
+      await qc.cancelQueries({ queryKey: ["job-cards"] });
+      const snapshot = patchJobInLists(qc, id, data as Partial<JobCard>);
+      return { snapshot };
+    },
+    onError: (_e, _vars, ctx) => {
+      ctx?.snapshot?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["job-cards"] }),
   });
 }
 
@@ -148,6 +156,23 @@ export function useUpdatePart(cardId: string) {
   });
 }
 
+/** Patch a single job inside every cached job-cards list page. */
+function patchJobInLists(
+  qc: ReturnType<typeof useQueryClient>,
+  id: string,
+  patch: Partial<JobCard>
+) {
+  const lists = qc.getQueriesData<{ items: JobCard[] }>({ queryKey: ["job-cards"] });
+  lists.forEach(([key, data]) => {
+    if (!data?.items) return;
+    qc.setQueryData(key, {
+      ...data,
+      items: data.items.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    });
+  });
+  return lists; // snapshot for rollback
+}
+
 export function useMarkPaid() {
   const qc = useQueryClient();
   return useMutation({
@@ -161,7 +186,15 @@ export function useMarkPaid() {
       api
         .put<JobCard>(`/job-cards/${id}`, { payment_status })
         .then((r) => r.data),
-    onSuccess: () => {
+    onMutate: async ({ id, payment_status }) => {
+      await qc.cancelQueries({ queryKey: ["job-cards"] });
+      const snapshot = patchJobInLists(qc, id, { payment_status });
+      return { snapshot };
+    },
+    onError: (_e, _vars, ctx) => {
+      ctx?.snapshot?.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["job-cards"] });
       qc.invalidateQueries({ queryKey: ["summary"] });
     },

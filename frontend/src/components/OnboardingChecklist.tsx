@@ -1,0 +1,88 @@
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, CheckCircle2, ClipboardList, Users, Wrench } from "lucide-react";
+import { useMechanics } from "../hooks/useMechanics";
+
+/** First-run guidance shown to an owner with no jobs yet. */
+export default function OnboardingChecklist({ onNewJob }: { onNewJob: () => void }) {
+  const navigate = useNavigate();
+  const { data: mechanics = [] } = useMechanics();
+
+  const steps = [
+    {
+      icon: Wrench,
+      title: "Set up your workshop",
+      desc: "Add your name, WhatsApp number, and invoice details.",
+      done: false,
+      cta: "Open settings",
+      onClick: () => navigate("/settings"),
+    },
+    {
+      icon: Users,
+      title: "Add your mechanics",
+      desc: "Give your team accounts so you can assign jobs.",
+      done: mechanics.length > 0,
+      cta: "Add mechanic",
+      onClick: () => navigate("/settings"),
+    },
+    {
+      icon: ClipboardList,
+      title: "Create your first job",
+      desc: "Log a vehicle and start tracking the work.",
+      done: false,
+      cta: "New job card",
+      onClick: onNewJob,
+      primary: true,
+    },
+  ];
+
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div className="bg-gradient-to-br from-[var(--brand)] to-[var(--brand-panel)] text-white p-5">
+        <h2 className="text-lg font-extrabold">Welcome to GarageOS 👋</h2>
+        <p className="text-sm text-white/80 mt-1">
+          Three quick steps to get your workshop running.
+        </p>
+      </div>
+      <div className="divide-y divide-slate-100 dark:divide-slate-700">
+        {steps.map(({ icon: Icon, title, desc, done, cta, onClick, primary }, i) => (
+          <div key={title} className="flex items-center gap-3 p-4">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                done
+                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300"
+                  : "bg-blue-50 text-[var(--brand)] dark:bg-blue-900/30"
+              }`}
+            >
+              {done ? <CheckCircle2 size={18} /> : <Icon size={17} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className={`text-sm font-bold ${
+                  done
+                    ? "text-slate-400 dark:text-slate-500 line-through"
+                    : "text-slate-900 dark:text-slate-100"
+                }`}
+              >
+                {i + 1}. {title}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{desc}</p>
+            </div>
+            {!done && (
+              <button
+                onClick={onClick}
+                className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-3 py-2 rounded-xl transition active:scale-95 ${
+                  primary
+                    ? "bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)] shadow-sm"
+                    : "text-[var(--brand)] hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                }`}
+              >
+                {cta}
+                <ArrowRight size={13} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

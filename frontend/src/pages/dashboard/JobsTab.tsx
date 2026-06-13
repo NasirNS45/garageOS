@@ -5,6 +5,8 @@ import JobCardList from "../../components/JobCardList";
 import StatusStrip from "../../components/StatusStrip";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
 import EmptyState from "../../components/EmptyState";
+import PullToRefresh from "../../components/PullToRefresh";
+import OnboardingChecklist from "../../components/OnboardingChecklist";
 import { useT } from "../../i18n/useT";
 import type { TKey } from "../../i18n/translations";
 
@@ -25,7 +27,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
 
-  const { data, isLoading, isError, isFetching } = useJobCards(page);
+  const { data, isLoading, isError, isFetching, refetch } = useJobCards(page);
 
   // When page 1 data refreshes (after a mutation), reset the accumulated list.
   // For page > 1, append deduplicated new items.
@@ -64,7 +66,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
   });
 
   return (
-    <div>
+    <PullToRefresh onRefresh={() => refetch()}>
       {displayItems.length > 0 && <StatusStrip jobs={displayItems} />}
 
       {/* Quick search */}
@@ -127,12 +129,16 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
       )}
 
       {!isLoading && !isError && displayItems.length === 0 && (
-        <EmptyState
-          icon={<ClipboardList size={48} />}
-          title={t("jobs.empty.title")}
-          description={t("jobs.empty.desc")}
-          action={{ label: t("jobs.empty.action"), onClick: onNewJob }}
-        />
+        role === "owner" ? (
+          <OnboardingChecklist onNewJob={onNewJob} />
+        ) : (
+          <EmptyState
+            icon={<ClipboardList size={48} />}
+            title={t("jobs.empty.title")}
+            description={t("jobs.empty.desc")}
+            action={{ label: t("jobs.empty.action"), onClick: onNewJob }}
+          />
+        )
       )}
 
       {!isLoading && !isError && displayItems.length > 0 && filteredItems.length === 0 && (
@@ -158,6 +164,6 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
             : `${t("jobs.loadMore")} (${data!.total - displayItems.length})`}
         </button>
       )}
-    </div>
+    </PullToRefresh>
   );
 }
