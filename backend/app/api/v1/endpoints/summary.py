@@ -5,6 +5,7 @@ from fastapi.responses import Response
 
 from app.core.dependencies import DbSession, OwnerClaims
 from app.schemas.summary import (
+    DailySeriesPoint,
     DailySummaryResponse,
     MechanicSummaryItem,
     RangeSummaryResponse,
@@ -67,6 +68,34 @@ async def mechanic_summary(
         )
     async with session.begin():
         return await SummaryService(session).mechanic_summary(
+            claims.workshop_id, start_date, end_date
+        )
+
+
+@router.get(
+    "/daily-series",
+    response_model=list[DailySeriesPoint],
+    status_code=status.HTTP_200_OK,
+)
+async def daily_series(
+    claims: OwnerClaims,
+    session: DbSession,
+    start_date: date = Query(..., description="Range start date (ISO)"),
+    end_date: date = Query(..., description="Range end date (ISO)"),
+) -> list[DailySeriesPoint]:
+    """Per-day revenue, collected, and expenses for charting (owner only)."""
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="start_date must be on or before end_date",
+        )
+    if (end_date - start_date).days > 92:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Range too large (max 92 days)",
+        )
+    async with session.begin():
+        return await SummaryService(session).daily_series(
             claims.workshop_id, start_date, end_date
         )
 

@@ -29,6 +29,12 @@ class WorkshopRepository:
         result = await self._session.execute(select(Workshop).where(Workshop.id == workshop_id))
         return result.scalar_one_or_none()
 
+    async def list_digest_enabled(self) -> list[Workshop]:
+        result = await self._session.execute(
+            select(Workshop).where(Workshop.digest_enabled.is_(True))
+        )
+        return list(result.scalars().all())
+
     async def update(self, workshop_id: str, **fields: object) -> Workshop | None:
         filtered = {k: v for k, v in fields.items() if v is not None}
         if not filtered:

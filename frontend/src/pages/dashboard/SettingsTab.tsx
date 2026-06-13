@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  BellRing,
   Building2,
   Download,
   Package,
@@ -9,6 +10,7 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
+import { useReminders, useCancelReminder } from "../../hooks/useReminders";
 import { useAuthStore } from "../../stores/authStore";
 import { useMechanics, useAddMechanic, useToggleMechanic, type Mechanic } from "../../hooks/useMechanics";
 import {
@@ -42,6 +44,8 @@ interface SettingsForm {
   whatsapp_number: string;
   invoice_footer: string;
   bank_details: string;
+  reminder_interval_days: number;
+  digest_enabled: boolean;
 }
 
 const EMPTY_SETTINGS: SettingsForm = {
@@ -51,6 +55,8 @@ const EMPTY_SETTINGS: SettingsForm = {
   whatsapp_number: "",
   invoice_footer: "",
   bank_details: "",
+  reminder_interval_days: 0,
+  digest_enabled: false,
 };
 
 // ── Shared card shell for every settings section ─────────────────────────────
@@ -84,6 +90,49 @@ function SettingCard({
   );
 }
 
+// ── Upcoming service reminders list ──────────────────────────────────────────
+function RemindersList() {
+  const { data: reminders = [], isLoading } = useReminders();
+  const cancelReminder = useCancelReminder();
+  const { toast } = useToast();
+
+  if (isLoading || reminders.length === 0) return null;
+
+  return (
+    <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
+      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2.5 uppercase tracking-wide">
+        Upcoming reminders ({reminders.length})
+      </p>
+      <div className="space-y-2">
+        {reminders.map((r) => (
+          <div key={r.id} className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                {r.vehicle_number} · {r.customer_name}
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                Due {r.due_date}
+              </p>
+            </div>
+            <button
+              onClick={() =>
+                cancelReminder.mutate(r.id, {
+                  onSuccess: () => toast("Reminder cancelled", "info"),
+                  onError: () => toast("Could not cancel reminder", "error"),
+                })
+              }
+              aria-label="Cancel reminder"
+              className="text-slate-300 hover:text-red-500 transition p-1 active:scale-95 shrink-0"
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsTab() {
   const { setWorkshopName } = useAuthStore();
   const { toast } = useToast();
@@ -106,6 +155,8 @@ export default function SettingsTab() {
           whatsapp_number: data.whatsapp_number ?? "",
           invoice_footer: (data as SettingsForm).invoice_footer ?? "",
           bank_details: (data as SettingsForm).bank_details ?? "",
+          reminder_interval_days: (data as SettingsForm).reminder_interval_days ?? 0,
+          digest_enabled: (data as SettingsForm).digest_enabled ?? false,
         });
         setLoaded(true);
       })
@@ -285,6 +336,74 @@ export default function SettingsTab() {
       {/* Appearance */}
       <SettingCard icon={<Palette size={15} />} title="Appearance">
         <ThemePicker />
+      </SettingCard>
+
+      {/* Automation: reminders + digest */}
+      <SettingCard icon={<BellRing size={15} />} title="Automation">
+        <form onSubmit={save} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              Service reminder interval (days)
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={365}
+              value={form.reminder_interval_days}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  reminder_interval_days: Math.max(0, Number(e.target.value) || 0),
+                }))
+              }
+              className={settingInput}
+            />
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              When a job is completed, schedule a WhatsApp service reminder this many
+              days later. Set to 0 to turn reminders off. (90 = roughly 3 months.)
+            </p>
+          </div>
+
+          <label className="flex items-center justify-between gap-3 cursor-pointer select-none">
+            <span className="text-sm text-slate-700 dark:text-slate-300">
+              Daily summary to my WhatsApp
+            </span>
+            <div className="relative shrink-0">
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={form.digest_enabled}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, digest_enabled: e.target.checked }))
+                }
+              />
+              <div
+                className={`w-10 h-5 rounded-full transition-colors ${
+                  form.digest_enabled ? "bg-[var(--brand)]" : "bg-slate-200 dark:bg-slate-600"
+                }`}
+              />
+              <div
+                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  form.digest_enabled ? "translate-x-5" : ""
+                }`}
+              />
+            </div>
+          </label>
+          <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
+            Each evening, get a WhatsApp with the day's jobs, revenue, and outstanding
+            amount. Sent to your WhatsApp number above.
+          </p>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-2.5 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
+          >
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </form>
+
+        <RemindersList />
       </SettingCard>
 
       {/* Team */}

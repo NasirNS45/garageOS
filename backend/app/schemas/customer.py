@@ -20,3 +20,11 @@ class CustomerHistoryResponse(BaseModel):
     vehicle_number: str | None = None
     total_jobs: int
     jobs: list[JobSummary]
+
+
+class TopCustomerItem(BaseModel):
+    customer_name: str
+    customer_phone: str
+    total_jobs: int
+    total_spent: float
+    last_visit: datetime | None

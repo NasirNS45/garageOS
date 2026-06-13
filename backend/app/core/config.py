@@ -34,9 +34,31 @@ class Settings(BaseSettings):
     app_base_url: str = "http://localhost:8000"
     cors_origins: str = "*"  # comma-separated in production, e.g. "https://myworkshop.com"
 
+    # Background scheduler (APScheduler) — disabled in tests
+    scheduler_enabled: bool = True
+    reminder_send_hour: int = 9   # local hour to dispatch due service reminders
+    digest_send_hour: int = 20    # local hour to send the owner daily digest
+
+    # Object storage for photos (S3-compatible, e.g. Cloudflare R2)
+    storage_endpoint_url: str = ""
+    storage_access_key: str = ""
+    storage_secret_key: str = ""
+    storage_bucket: str = ""
+    storage_public_url: str = ""  # public base URL for stored objects
+    storage_region: str = "auto"
+
     @property
     def whatsapp_enabled(self) -> bool:
         return bool(self.twilio_account_sid and self.twilio_auth_token)
+
+    @property
+    def storage_enabled(self) -> bool:
+        return bool(
+            self.storage_endpoint_url
+            and self.storage_access_key
+            and self.storage_secret_key
+            and self.storage_bucket
+        )
 
 
 @lru_cache

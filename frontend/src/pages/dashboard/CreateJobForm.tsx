@@ -13,6 +13,7 @@ import MechanicSelector from "../../components/MechanicSelector";
 import PhoneInputField from "../../components/PhoneInputField";
 import { parseApiError } from "../../utils/parseApiError";
 import { isValidPhone } from "../../utils/validation";
+import { useT } from "../../i18n/useT";
 import { inputClass, fieldClass } from "./formStyles";
 
 // ── Create Job Form (used inside BottomSheet) ─────────────────────────────────
@@ -21,6 +22,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
   const { data: mechanics = [] } = useMechanics();
   const { data: presets = [] } = useServicePresets();
   const { toast } = useToast();
+  const t = useT();
 
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleMake, setVehicleMake] = useState("");
@@ -115,7 +117,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
 
       <div>
         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-          Vehicle number
+          {t("form.vehicleNumber")}
         </label>
         <input
           type="text"
@@ -148,7 +150,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
 
       <div>
         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-          Vehicle make
+          {t("form.vehicleMake")}
         </label>
         <select
           value={vehicleMake}
@@ -185,7 +187,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
 
       <div>
         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-          Customer name
+          {t("form.customerName")}
         </label>
         <input
           type="text"
@@ -201,7 +203,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
 
       <div>
         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-          Customer phone
+          {t("form.customerPhone")}
         </label>
         <PhoneInputField
           value={customerPhone}
@@ -250,7 +252,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
 
       <div>
         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-          Description
+          {t("form.description")}
         </label>
         <input
           type="text"
@@ -275,7 +277,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
 
       <div>
         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-          Labour charge (PKR)
+          {t("form.labour")}
         </label>
         <input
           type="number"
@@ -293,7 +295,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
 
       <div>
         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-          Notes (internal)
+          {t("form.notes")}
         </label>
         <textarea
           rows={2}
@@ -325,7 +327,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
           />
         </div>
         <span className="text-sm text-slate-700">
-          Send check-in WhatsApp to customer
+          {t("form.notifyCheckin")}
         </span>
       </label>
 
@@ -334,7 +336,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
         disabled={createCard.isPending}
         className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 shadow-sm disabled:opacity-60"
       >
-        {createCard.isPending ? "Creating…" : "Create Job Card"}
+        {createCard.isPending ? t("form.saving") : t("form.submit")}
       </button>
     </form>
   );

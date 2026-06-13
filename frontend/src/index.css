@@ -59,6 +59,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Urdu mode — Nastaliq script needs extra line height */
+html[lang="ur"] body {
+  font-family: "Noto Nastaliq Urdu", "Inter", system-ui, sans-serif;
+  line-height: 1.9;
+}
+/* Latin content (plates, numbers) stays LTR inside RTL layout */
+html[lang="ur"] [data-keep-ltr] {
+  direction: ltr;
+}
+
 /* Thin scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

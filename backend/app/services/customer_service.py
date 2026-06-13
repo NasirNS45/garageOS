@@ -4,7 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationError
 from app.repositories.job_card_repository import JobCardRepository
-from app.schemas.customer import CustomerHistoryResponse, JobSummary
+from app.schemas.customer import (
+    CustomerHistoryResponse,
+    JobSummary,
+    TopCustomerItem,
+)
 from app.services.invoice_service import InvoiceService
 from app.utils.mobile import normalize_mobile
 
@@ -63,3 +67,7 @@ class CustomerService:
             total_jobs=len(summaries),
             jobs=summaries,
         )
+
+    async def top_customers(self, workshop_id: str, limit: int = 20) -> list[TopCustomerItem]:
+        rows = await self._repo.top_customers(workshop_id, limit)
+        return [TopCustomerItem(**row) for row in rows]  # type: ignore[arg-type]

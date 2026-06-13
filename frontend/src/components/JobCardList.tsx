@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Copy, CreditCard, FileText, Share2, User, X } from "lucide-react";
+import { CheckCircle2, Copy, CreditCard, FileText, Radio, Share2, User, X } from "lucide-react";
 import {
   type JobCard,
   useCancelJobCard,
@@ -12,7 +12,10 @@ import { formatAge } from "../utils/formatAge";
 import VehiclePlate from "./VehiclePlate";
 import PartsPanel from "./PartsPanel";
 import ReviewSheet from "./ReviewSheet";
+import JobPhotos from "./JobPhotos";
 import { useToast } from "../context/ToastContext";
+import { useT } from "../i18n/useT";
+import type { TKey } from "../i18n/translations";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
@@ -21,11 +24,11 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-slate-100 text-slate-500",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  in_progress: "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
+const STATUS_KEYS: Record<string, TKey> = {
+  pending: "status.pending",
+  in_progress: "status.in_progress",
+  completed: "status.completed",
+  cancelled: "status.cancelled",
 };
 
 interface Props {
@@ -67,6 +70,7 @@ function JobCardItem({
   const updateCard = useUpdateJobCard();
   const markPaid = useMarkPaid();
   const { toast } = useToast();
+  const t = useT();
 
   const isTerminal = card.status === "completed" || card.status === "cancelled";
   const showActions = isOwner && !isTerminal;
@@ -110,7 +114,7 @@ function JobCardItem({
             <span
               className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_STYLES[card.status]}`}
             >
-              {STATUS_LABELS[card.status]}
+              {t(STATUS_KEYS[card.status])}
             </span>
             {showAge && (
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
@@ -242,9 +246,14 @@ function JobCardItem({
                   className="inline-flex items-center gap-1 text-xs text-[var(--brand)] font-medium hover:underline"
                 >
                   <FileText size={12} />
-                  View Invoice
+                  {t("job.viewInvoice")}
                 </a>
-                <ShareInvoiceButton url={card.invoice_url} />
+                <ShareLinkButton
+                  url={card.invoice_url}
+                  title="Invoice"
+                  label={t("job.share")}
+                  toastMessage="Invoice link copied"
+                />
               </div>
             ) : (
               <span />
@@ -252,7 +261,7 @@ function JobCardItem({
             {card.payment_status === "paid" ? (
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                 <CreditCard size={11} />
-                Paid
+                {t("job.paid")}
               </span>
             ) : (
               isOwner && (
@@ -270,7 +279,7 @@ function JobCardItem({
                   className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-2.5 py-1 rounded-full transition disabled:opacity-50"
                 >
                   <CreditCard size={11} />
-                  {markPaid.isPending ? "Marking…" : "Mark Paid"}
+                  {markPaid.isPending ? "…" : t("job.markPaid")}
                 </button>
               )
             )}
@@ -286,8 +295,34 @@ function JobCardItem({
             className="inline-flex items-center gap-1 text-xs text-[var(--brand)] font-medium hover:underline mt-2"
           >
             <FileText size={12} />
-            View Invoice
+            {t("job.viewInvoice")}
           </a>
+        )}
+
+        {/* Customer tracking link — active jobs only */}
+        {!isTerminal && card.track_url && (
+          <div className="flex items-center justify-between mt-2">
+            <a
+              href={card.track_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-[var(--brand)] font-medium hover:underline"
+            >
+              <Radio size={12} />
+              {t("job.liveTracking")}
+            </a>
+            <ShareLinkButton
+              url={card.track_url}
+              title="Vehicle tracking"
+              label={t("job.shareWithCustomer")}
+              toastMessage="Tracking link copied"
+            />
+          </div>
+        )}
+
+        {/* Photos — available on active and completed jobs */}
+        {card.status !== "cancelled" && (
+          <JobPhotos cardId={card.id} canEdit />
         )}
 
         {/* Actions */}
@@ -295,19 +330,19 @@ function JobCardItem({
           <div className="mt-3">
             {confirmCancel ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400 flex-1">Cancel this job?</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 flex-1">{t("job.cancelQuestion")}</span>
                 <button
                   onClick={handleCancel}
                   disabled={cancel.isPending}
                   className="text-xs text-red-600 font-semibold px-3 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition disabled:opacity-60"
                 >
-                  Yes, cancel
+                  {t("job.yesCancel")}
                 </button>
                 <button
                   onClick={() => setConfirmCancel(false)}
                   className="text-xs text-slate-600 dark:text-slate-400 font-semibold px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition"
                 >
-                  Keep
+                  {t("job.keep")}
                 </button>
               </div>
             ) : (
@@ -317,7 +352,7 @@ function JobCardItem({
                   className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl py-2.5 transition active:scale-95 shadow-sm"
                 >
                   <CheckCircle2 size={14} />
-                  Review & Complete
+                  {t("job.reviewComplete")}
                 </button>
                 <button
                   onClick={() => setConfirmCancel(true)}
@@ -344,15 +379,26 @@ function JobCardItem({
   );
 }
 
-function ShareInvoiceButton({ url }: { url: string }) {
+function ShareLinkButton({
+  url,
+  title,
+  label = "Share",
+  toastMessage,
+}: {
+  url: string;
+  title: string;
+  label?: string;
+  toastMessage: string;
+}) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const t = useT();
 
   const handleShare = async () => {
     // Web Share API — available on mobile browsers
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Invoice", url });
+        await navigator.share({ title, url });
       } catch {
         // User cancelled — not an error
       }
@@ -362,7 +408,7 @@ function ShareInvoiceButton({ url }: { url: string }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast("Invoice link copied", "success");
+      toast(toastMessage, "success");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast("Could not copy link", "error");
@@ -372,11 +418,11 @@ function ShareInvoiceButton({ url }: { url: string }) {
   return (
     <button
       onClick={handleShare}
-      aria-label="Share invoice"
+      aria-label={`Share ${title.toLowerCase()}`}
       className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-[var(--brand)] transition"
     >
       {copied ? <Copy size={12} /> : <Share2 size={12} />}
-      {copied ? "Copied" : "Share"}
+      {copied ? t("job.copied") : label}
     </button>
   );
 }

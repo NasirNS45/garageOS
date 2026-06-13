@@ -22,6 +22,15 @@ class RangeSummaryResponse(BaseModel):
     in_progress_jobs: int
     total_revenue: float
     total_collected: float
+    total_expenses: float      # workshop expenses in the range
+    net_profit: float          # total_revenue - total_expenses
+
+
+class DailySeriesPoint(BaseModel):
+    date: date
+    revenue: float
+    collected: float
+    expenses: float
 
 
 class MechanicSummaryItem(BaseModel):

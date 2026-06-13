@@ -32,6 +32,7 @@ export interface JobCard {
   total_amount: number;
   invoice_number: string | null;
   invoice_url: string | null;
+  track_url: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -197,6 +198,8 @@ export interface RangeSummaryData {
   pending_jobs: number;
   total_revenue: number;
   total_collected: number;
+  total_expenses: number;
+  net_profit: number;
 }
 
 export function useRangeSummary(startDate: string, endDate: string) {
@@ -230,5 +233,26 @@ export function useMechanicSummary(startDate: string, endDate: string) {
         )
         .then((r) => r.data),
     placeholderData: keepPreviousData,
+  });
+}
+
+export interface DailySeriesPoint {
+  date: string;
+  revenue: number;
+  collected: number;
+  expenses: number;
+}
+
+export function useDailySeries(startDate: string, endDate: string, enabled = true) {
+  return useQuery({
+    queryKey: ["summary", "series", startDate, endDate],
+    queryFn: () =>
+      api
+        .get<DailySeriesPoint[]>(
+          `/summary/daily-series?start_date=${startDate}&end_date=${endDate}`
+        )
+        .then((r) => r.data),
+    placeholderData: keepPreviousData,
+    enabled,
   });
 }

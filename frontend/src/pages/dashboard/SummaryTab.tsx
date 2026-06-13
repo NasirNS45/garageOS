@@ -1,14 +1,27 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Wallet } from "lucide-react";
 import {
   useSummary,
   useRangeSummary,
   useMechanicSummary,
+  useDailySeries,
   type SummaryData,
   type RangeSummaryData,
   type MechanicSummaryItem,
 } from "../../hooks/useJobCards";
+import {
+  useExpenses,
+  useCreateExpense,
+  useDeleteExpense,
+  EXPENSE_CATEGORY_LABELS,
+  type ExpenseCategory,
+} from "../../hooks/useExpenses";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
+import RevenueChart from "../../components/RevenueChart";
+import BottomSheet from "../../components/BottomSheet";
+import { useToast } from "../../context/ToastContext";
+import { parseApiError } from "../../utils/parseApiError";
+import { inputClass } from "./formStyles";
 import { todayStr, shiftDate, weekRange, monthRange } from "../../utils/dates";
 
 // ── Summary tab ───────────────────────────────────────────────────────────────
@@ -78,8 +91,12 @@ export default function SummaryTab() {
   const dailyQ = useSummary(period === "day" ? dayStr : undefined);
   const rangeQ = useRangeSummary(startDate, endDate);
   const mechQ = useMechanicSummary(startDate, endDate);
+  const seriesQ = useDailySeries(startDate, endDate, period !== "day");
+  const expensesQ = useExpenses(startDate, endDate);
 
   const isLoading = period === "day" ? dailyQ.isLoading : rangeQ.isLoading;
+
+  const totalExpenses = expensesQ.data?.total_amount ?? 0;
 
   // Normalise to a common shape for rendering
   const d: { total_jobs: number; completed_jobs: number; in_progress_jobs: number; pending_jobs: number; total_revenue: number; total_collected: number } | undefined = (() => {
@@ -165,8 +182,29 @@ export default function SummaryTab() {
                   PKR {((d?.total_revenue ?? 0) - (d?.total_collected ?? 0)).toLocaleString()}
                 </p>
               </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
+                  Expenses
+                </p>
+                <p className="text-base font-bold mt-0.5">
+                  PKR {totalExpenses.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-between items-baseline mt-3 pt-3 border-t border-white/20">
+              <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
+                Net profit
+              </p>
+              <p className="text-lg font-extrabold">
+                PKR {((d?.total_revenue ?? 0) - totalExpenses).toLocaleString()}
+              </p>
             </div>
           </div>
+
+          {/* Daily revenue chart (week/month) */}
+          {period !== "day" && seriesQ.data && seriesQ.data.length > 1 && (
+            <RevenueChart points={seriesQ.data} />
+          )}
 
           {/* Stat grid */}
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -183,11 +221,188 @@ export default function SummaryTab() {
             ))}
           </div>
 
+          {/* Expenses */}
+          <ExpensesSection startDate={startDate} endDate={endDate} />
+
           {/* Mechanic breakdown */}
           <MechanicBreakdown items={mechQ.data ?? []} isLoading={mechQ.isLoading} />
         </>
       )}
     </div>
+  );
+}
+
+// ── Expenses section ──────────────────────────────────────────────────────────
+
+function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: string }) {
+  const [showForm, setShowForm] = useState(false);
+  const expensesQ = useExpenses(startDate, endDate);
+  const deleteExpense = useDeleteExpense();
+  const { toast } = useToast();
+
+  const items = expensesQ.data?.items ?? [];
+
+  const handleDelete = (id: string) => {
+    deleteExpense.mutate(id, {
+      onSuccess: () => toast("Expense deleted", "success"),
+      onError: (e) => toast(parseApiError(e)._form ?? "Could not delete expense", "error"),
+    });
+  };
+
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+          <Wallet size={15} className="text-amber-500" />
+          Expenses
+        </h3>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-1 text-xs font-semibold text-[var(--brand)] hover:underline active:scale-95 transition"
+        >
+          <Plus size={14} />
+          Add expense
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="text-xs text-slate-400 dark:text-slate-500">
+          No expenses recorded for this period.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {items.map((e) => (
+            <div key={e.id} className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {EXPENSE_CATEGORY_LABELS[e.category]}
+                  {e.note ? ` · ${e.note}` : ""}
+                </p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{e.expense_date}</p>
+              </div>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100 shrink-0">
+                PKR {e.amount.toLocaleString()}
+              </p>
+              <button
+                onClick={() => handleDelete(e.id)}
+                aria-label="Delete expense"
+                className="text-slate-300 hover:text-red-500 transition p-1 active:scale-95 shrink-0"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <BottomSheet open={showForm} onClose={() => setShowForm(false)} title="Add Expense">
+        <ExpenseForm onSuccess={() => setShowForm(false)} />
+      </BottomSheet>
+    </div>
+  );
+}
+
+function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
+  const createExpense = useCreateExpense();
+  const { toast } = useToast();
+  const [expenseDate, setExpenseDate] = useState(todayStr());
+  const [category, setCategory] = useState<ExpenseCategory>("parts_purchase");
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = parseFloat(amount);
+    if (!amount || isNaN(value) || value <= 0) {
+      setError("Enter a valid amount");
+      return;
+    }
+    setError("");
+    createExpense.mutate(
+      {
+        expense_date: expenseDate,
+        category,
+        amount: value,
+        note: note.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast("Expense added", "success");
+          onSuccess();
+        },
+        onError: (err) =>
+          toast(parseApiError(err)._form ?? "Could not save expense", "error"),
+      }
+    );
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+          Date
+        </label>
+        <input
+          type="date"
+          value={expenseDate}
+          max={todayStr()}
+          onChange={(e) => setExpenseDate(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+          Category
+        </label>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
+          className={inputClass}
+        >
+          {Object.entries(EXPENSE_CATEGORY_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+          Amount (PKR)
+        </label>
+        <input
+          type="number"
+          inputMode="decimal"
+          min="1"
+          placeholder="e.g. 2500"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className={inputClass}
+        />
+        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+          Note (optional)
+        </label>
+        <input
+          type="text"
+          maxLength={500}
+          placeholder="e.g. Brake pads stock"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={createExpense.isPending}
+        className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-bold py-3 rounded-xl transition active:scale-95 disabled:opacity-50"
+      >
+        {createExpense.isPending ? "Saving…" : "Save Expense"}
+      </button>
+    </form>
   );
 }
 

@@ -2,6 +2,7 @@ import os
 
 # Must be set before app modules import settings
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+os.environ.setdefault("SCHEDULER_ENABLED", "false")
 
 import pytest_asyncio  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402

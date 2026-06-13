@@ -12,6 +12,7 @@ export default function VehiclePlate({ number, size = "md" }: VehiclePlateProps)
   return (
     <span
       aria-label={`Plate: ${number}`}
+      data-keep-ltr
       className={`inline-flex items-center font-mono font-black uppercase rounded-md shadow-md ${SIZE[size]}`}
       style={{
         background: "linear-gradient(135deg, #FEF08A 0%, #FDE047 60%, #FACC15 100%)",

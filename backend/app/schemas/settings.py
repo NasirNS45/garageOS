@@ -14,6 +14,8 @@ class WorkshopSettingsUpdate(BaseModel):
     whatsapp_number: str | None = None
     invoice_footer: str | None = Field(None, max_length=1000)
     bank_details: str | None = Field(None, max_length=500)
+    reminder_interval_days: int | None = Field(None, ge=0, le=365)
+    digest_enabled: bool | None = None
 
 
 class WorkshopSettingsResponse(BaseModel):
@@ -26,4 +28,6 @@ class WorkshopSettingsResponse(BaseModel):
     whatsapp_number: str | None
     invoice_footer: str | None
     bank_details: str | None
+    reminder_interval_days: int
+    digest_enabled: bool
     created_at: datetime

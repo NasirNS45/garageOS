@@ -124,6 +124,47 @@ class JobCardRepository:
         )
         return list(result.scalars().all())
 
+    async def top_customers(
+        self, workshop_id: str, limit: int = 20
+    ) -> list[dict[str, object]]:
+        """Customers ranked by total completed spend, with visit count and last visit."""
+        completed_spend = func.coalesce(
+            func.sum(
+                case(
+                    (JobCard.status == JobStatus.completed.value, JobCard.total_amount),
+                    else_=0,
+                )
+            ),
+            0,
+        )
+        result = await self._session.execute(
+            select(
+                JobCard.customer_phone.label("customer_phone"),
+                func.max(JobCard.customer_name).label("customer_name"),
+                func.count(JobCard.id).label("total_jobs"),
+                completed_spend.label("total_spent"),
+                func.max(JobCard.created_at).label("last_visit"),
+            )
+            .where(
+                JobCard.workshop_id == workshop_id,
+                JobCard.customer_phone.is_not(None),
+                JobCard.customer_phone != "",
+            )
+            .group_by(JobCard.customer_phone)
+            .order_by(completed_spend.desc(), func.count(JobCard.id).desc())
+            .limit(limit)
+        )
+        return [
+            {
+                "customer_phone": row.customer_phone,
+                "customer_name": row.customer_name,
+                "total_jobs": int(row.total_jobs or 0),
+                "total_spent": float(row.total_spent or 0),
+                "last_visit": row.last_visit,
+            }
+            for row in result.all()
+        ]
+
     async def daily_summary(self, workshop_id: str, target_date: date) -> dict[str, object]:
         # Active jobs: current shop-floor state, no date filter.
         active_result = await self._session.execute(
@@ -283,6 +324,44 @@ class JobCardRepository:
             "in_progress_jobs": in_progress,
             "total_revenue": float(completed_row.total_revenue or 0),
             "total_collected": float(completed_row.total_collected or 0),
+        }
+
+    async def revenue_by_day(
+        self, workshop_id: str, start_date: date, end_date: date
+    ) -> dict[str, dict[str, float]]:
+        """Map of ISO date -> {revenue, collected} for completed jobs per day."""
+        day = func.date(JobCard.completed_at)
+        result = await self._session.execute(
+            select(
+                day.label("day"),
+                func.coalesce(func.sum(JobCard.total_amount), 0).label("revenue"),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (
+                                JobCard.payment_status == PaymentStatus.paid.value,
+                                JobCard.total_amount,
+                            ),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ).label("collected"),
+            )
+            .where(
+                JobCard.workshop_id == workshop_id,
+                JobCard.status == JobStatus.completed.value,
+                day >= start_date,
+                day <= end_date,
+            )
+            .group_by(day)
+        )
+        return {
+            str(row.day): {
+                "revenue": float(row.revenue or 0),
+                "collected": float(row.collected or 0),
+            }
+            for row in result.all()
         }
 
     async def mechanic_summary(

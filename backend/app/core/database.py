@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Any
 
 from sqlalchemy.ext.asyncio import (
@@ -37,6 +38,13 @@ _async_session_factory = async_sessionmaker(_engine, expire_on_commit=False)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with _async_session_factory() as session:
+        yield session
+
+
+@asynccontextmanager
+async def session_scope() -> AsyncGenerator[AsyncSession, None]:
+    """Standalone session for background jobs (outside the request lifecycle)."""
     async with _async_session_factory() as session:
         yield session
 

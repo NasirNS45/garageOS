@@ -68,11 +68,14 @@ class WhatsAppService:
         customer_name: str,
         vehicle_number: str,
         workshop_name: str,
+        track_url: str | None = None,
     ) -> None:
+        track_line = f"Track your vehicle: {track_url}\n\n" if track_url else ""
         body = (
             f"Assalam o Alaikum {customer_name}!\n\n"
             f"Your vehicle *{vehicle_number}* has been received at {workshop_name}.\n"
             f"We'll notify you when it's ready for pickup.\n\n"
+            f"{track_line}"
             f"Thank you!"
         )
         await self.send_message(customer_phone, body)
@@ -95,3 +98,39 @@ class WhatsAppService:
             f"Thank you for choosing us!"
         )
         await self.send_message(customer_phone, body)
+
+    async def send_service_reminder(
+        self,
+        customer_phone: str,
+        customer_name: str,
+        vehicle_number: str,
+        workshop_name: str,
+    ) -> None:
+        body = (
+            f"Assalam o Alaikum {customer_name}!\n\n"
+            f"Your vehicle *{vehicle_number}* may be due for its next service.\n"
+            f"Reply to this message or call us to book an appointment at {workshop_name}.\n\n"
+            f"Thank you!"
+        )
+        await self.send_message(customer_phone, body)
+
+    async def send_daily_digest(
+        self,
+        owner_phone: str,
+        workshop_name: str,
+        summary_date: str,
+        completed_jobs: int,
+        total_jobs: int,
+        total_revenue: float,
+        total_collected: float,
+    ) -> None:
+        outstanding = total_revenue - total_collected
+        body = (
+            f"*{workshop_name}* daily summary ({summary_date})\n\n"
+            f"Jobs completed: {completed_jobs} of {total_jobs}\n"
+            f"Revenue: PKR {total_revenue:,.0f}\n"
+            f"Collected: PKR {total_collected:,.0f}\n"
+            f"Outstanding: PKR {outstanding:,.0f}\n\n"
+            f"Sent by GarageOS."
+        )
+        await self.send_message(owner_phone, body)

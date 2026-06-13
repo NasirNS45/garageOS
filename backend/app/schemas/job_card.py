@@ -56,6 +56,7 @@ class JobCardResponse(BaseModel):
     total_amount: float
     invoice_number: str | None
     invoice_url: str | None = None
+    track_url: str | None = None
     payment_status: str
     notes: str | None
     created_at: datetime

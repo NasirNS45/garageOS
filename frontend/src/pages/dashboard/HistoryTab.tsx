@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { SearchX } from "lucide-react";
+import { SearchX, Trophy } from "lucide-react";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
 import EmptyState from "../../components/EmptyState";
 import VehiclePlate from "../../components/VehiclePlate";
+import { useCustomerInsights } from "../../hooks/useCustomerInsights";
 import { api } from "../../api/axios";
 
 // ── History tab ───────────────────────────────────────────────────────────────
@@ -39,9 +40,9 @@ export default function HistoryTab() {
   const [searched, setSearched] = useState(false);
   const [searchError, setSearchError] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<HistoryStatusFilter>("all");
+  const insightsQ = useCustomerInsights(10);
 
-  const search = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const runSearch = async (searchType: "vehicle" | "phone", value: string) => {
     setLoading(true);
     setSearched(true);
     setResult(null);
@@ -49,9 +50,9 @@ export default function HistoryTab() {
     setHistoryFilter("all");
     try {
       const param =
-        type === "vehicle"
-          ? `vehicle_number=${encodeURIComponent(query)}`
-          : `phone=${encodeURIComponent(query)}`;
+        searchType === "vehicle"
+          ? `vehicle_number=${encodeURIComponent(value)}`
+          : `phone=${encodeURIComponent(value)}`;
       const { data } = await api.get<HistoryResult>(`/customers/history?${param}`);
       setResult(data);
     } catch {
@@ -60,6 +61,17 @@ export default function HistoryTab() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const search = (e: React.FormEvent) => {
+    e.preventDefault();
+    void runSearch(type, query);
+  };
+
+  const openCustomer = (phone: string) => {
+    setType("phone");
+    setQuery(phone);
+    void runSearch("phone", phone);
   };
 
   const toggle = (active: boolean) =>
@@ -101,6 +113,38 @@ export default function HistoryTab() {
           {loading ? "Searching…" : "Search"}
         </button>
       </form>
+
+      {/* Top customers — discovery aid shown before a search is run */}
+      {!searched && (insightsQ.data?.length ?? 0) > 0 && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
+            <Trophy size={15} className="text-amber-500" />
+            Top Customers
+          </h3>
+          <div className="space-y-2.5">
+            {insightsQ.data!.map((c, i) => (
+              <button
+                key={c.customer_phone}
+                onClick={() => openCustomer(c.customer_phone)}
+                className="w-full flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1.5 rounded-lg transition active:scale-[0.99]"
+              >
+                <span className="w-5 text-xs font-bold text-slate-400 shrink-0">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                    {c.customer_name}
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500" data-keep-ltr>
+                    {c.total_jobs} visit{c.total_jobs !== 1 ? "s" : ""} · {c.customer_phone}
+                  </p>
+                </div>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 shrink-0">
+                  PKR {c.total_spent.toLocaleString()}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading && <JobCardSkeleton count={1} />}
 

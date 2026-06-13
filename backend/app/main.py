@@ -4,12 +4,13 @@ from contextlib import asynccontextmanager
 from datetime import UTC
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.router import v1_router
 from app.core.config import get_settings
@@ -17,6 +18,7 @@ from app.core.database import get_session
 from app.core.exceptions import AppException
 from app.core.logging import configure_logging, request_id_var
 from app.core.ratelimit import limiter
+from app.core.scheduler import shutdown_scheduler, start_scheduler
 from app.models.job_card import JobCard, JobStatus
 from app.models.job_part import JobPart
 from app.models.workshop import Workshop
@@ -31,7 +33,9 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     settings = get_settings()
     configure_logging(settings.log_level, settings.environment)
     logger.info("GarageOS starting", extra={"env": settings.environment})
+    start_scheduler()
     yield
+    shutdown_scheduler()
     logger.info("GarageOS shutting down")
 
 
@@ -178,6 +182,55 @@ def create_app() -> FastAPI:
                 "total_amount": float(card.total_amount),
                 "parts": parts_data,
                 "completed_at": completed_str,
+            },
+        )
+
+    # Public job-tracking page (no auth — card id is an unguessable UUID)
+    @app.get(
+        "/track/{card_id}",
+        response_class=HTMLResponse,
+        include_in_schema=False,
+    )
+    async def track_job(
+        request: Request,
+        card_id: str,
+        session: AsyncSession = Depends(get_session),
+    ) -> HTMLResponse:
+        result = await session.execute(select(JobCard).where(JobCard.id == card_id))
+        card = result.scalar_one_or_none()
+        if card is None:
+            return HTMLResponse("<h2>Job not found</h2>", status_code=404)
+
+        ws_result = await session.execute(
+            select(Workshop).where(Workshop.id == card.workshop_id)
+        )
+        workshop = ws_result.scalar_one_or_none()
+
+        invoice_url = (
+            f"{settings.app_base_url.rstrip('/')}/invoices/{card.invoice_number}"
+            if card.status == JobStatus.completed.value and card.invoice_number
+            else None
+        )
+
+        return _TEMPLATES.TemplateResponse(
+            request,
+            "track.html",
+            {
+                "workshop_name": workshop.name if workshop else "Workshop",
+                "vehicle_number": card.vehicle_number,
+                "vehicle_make": card.vehicle_make or "",
+                "status": card.status,
+                "description": card.description or "",
+                "labour_charge": float(card.labour_charge),
+                "parts_charge": float(card.parts_charge),
+                "total_amount": float(card.total_amount),
+                "created_at": card.created_at.astimezone(UTC).strftime("%d %b %Y"),
+                "completed_at": (
+                    card.completed_at.astimezone(UTC).strftime("%d %b %Y")
+                    if card.completed_at
+                    else ""
+                ),
+                "invoice_url": invoice_url,
             },
         )
 

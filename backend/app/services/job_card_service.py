@@ -15,6 +15,7 @@ from app.schemas.job_card import (
 )
 from app.schemas.job_part import JobPartResponse
 from app.services.invoice_service import InvoiceService
+from app.services.reminder_service import ReminderService
 from app.services.whatsapp_service import WhatsAppService
 from app.utils.mobile import normalize_mobile
 
@@ -26,10 +27,11 @@ def _to_response(
     invoice_svc: InvoiceService,
     parts: list[JobPartResponse] | None = None,
 ) -> JobCardResponse:
-    """Map a JobCard ORM object to a response schema, injecting invoice URL and parts."""
+    """Map a JobCard ORM object to a response schema, injecting public URLs and parts."""
     resp = JobCardResponse.model_validate(card)
     if resp.invoice_number:
         resp.invoice_url = invoice_svc.invoice_url(resp.invoice_number)
+    resp.track_url = invoice_svc.track_url(resp.id)
     if parts is not None:
         resp.parts = parts
     return resp
@@ -37,6 +39,7 @@ def _to_response(
 
 class JobCardService:
     def __init__(self, session: AsyncSession) -> None:
+        self._session = session
         self._repo = JobCardRepository(session)
         self._part_repo = JobPartRepository(session)
         self._workshop_repo = WorkshopRepository(session)
@@ -81,6 +84,7 @@ class JobCardService:
                     customer_name=payload.customer_name,
                     vehicle_number=card.vehicle_number,  # type: ignore[union-attr]
                     workshop_name=workshop_name,
+                    track_url=self._invoice_svc.track_url(card.id),
                 )
             except Exception as exc:
                 logger.error(
@@ -217,6 +221,16 @@ class JobCardService:
                     "WhatsApp completion notification failed",
                     extra={"error": str(exc)},
                 )
+
+        # Schedule a follow-up service reminder if the workshop has opted in
+        try:
+            workshop = await self._workshop_repo.get_by_id(workshop_id)
+            if workshop is not None:
+                await ReminderService(self._session).maybe_create_for_completion(
+                    workshop, completed
+                )
+        except Exception as exc:
+            logger.error("Failed to schedule service reminder", extra={"error": str(exc)})
 
         parts_list = await self._part_repo.list_by_job(card_id)
         part_responses = [JobPartResponse.model_validate(p) for p in parts_list]

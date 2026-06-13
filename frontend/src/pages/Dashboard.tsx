@@ -3,12 +3,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   BarChart3,
   Clock,
+  Globe,
   LogOut,
   Plus,
   Settings2,
   Wrench,
 } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
+import { useLanguageStore } from "../stores/languageStore";
+import { useT } from "../i18n/useT";
+import type { TKey } from "../i18n/translations";
 import { useOnline } from "../hooks/useOnline";
 import Logo from "../components/Logo";
 import BottomSheet from "../components/BottomSheet";
@@ -23,16 +27,16 @@ type Tab = "jobs" | "history" | "summary" | "settings";
 
 interface NavItem {
   tab: Tab;
-  label: string;
+  labelKey: TKey;
   Icon: React.ElementType;
   ownerOnly: boolean;
 }
 
 const NAV: NavItem[] = [
-  { tab: "jobs",     label: "Jobs",     Icon: Wrench,    ownerOnly: false },
-  { tab: "history",  label: "History",  Icon: Clock,     ownerOnly: false },
-  { tab: "summary",  label: "Summary",  Icon: BarChart3, ownerOnly: true  },
-  { tab: "settings", label: "Settings", Icon: Settings2, ownerOnly: true  },
+  { tab: "jobs",     labelKey: "nav.jobs",     Icon: Wrench,    ownerOnly: false },
+  { tab: "history",  labelKey: "nav.history",  Icon: Clock,     ownerOnly: false },
+  { tab: "summary",  labelKey: "nav.summary",  Icon: BarChart3, ownerOnly: true  },
+  { tab: "settings", labelKey: "nav.settings", Icon: Settings2, ownerOnly: true  },
 ];
 
 const VALID_TABS: Tab[] = ["jobs", "history", "summary", "settings"];
@@ -43,6 +47,8 @@ export default function Dashboard() {
   const { role, workshopName, setWorkshopName, logout } = useAuthStore();
   const [showForm, setShowForm] = useState(false);
   const online = useOnline();
+  const t = useT();
+  const { language, toggleLanguage } = useLanguageStore();
 
   // Derive active tab from URL path — defaults to "jobs" for unknown paths
   const pathSegment = location.pathname.replace(/^\//, "") as Tab;
@@ -73,7 +79,7 @@ export default function Dashboard() {
           role="status"
           className="bg-amber-500 text-slate-900 text-center text-xs font-bold py-1.5 px-4 sticky top-0 z-30"
         >
-          You are offline. Changes cannot be saved until the connection returns.
+          {t("banner.offline")}
         </div>
       )}
 
@@ -91,13 +97,25 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            aria-label="Sign out"
-            className="text-slate-400 hover:text-slate-700 transition p-1.5 rounded-xl hover:bg-slate-100 active:scale-95"
-          >
-            <LogOut size={20} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggleLanguage}
+              aria-label={language === "ur" ? "Switch to English" : "اردو میں دیکھیں"}
+              className="flex items-center gap-1 text-slate-400 hover:text-slate-700 transition px-2 py-1.5 rounded-xl hover:bg-slate-100 active:scale-95"
+            >
+              <Globe size={17} />
+              <span className="text-xs font-bold" data-keep-ltr>
+                {language === "ur" ? "EN" : "اردو"}
+              </span>
+            </button>
+            <button
+              onClick={handleLogout}
+              aria-label={t("header.signOut")}
+              className="text-slate-400 hover:text-slate-700 transition p-1.5 rounded-xl hover:bg-slate-100 active:scale-95"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -113,7 +131,7 @@ export default function Dashboard() {
       <BottomSheet
         open={showForm}
         onClose={() => setShowForm(false)}
-        title="New Job Card"
+        title={t("jobs.empty.action")}
       >
         <CreateJobForm onSuccess={() => setShowForm(false)} />
       </BottomSheet>
@@ -121,12 +139,12 @@ export default function Dashboard() {
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] pb-safe">
         <div className="max-w-2xl mx-auto flex h-16">
-          {visibleTabs.map(({ tab: t, label, Icon }) => {
-            const active = tab === t;
+          {visibleTabs.map(({ tab: navTab, labelKey, Icon }) => {
+            const active = tab === navTab;
             return (
               <button
-                key={t}
-                onClick={() => { setShowForm(false); navigate(`/${t}`); }}
+                key={navTab}
+                onClick={() => { setShowForm(false); navigate(`/${navTab}`); }}
                 className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition active:scale-95 ${
                   active ? "text-[var(--brand)]" : "text-slate-400 hover:text-slate-600"
                 }`}
@@ -136,7 +154,7 @@ export default function Dashboard() {
                 )}
                 <Icon size={22} />
                 <span className={`text-[10px] font-semibold ${active ? "font-bold" : ""}`}>
-                  {label}
+                  {t(labelKey)}
                 </span>
               </button>
             );
