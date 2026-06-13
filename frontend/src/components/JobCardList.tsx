@@ -1,5 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Copy, CreditCard, FileText, Radio, Share2, User, X } from "lucide-react";
+import {
+  CheckCircle2,
+  Copy,
+  CreditCard,
+  FileText,
+  MessageCircle,
+  Phone,
+  Radio,
+  Share2,
+  User,
+  X,
+} from "lucide-react";
 import {
   type JobCard,
   useCancelJobCard,
@@ -124,11 +135,33 @@ function JobCardItem({
           </div>
         </div>
 
-        {/* Row 2: customer */}
-        <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-2">
-          {card.customer_name}
-          <span className="text-slate-400 font-normal"> · {card.customer_phone}</span>
-        </p>
+        {/* Row 2: customer with tap-to-call + WhatsApp */}
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+            {card.customer_name}
+          </span>
+          {card.customer_phone && (
+            <>
+              <a
+                href={`tel:${card.customer_phone}`}
+                className="inline-flex items-center gap-1 text-xs text-[var(--brand)] hover:underline"
+                data-keep-ltr
+              >
+                <Phone size={11} />
+                {card.customer_phone}
+              </a>
+              <a
+                href={`https://wa.me/${card.customer_phone.replace(/[^0-9]/g, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Message customer on WhatsApp"
+                className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition active:scale-95"
+              >
+                <MessageCircle size={12} />
+              </a>
+            </>
+          )}
+        </div>
 
         {/* Row 3: assigned mechanic */}
         {assignedMechanic && (

@@ -37,6 +37,8 @@ import { todayStr, shiftDate } from "../../utils/dates";
 import { inputClass, fieldClass } from "./formStyles";
 
 // ── Settings tab ──────────────────────────────────────────────────────────────
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "1.0.0";
+
 interface SettingsForm {
   name: string;
   address: string;
@@ -417,6 +419,20 @@ export default function SettingsTab() {
 
       {/* Export */}
       <ExportSection />
+
+      {/* App footer */}
+      <p className="text-center text-xs text-slate-400 dark:text-slate-500 pt-2 pb-1">
+        GarageOS v{APP_VERSION}
+        <span className="mx-1.5">·</span>
+        <a
+          href="https://wa.me/923001234567?text=GarageOS%20feedback%3A%20"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium text-[var(--brand)] hover:underline"
+        >
+          Send feedback
+        </a>
+      </p>
     </div>
   );
 }

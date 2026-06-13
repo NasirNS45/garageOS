@@ -99,9 +99,29 @@
       border-top: 1px solid #f1f5f9; white-space: pre-wrap; line-height: 1.6;
     }
     .footer .powered { margin-top: 8px; font-weight: 600; color: #cbd5e1; letter-spacing: .02em; }
+    /* Print bar */
+    .print-bar { max-width: 600px; margin: 0 auto 14px; display: flex; justify-content: flex-end; }
+    .print-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #1d4ed8; color: #fff; border: none; cursor: pointer;
+      font: inherit; font-size: 13px; font-weight: 700;
+      padding: 9px 16px; border-radius: 12px; transition: background .15s ease;
+    }
+    .print-btn:hover { background: #1e40af; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .card { box-shadow: none; border: none; border-radius: 0; max-width: 100%; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body>
+  <div class="print-bar no-print">
+    <button class="print-btn" onclick="window.print()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print / Save PDF
+    </button>
+  </div>
   <div class="card">
     <div class="header">
       <span class="brand">
@@ -149,8 +169,8 @@
             <tr>
               <td>{{ p.name }}</td>
               <td style="text-align:center" class="parts-qty">{{ p.quantity | int if p.quantity == (p.quantity | int) else p.quantity }}</td>
-              <td style="text-align:right" class="parts-qty">{{ p.unit_price | int }}</td>
-              <td>{{ p.line_total | int }}</td>
+              <td style="text-align:right" class="parts-qty">{{ "{:,.0f}".format(p.unit_price) }}</td>
+              <td>{{ "{:,.0f}".format(p.line_total) }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -158,14 +178,14 @@
         <div style="margin-top:12px">
         {% endif %}
 
-        <div class="charge-row"><span class="label">Labour</span><span>PKR {{ labour_charge | int }}</span></div>
-        <div class="charge-row"><span class="label">Parts</span><span>PKR {{ parts_charge | int }}</span></div>
+        <div class="charge-row"><span class="label">Labour</span><span>PKR {{ "{:,.0f}".format(labour_charge) }}</span></div>
+        <div class="charge-row"><span class="label">Parts</span><span>PKR {{ "{:,.0f}".format(parts_charge) }}</span></div>
 
         {% if parts %}
         </div>
         {% endif %}
 
-        <div class="total-row"><span>Total</span><span>PKR {{ total_amount | int }}</span></div>
+        <div class="total-row"><span>Total</span><span>PKR {{ "{:,.0f}".format(total_amount) }}</span></div>
       </div>
 
       {% if workshop_bank_details %}

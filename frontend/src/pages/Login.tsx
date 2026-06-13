@@ -6,6 +6,7 @@ import Logo from "../components/Logo";
 import { useAuthStore } from "../stores/authStore";
 import PhoneInputField from "../components/PhoneInputField";
 import { isValidPhone } from "../utils/validation";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const inputBase =
   "w-full bg-white dark:bg-slate-800 dark:text-slate-100 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition shadow-sm";
@@ -26,6 +27,8 @@ export default function Login() {
   const [formError, setFormError] = useState("");
   const [sessionExpired, setSessionExpired] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useDocumentTitle("Sign in");
 
   useEffect(() => {
     if (sessionStorage.getItem("session_expired")) {

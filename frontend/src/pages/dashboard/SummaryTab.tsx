@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Wallet } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Wallet, X } from "lucide-react";
 import {
   useSummary,
   useRangeSummary,
@@ -164,6 +164,8 @@ export default function SummaryTab() {
             </p>
             <p className="text-xs opacity-60 mt-0.5">
               via {d?.completed_jobs ?? 0} completed job(s)
+              {(d?.completed_jobs ?? 0) > 0 &&
+                ` · avg PKR ${Math.round((d?.total_revenue ?? 0) / (d?.completed_jobs ?? 1)).toLocaleString()}`}
             </p>
             <div className="flex gap-4 mt-3 pt-3 border-t border-white/20">
               <div>
@@ -236,6 +238,7 @@ export default function SummaryTab() {
 
 function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: string }) {
   const [showForm, setShowForm] = useState(false);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const expensesQ = useExpenses(startDate, endDate);
   const deleteExpense = useDeleteExpense();
   const { toast } = useToast();
@@ -243,6 +246,7 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
   const items = expensesQ.data?.items ?? [];
 
   const handleDelete = (id: string) => {
+    setConfirmId(null);
     deleteExpense.mutate(id, {
       onSuccess: () => toast("Expense deleted", "success"),
       onError: (e) => toast(parseApiError(e)._form ?? "Could not delete expense", "error"),
@@ -283,13 +287,31 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100 shrink-0">
                 PKR {e.amount.toLocaleString()}
               </p>
-              <button
-                onClick={() => handleDelete(e.id)}
-                aria-label="Delete expense"
-                className="text-slate-300 hover:text-red-500 transition p-1 active:scale-95 shrink-0"
-              >
-                <Trash2 size={15} />
-              </button>
+              {confirmId === e.id ? (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleDelete(e.id)}
+                    className="text-[11px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setConfirmId(null)}
+                    aria-label="Cancel"
+                    className="text-slate-400 hover:text-slate-600 p-1 active:scale-95"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmId(e.id)}
+                  aria-label="Delete expense"
+                  className="text-slate-300 hover:text-red-500 transition p-1 active:scale-95 shrink-0"
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
             </div>
           ))}
         </div>

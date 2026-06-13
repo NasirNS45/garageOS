@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Camera, ImageIcon, Loader2, Trash2, X } from "lucide-react";
+import { Camera, Check, ImageIcon, Loader2, Trash2, X } from "lucide-react";
 import { usePhotos, useUploadPhoto, useDeletePhoto } from "../hooks/usePhotos";
 import { useToast } from "../context/ToastContext";
 
@@ -16,6 +16,7 @@ export default function JobPhotos({
 }) {
   const [open, setOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { data: photos = [], isLoading } = usePhotos(cardId, open);
   const upload = useUploadPhoto(cardId);
@@ -68,18 +69,37 @@ export default function JobPhotos({
                       className="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-600"
                     />
                   </button>
-                  {canEdit && (
+                  {canEdit && confirmId !== p.id && (
                     <button
-                      onClick={() =>
-                        remove.mutate(p.id, {
-                          onError: () => toast("Could not delete photo", "error"),
-                        })
-                      }
+                      onClick={() => setConfirmId(p.id)}
                       aria-label="Delete photo"
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow opacity-90 hover:opacity-100 active:scale-95"
                     >
                       <Trash2 size={11} />
                     </button>
+                  )}
+                  {canEdit && confirmId === p.id && (
+                    <div className="absolute inset-0 rounded-lg bg-black/70 flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => {
+                          remove.mutate(p.id, {
+                            onError: () => toast("Could not delete photo", "error"),
+                          });
+                          setConfirmId(null);
+                        }}
+                        aria-label="Confirm delete"
+                        className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center active:scale-95"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        onClick={() => setConfirmId(null)}
+                        aria-label="Cancel delete"
+                        className="w-7 h-7 rounded-full bg-white text-slate-700 flex items-center justify-center active:scale-95"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}

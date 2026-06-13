@@ -183,6 +183,7 @@ def create_app() -> FastAPI:
                 "parts": parts_data,
                 "completed_at": completed_str,
             },
+            headers={"Cache-Control": "no-store, max-age=0"},
         )
 
     # Public job-tracking page (no auth — card id is an unguessable UUID)
@@ -232,6 +233,7 @@ def create_app() -> FastAPI:
                 ),
                 "invoice_url": invoice_url,
             },
+            headers={"Cache-Control": "no-store, max-age=0"},
         )
 
     @app.get("/health", include_in_schema=False)

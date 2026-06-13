@@ -7,6 +7,7 @@ import { useAuthStore } from "../stores/authStore";
 import { parseApiError } from "../utils/parseApiError";
 import { isValidPhone } from "../utils/validation";
 import PhoneInputField from "../components/PhoneInputField";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 interface SignupForm {
   full_name: string;
@@ -40,6 +41,8 @@ export default function Signup() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useDocumentTitle("Create account");
 
   const set =
     (field: keyof SignupForm) => (e: React.ChangeEvent<HTMLInputElement>) => {

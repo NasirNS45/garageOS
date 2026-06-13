@@ -14,6 +14,8 @@ import { useLanguageStore } from "../stores/languageStore";
 import { useT } from "../i18n/useT";
 import type { TKey } from "../i18n/translations";
 import { useOnline } from "../hooks/useOnline";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useJobCards } from "../hooks/useJobCards";
 import Logo from "../components/Logo";
 import BottomSheet from "../components/BottomSheet";
 import { api } from "../api/axios";
@@ -53,6 +55,14 @@ export default function Dashboard() {
   // Derive active tab from URL path — defaults to "jobs" for unknown paths
   const pathSegment = location.pathname.replace(/^\//, "") as Tab;
   const tab: Tab = VALID_TABS.includes(pathSegment) ? pathSegment : "jobs";
+
+  useDocumentTitle(tab.charAt(0).toUpperCase() + tab.slice(1));
+
+  // Active-job count for the Jobs nav badge (shares cache with JobsTab)
+  const { data: jobPage } = useJobCards(1);
+  const activeCount = (jobPage?.items ?? []).filter(
+    (j) => j.status === "pending" || j.status === "in_progress"
+  ).length;
 
   // Fetch workshop name once on mount
   useEffect(() => {
@@ -152,7 +162,14 @@ export default function Dashboard() {
                 {active && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[var(--brand)] rounded-full" />
                 )}
-                <Icon size={22} />
+                <span className="relative">
+                  <Icon size={22} />
+                  {navTab === "jobs" && activeCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center" data-keep-ltr>
+                      {activeCount > 9 ? "9+" : activeCount}
+                    </span>
+                  )}
+                </span>
                 <span className={`text-[10px] font-semibold ${active ? "font-bold" : ""}`}>
                   {t(labelKey)}
                 </span>
