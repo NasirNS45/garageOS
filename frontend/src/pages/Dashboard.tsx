@@ -167,7 +167,7 @@ export default function Dashboard() {
         <button
           onClick={() => setShowForm(true)}
           aria-label="New job card"
-          className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 transition active:scale-95"
+          className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-[var(--brand)]/15 transition-transform hover:scale-105 active:scale-95"
         >
           <Plus size={26} />
         </button>

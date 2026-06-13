@@ -45,6 +45,9 @@ export const en = {
   "jobs.loadMore": "Load more",
   "jobs.search": "Search plate, customer, or phone",
   "jobs.searchEmpty": "No jobs match your search",
+  "stat.active": "Active",
+  "stat.doneToday": "Done today",
+  "stat.total": "Total",
 
   // Create job form
   "form.vehicleNumber": "Vehicle Number",
@@ -99,6 +102,9 @@ export const ur: Record<TKey, string> = {
   "jobs.loadMore": "مزید دکھائیں",
   "jobs.search": "نمبر، کسٹمر یا فون تلاش کریں",
   "jobs.searchEmpty": "کوئی کام آپ کی تلاش سے میل نہیں کھاتا",
+  "stat.active": "جاری",
+  "stat.doneToday": "آج مکمل",
+  "stat.total": "کل",
 
   "form.vehicleNumber": "گاڑی کا نمبر",
   "form.vehicleMake": "گاڑی کی کمپنی",
