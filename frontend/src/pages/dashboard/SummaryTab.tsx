@@ -171,7 +171,7 @@ export default function SummaryTab() {
             </p>
             <div className="flex gap-4 mt-3 pt-3 border-t border-white/20">
               <div>
-                <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
+                <p className="text-[11px] uppercase tracking-widest opacity-60 font-semibold">
                   {t("summary.collected")}
                 </p>
                 <p className="text-base font-bold mt-0.5">
@@ -179,7 +179,7 @@ export default function SummaryTab() {
                 </p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
+                <p className="text-[11px] uppercase tracking-widest opacity-60 font-semibold">
                   {t("summary.outstanding")}
                 </p>
                 <p className="text-base font-bold mt-0.5">
@@ -187,7 +187,7 @@ export default function SummaryTab() {
                 </p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
+                <p className="text-[11px] uppercase tracking-widest opacity-60 font-semibold">
                   {t("summary.expenses")}
                 </p>
                 <p className="text-base font-bold mt-0.5">
@@ -196,7 +196,7 @@ export default function SummaryTab() {
               </div>
             </div>
             <div className="flex justify-between items-baseline mt-3 pt-3 border-t border-white/20">
-              <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
+              <p className="text-[11px] uppercase tracking-widest opacity-60 font-semibold">
                 {t("summary.netProfit")}
               </p>
               <p className="text-lg font-extrabold">
@@ -211,7 +211,7 @@ export default function SummaryTab() {
           )}
 
           {/* Stat grid */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
             {stats.map((s) => (
               <div
                 key={s.label}
@@ -461,7 +461,7 @@ function MechanicBreakdown({
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 PKR {m.total_revenue.toLocaleString()}
               </p>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{t("summary.revenueLabel")}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">{t("summary.revenueLabel")}</p>
             </div>
           </div>
         ))}

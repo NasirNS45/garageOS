@@ -84,7 +84,7 @@ export default function HistoryTab() {
     }`;
 
   return (
-    <div>
+    <div className="lg:max-w-2xl lg:mx-auto">
       <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t("history.title")}</h2>
 
       <form

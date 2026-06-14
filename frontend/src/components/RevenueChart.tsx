@@ -37,7 +37,7 @@ export default function RevenueChart({ points }: Props) {
     <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 mb-3">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Daily Revenue</h3>
-        <div className="flex items-center gap-3 text-[10px] font-medium text-slate-400 dark:text-slate-500">
+        <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400 dark:text-slate-500">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-sm bg-[var(--brand)]" /> Revenue
           </span>
@@ -125,7 +125,7 @@ export default function RevenueChart({ points }: Props) {
         {points.map((p, i) => (
           <span
             key={p.date}
-            className="text-[8px] text-slate-400 dark:text-slate-500 text-center"
+            className="text-[10px] text-slate-400 dark:text-slate-500 text-center"
             style={{ width: `${slot}%` }}
           >
             {i % showEveryNth === 0 ? dayLabel(p.date).split(" ")[0] : ""}

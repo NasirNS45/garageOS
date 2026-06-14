@@ -32,7 +32,7 @@ export default function JobCardList({ cards, isOwner }: Props) {
   const { data: mechanics = [] } = useMechanics();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
       {cards.map((card) => (
         <JobCardItem key={card.id} card={card} isOwner={isOwner} mechanics={mechanics} />
       ))}
@@ -86,7 +86,7 @@ function JobCardItem({
               {t(STATUS_KEYS[card.status])}
             </span>
             {!isTerminal && (
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                 {formatAge(card.created_at)}
               </span>
             )}

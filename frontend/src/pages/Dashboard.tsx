@@ -17,6 +17,7 @@ import { useOnline } from "../hooks/useOnline";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useJobCards } from "../hooks/useJobCards";
 import Logo from "../components/Logo";
+import Sidebar from "../components/Sidebar";
 import BottomSheet from "../components/BottomSheet";
 import { api } from "../api/axios";
 import CreateJobForm from "./dashboard/CreateJobForm";
@@ -98,8 +99,21 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 sticky top-0 z-20 shadow-sm">
+      {/* Desktop sidebar (lg+) */}
+      <Sidebar
+        items={visibleTabs}
+        activeTab={tab}
+        onSelect={(t2) => { setShowForm(false); navigate(`/${t2}`); }}
+        onNewJob={() => setShowForm(true)}
+        onLogout={handleLogout}
+        workshopName={workshopName ?? "GarageOS"}
+        role={role}
+        activeCount={activeCount}
+      />
+
+      <div className="lg:ms-60">
+      {/* Header (mobile only) */}
+      <header className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 sticky top-0 z-20 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Logo variant="icon" size="sm" to="/jobs" />
@@ -107,7 +121,7 @@ export default function Dashboard() {
               <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate max-w-[180px]">
                 {workshopName ?? "GarageOS"}
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+              <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium mt-0.5">
                 {role ?? ""}
               </span>
             </div>
@@ -135,12 +149,13 @@ export default function Dashboard() {
       </header>
 
       {/* Tab content */}
-      <main className="max-w-2xl mx-auto px-4 py-4 pb-24">
+      <main className="max-w-2xl lg:max-w-5xl mx-auto px-4 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-10">
         {tab === "jobs"     && <JobsTab role={role} onNewJob={() => setShowForm(true)} />}
         {tab === "history"  && <HistoryTab />}
         {tab === "summary"  && role === "owner" && <SummaryTab />}
         {tab === "settings" && role === "owner" && <SettingsTab />}
       </main>
+      </div>{/* /lg:ms-60 */}
 
       {/* New job bottom sheet */}
       <BottomSheet
@@ -151,8 +166,8 @@ export default function Dashboard() {
         <CreateJobForm onSuccess={() => setShowForm(false)} />
       </BottomSheet>
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] pb-safe">
+      {/* Bottom nav (mobile only) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] pb-safe">
         <div className="max-w-2xl mx-auto flex h-16">
           {visibleTabs.map(({ tab: navTab, labelKey, Icon }) => {
             const active = tab === navTab;
@@ -170,12 +185,12 @@ export default function Dashboard() {
                 <span className="relative">
                   <Icon size={22} />
                   {navTab === "jobs" && activeCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 rtl:right-auto rtl:-left-2 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center" data-keep-ltr>
+                    <span className="absolute -top-1.5 -right-2 rtl:right-auto rtl:-left-2 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center" data-keep-ltr>
                       {activeCount > 9 ? "9+" : activeCount}
                     </span>
                   )}
                 </span>
-                <span className={`text-[10px] font-semibold ${active ? "font-bold" : ""}`}>
+                <span className={`text-[11px] font-semibold ${active ? "font-bold" : ""}`}>
                   {t(labelKey)}
                 </span>
               </button>
@@ -189,7 +204,7 @@ export default function Dashboard() {
         <button
           onClick={() => setShowForm(true)}
           aria-label="New job card"
-          className="fixed bottom-20 right-4 rtl:right-auto rtl:left-4 z-30 w-14 h-14 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-[var(--brand)]/15 transition-transform hover:scale-105 active:scale-95"
+          className="lg:hidden fixed bottom-20 right-4 rtl:right-auto rtl:left-4 z-30 w-14 h-14 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-[var(--brand)]/15 transition-transform hover:scale-105 active:scale-95"
         >
           <Plus size={26} />
         </button>

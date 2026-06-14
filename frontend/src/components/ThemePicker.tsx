@@ -81,7 +81,7 @@ function ThemeDot({
         {active && <Check size={16} strokeWidth={3} className="text-white" />}
       </span>
       <span
-        className={`text-[10px] font-semibold tracking-wide transition-colors ${
+        className={`text-[11px] font-semibold tracking-wide transition-colors ${
           active
             ? "text-slate-700 dark:text-slate-200"
             : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"

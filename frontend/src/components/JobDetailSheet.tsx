@@ -116,7 +116,7 @@ export default function JobDetailSheet({
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_STYLES[card.status]}`}>
               {t(STATUS_KEYS[card.status])}
             </span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
               {formatAge(card.created_at)}
             </span>
           </div>

@@ -240,9 +240,10 @@ export default function SettingsTab() {
   }
 
   return (
-    <div className="space-y-4 pb-4">
-      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Settings</h2>
+    <div className="pb-4">
+      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t("settings.title")}</h2>
 
+      <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
       {/* Workshop */}
       <SettingCard icon={<Building2 size={15} />} title={t("settings.workshop")}>
         <form onSubmit={save} className="space-y-3.5">
@@ -420,9 +421,10 @@ export default function SettingsTab() {
 
       {/* Export */}
       <ExportSection />
+      </div>{/* /lg grid */}
 
       {/* App footer */}
-      <p className="text-center text-xs text-slate-400 dark:text-slate-500 pt-2 pb-1">
+      <p className="text-center text-xs text-slate-400 dark:text-slate-500 pt-5 pb-1">
         GarageOS v{APP_VERSION}
         <span className="mx-1.5">·</span>
         <a
