@@ -1,4 +1,6 @@
 from app.models.expense import Expense, ExpenseCategory
+from app.models.pilot_event import PilotEvent
+from app.models.password_reset_token import PasswordResetToken
 from app.models.job_card import JobCard, JobStatus
 from app.models.job_part import JobPart
 from app.models.job_photo import JobPhoto
@@ -22,4 +24,6 @@ __all__ = [
     "ReminderStatus",
     "Expense",
     "ExpenseCategory",
+    "PasswordResetToken",
+    "PilotEvent",
 ]

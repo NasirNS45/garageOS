@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.v1.endpoints.analytics import router as analytics_router
 from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.customers import router as customers_router
 from app.api.v1.endpoints.expenses import router as expenses_router
@@ -14,6 +15,7 @@ from app.api.v1.endpoints.settings import router as settings_router
 from app.api.v1.endpoints.summary import router as summary_router
 
 v1_router = APIRouter(prefix="/api/v1")
+v1_router.include_router(analytics_router)
 v1_router.include_router(auth_router)
 v1_router.include_router(job_cards_router)
 v1_router.include_router(job_parts_router)

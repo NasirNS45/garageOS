@@ -10,6 +10,7 @@ import { useToast } from "../context/ToastContext";
 import type { Mechanic } from "../hooks/useMechanics";
 import { parseApiError } from "../utils/parseApiError";
 import { useT } from "../i18n/useT";
+import { trackPilotEvent } from "../utils/trackPilotEvent";
 
 interface Props {
   card: JobCard;
@@ -68,6 +69,7 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
       { id: card.id, notify_customer: notifyCustomer },
       {
         onSuccess: () => {
+          trackPilotEvent("job_completed_frontend");
           toast(t("toast.jobCompleted"), "success");
           onClose();
         },

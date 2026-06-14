@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ClipboardList, Search, X } from "lucide-react";
-import { useJobCards, type JobCard } from "../../hooks/useJobCards";
+import { useJobCards, type JobCard, type JobCardListFilters } from "../../hooks/useJobCards";
+import { useDebounce } from "../../hooks/useDebounce";
 import JobCardList from "../../components/JobCardList";
 import StatusStrip from "../../components/StatusStrip";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
@@ -10,41 +11,64 @@ import OnboardingChecklist from "../../components/OnboardingChecklist";
 import { useT } from "../../i18n/useT";
 import type { TKey } from "../../i18n/translations";
 
-// ── Jobs tab ──────────────────────────────────────────────────────────────────
-type StatusFilter = "all" | "pending" | "in_progress" | "completed";
+type StatusFilter = "active" | "all" | "pending" | "in_progress" | "completed" | "unpaid";
 
 const STATUS_FILTER_KEYS: Record<StatusFilter, TKey> = {
+  active: "stat.active",
   all: "status.all",
   pending: "status.pending",
   in_progress: "status.in_progress",
   completed: "status.completed",
+  unpaid: "job.unpaid",
 };
+
+const BASE_PILLS: StatusFilter[] = ["active", "pending", "in_progress", "completed", "all"];
+
+function buildApiFilters(statusFilter: StatusFilter): JobCardListFilters {
+  if (statusFilter === "active" || statusFilter === "pending" || statusFilter === "in_progress") {
+    return { activeOnly: true };
+  }
+  if (statusFilter === "unpaid") {
+    return { activeOnly: false, status: "completed", paymentStatus: "unpaid" };
+  }
+  if (statusFilter === "completed") {
+    return { activeOnly: false, status: "completed" };
+  }
+  return { activeOnly: false };
+}
 
 export default function JobsTab({ role, onNewJob }: { role: string | null; onNewJob: () => void }) {
   const t = useT();
+  const isOwner = role === "owner";
   const [page, setPage] = useState(1);
   const [allItems, setAllItems] = useState<JobCard[]>([]);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
 
-  const { data, isLoading, isError, isFetching, refetch } = useJobCards(page);
+  const apiFilters = useMemo(
+    () => ({ ...buildApiFilters(statusFilter), search: debouncedSearch }),
+    [statusFilter, debouncedSearch]
+  );
+  const { data, isLoading, isError, isFetching, refetch } = useJobCards(page, apiFilters);
 
-  // When page 1 data refreshes (after a mutation), reset the accumulated list.
-  // For page > 1, append deduplicated new items.
   const prevP1Ts = useRef(0);
-  const { dataUpdatedAt: p1UpdatedAt, data: p1Data } = useJobCards(1);
+  const { dataUpdatedAt: p1UpdatedAt, data: p1Data } = useJobCards(1, apiFilters);
+
+  useEffect(() => {
+    setPage(1);
+    setAllItems([]);
+  }, [statusFilter, debouncedSearch]);
 
   useEffect(() => {
     if (!p1UpdatedAt || p1UpdatedAt === prevP1Ts.current) return;
     prevP1Ts.current = p1UpdatedAt;
-    // Page 1 data refreshed: if we were on a later page, reset to 1
     if (page !== 1) setPage(1);
     setAllItems(p1Data?.items ?? []);
   }, [p1UpdatedAt, p1Data, page]);
 
   useEffect(() => {
     if (!data || page === 1) return;
-    // Append page 2+ items, deduplicating by id
     setAllItems((prev) => {
       const ids = new Set(prev.map((c) => c.id));
       return [...prev, ...data.items.filter((c) => !ids.has(c.id))];
@@ -54,9 +78,19 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
   const displayItems = page === 1 ? (data?.items ?? allItems) : allItems;
   const hasMore = data ? displayItems.length < data.total : false;
 
+  const filterPills = isOwner
+    ? [...BASE_PILLS.slice(0, 4), "unpaid" as const, "all" as const]
+    : BASE_PILLS;
+
   const q = search.trim().toLowerCase();
   const filteredItems = displayItems.filter((c) => {
-    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (statusFilter === "active") {
+      if (c.status !== "pending" && c.status !== "in_progress") return false;
+    } else if (statusFilter === "unpaid") {
+      if (c.status !== "completed" || c.payment_status !== "unpaid") return false;
+    } else if (statusFilter !== "all") {
+      if (c.status !== statusFilter) return false;
+    }
     if (!q) return true;
     return (
       c.vehicle_number.toLowerCase().includes(q) ||
@@ -69,7 +103,6 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
     <PullToRefresh onRefresh={() => refetch()}>
       {displayItems.length > 0 && <StatusStrip jobs={displayItems} />}
 
-      {/* Quick search */}
       {displayItems.length > 0 && (
         <div className="relative mb-3">
           <Search
@@ -95,11 +128,10 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
         </div>
       )}
 
-      {/* Status filter pills */}
       {displayItems.length > 0 && (
         <div className="relative mb-3">
           <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
-            {(Object.keys(STATUS_FILTER_KEYS) as StatusFilter[]).map((f) => (
+            {filterPills.map((f) => (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
@@ -113,8 +145,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
               </button>
             ))}
           </div>
-          {/* Right fade hint — shows when pills overflow */}
-          <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[#F1F5F9] to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[#F1F5F9] to-transparent dark:from-slate-900 pointer-events-none" />
         </div>
       )}
 
@@ -125,6 +156,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
           icon={<ClipboardList size={48} />}
           title={t("jobs.loadError.title")}
           description={t("jobs.loadError.desc")}
+          action={{ label: t("common.retry"), onClick: () => refetch() }}
         />
       )}
 
@@ -150,7 +182,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
       )}
 
       {filteredItems.length > 0 && (
-        <JobCardList cards={filteredItems} isOwner={role === "owner"} />
+        <JobCardList cards={filteredItems} isOwner={isOwner} />
       )}
 
       {hasMore && (

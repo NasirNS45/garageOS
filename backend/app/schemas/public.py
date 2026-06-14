@@ -24,6 +24,7 @@ class PublicInvoiceResponse(BaseModel):
     total_amount: float
     parts: list[PublicInvoicePart]
     completed_at: str
+    brand_color: str
 
 
 class PublicTrackResponse(BaseModel):
@@ -38,3 +39,4 @@ class PublicTrackResponse(BaseModel):
     created_at: str
     completed_at: str
     invoice_number: str | None
+    brand_color: str

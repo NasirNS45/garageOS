@@ -49,6 +49,7 @@ export default function Dashboard() {
   const location = useLocation();
   const { role, workshopName, setWorkshopName, logout } = useAuthStore();
   const [showForm, setShowForm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const online = useOnline();
   const t = useT();
   const { language, toggleLanguage } = useLanguageStore();
@@ -61,6 +62,13 @@ export default function Dashboard() {
   // Derive active tab from URL path — defaults to "jobs" for unknown paths
   const pathSegment = location.pathname.replace(/^\//, "") as Tab;
   const tab: Tab = VALID_TABS.includes(pathSegment) ? pathSegment : "jobs";
+
+  // Redirect mechanics away from owner-only tabs
+  useEffect(() => {
+    if (role === "mechanic" && (tab === "summary" || tab === "settings")) {
+      navigate("/jobs", { replace: true });
+    }
+  }, [role, tab, navigate]);
 
   useDocumentTitle(tab.charAt(0).toUpperCase() + tab.slice(1));
 
@@ -85,6 +93,8 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  const requestLogout = () => setShowLogoutConfirm(true);
+
   const visibleTabs = NAV.filter((n) => !n.ownerOnly || role === "owner");
 
   return (
@@ -105,7 +115,7 @@ export default function Dashboard() {
         activeTab={tab}
         onSelect={(t2) => { setShowForm(false); navigate(`/${t2}`); }}
         onNewJob={() => setShowForm(true)}
-        onLogout={handleLogout}
+        onLogout={requestLogout}
         workshopName={workshopName ?? "GarageOS"}
         role={role}
         activeCount={activeCount}
@@ -138,7 +148,7 @@ export default function Dashboard() {
               </span>
             </button>
             <button
-              onClick={handleLogout}
+              onClick={requestLogout}
               aria-label={t("header.signOut")}
               className="text-slate-400 hover:text-slate-700 transition p-1.5 rounded-xl hover:bg-slate-100 active:scale-95"
             >
@@ -156,6 +166,34 @@ export default function Dashboard() {
         {tab === "settings" && role === "owner" && <SettingsTab />}
       </main>
       </div>{/* /lg:ms-60 */}
+
+      {/* Logout confirmation */}
+      <BottomSheet
+        open={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        title={t("header.signOutConfirm")}
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-5">
+          {t("header.signOutHint")}
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowLogoutConfirm(false)}
+            className="flex-1 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl py-3 transition active:scale-95"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            onClick={() => {
+              setShowLogoutConfirm(false);
+              handleLogout();
+            }}
+            className="flex-1 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl py-3 transition active:scale-95"
+          >
+            {t("header.signOutYes")}
+          </button>
+        </div>
+      </BottomSheet>
 
       {/* New job bottom sheet */}
       <BottomSheet

@@ -14,6 +14,7 @@ import PhoneInputField from "../../components/PhoneInputField";
 import { parseApiError } from "../../utils/parseApiError";
 import { isValidPhone } from "../../utils/validation";
 import { useT } from "../../i18n/useT";
+import { trackPilotEvent } from "../../utils/trackPilotEvent";
 import { inputClass, fieldClass } from "./formStyles";
 
 // ── Create Job Form (used inside BottomSheet) ─────────────────────────────────
@@ -48,17 +49,25 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
   // All required fields live in step 1.
   const validateStep1 = (): Record<string, string> => {
     const errs: Record<string, string> = {};
-    if (!vehicleNumber.trim()) errs.vehicle_number = "Vehicle number is required";
-    if (!customerName.trim()) errs.customer_name = "Customer name is required";
+    if (!vehicleNumber.trim()) errs.vehicle_number = t("form.errVehicleRequired");
+    if (!customerName.trim()) errs.customer_name = t("form.errCustomerNameRequired");
     if (!customerPhone.trim()) {
-      errs.customer_phone = "Customer phone is required";
+      errs.customer_phone = t("form.errCustomerPhoneRequired");
     } else if (!isValidPhone(customerPhone)) {
-      errs.customer_phone = "Enter a valid mobile number";
+      errs.customer_phone = t("form.errMobileInvalid");
     }
     if (vehicleMake === "Other" && !customMake.trim()) {
-      errs.vehicle_make = "Enter a make or choose from the list";
+      errs.vehicle_make = t("form.errVehicleMakeRequired");
     }
     return errs;
+  };
+
+  const applyPreset = (presetId: string) => {
+    const preset = presets.find((p) => p.id === presetId);
+    if (!preset) return;
+    if (preset.description) setDescription(preset.description);
+    else setDescription(preset.name);
+    setLabourCharge(preset.default_labour);
   };
 
   const goNext = () => {
@@ -118,7 +127,8 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
     try {
       await createCard.mutateAsync(payload);
       resetForm();
-      toast("Job card created", "success");
+      trackPilotEvent("job_created_frontend");
+      toast(t("form.toastCreated"), "success");
       onSuccess();
     } catch (err: unknown) {
       const serverErrors = parseApiError(err);
@@ -127,7 +137,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
         setErrors(serverErrors);
         setStep(1);
       } else {
-        toast(serverErrors._form ?? "Failed to create job card", "error");
+        toast(serverErrors._form ?? t("form.errCreateFailed"), "error");
       }
     }
   };
@@ -164,20 +174,40 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
               <p className="text-xs text-red-500 mt-1">{errors.vehicle_number}</p>
             )}
             {/* Repeat vehicle banner */}
-            {lastVisit && (
-              <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 px-2.5 py-1.5 rounded-lg">
-                <Clock size={11} className="shrink-0" />
-                <span>
-                  Last visit{" "}
-                  {new Date(lastVisit.created_at).toLocaleDateString("en-PK", {
-                    day: "numeric",
-                    month: "short",
-                  })}
+            {vehicleHistory && vehicleHistory.total_jobs > 0 && (
+              <div className="mt-1.5 text-xs bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-lg px-2.5 py-2 space-y-1">
+                <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-200 font-semibold">
+                  <Clock size={11} className="shrink-0" />
+                  {t("form.repeatCustomer")}
                   {" · "}
-                  {lastVisit.status.replace("_", " ")}
-                  {" · "}
-                  PKR {lastVisit.total_amount.toLocaleString()}
-                </span>
+                  {vehicleHistory.total_jobs} {t("form.visitsCount")}
+                </div>
+                {lastVisit && (
+                  <p className="text-emerald-700 dark:text-emerald-300">
+                    {t("form.lastVisit")}{" "}
+                    {new Date(lastVisit.created_at).toLocaleDateString("en-PK", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                    {" · "}
+                    {t(`status.${lastVisit.status}` as "status.pending")}
+                    {" · "}
+                    PKR {lastVisit.total_amount.toLocaleString()}
+                  </p>
+                )}
+                {vehicleHistory.customer_name && !customerName && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomerName(vehicleHistory.customer_name);
+                      if (vehicleHistory.customer_phone) setCustomerPhone(vehicleHistory.customer_phone);
+                    }}
+                    className="text-[var(--brand)] font-semibold hover:underline"
+                  >
+                    {vehicleHistory.customer_name}
+                    {vehicleHistory.customer_phone ? ` · ${vehicleHistory.customer_phone}` : ""}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -268,15 +298,23 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
                 {t("form.presetLabel")}
               </label>
+              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar mb-2">
+                {presets.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => applyPreset(p.id)}
+                    className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[var(--brand)] hover:text-white transition active:scale-95"
+                  >
+                    {p.name}
+                    {p.default_labour > 0 ? ` · ${p.default_labour.toLocaleString()}` : ""}
+                  </button>
+                ))}
+              </div>
               <select
                 defaultValue=""
                 onChange={(e) => {
-                  const preset = presets.find((p) => p.id === e.target.value);
-                  if (preset) {
-                    if (preset.description) setDescription(preset.description);
-                    else setDescription(preset.name);
-                    setLabourCharge(preset.default_labour);
-                  }
+                  if (e.target.value) applyPreset(e.target.value);
                 }}
                 className={inputClass}
               >

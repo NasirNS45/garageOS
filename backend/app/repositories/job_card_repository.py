@@ -27,17 +27,50 @@ class JobCardRepository:
         )
         return result.scalar_one_or_none()
 
-    async def list_active(
+    async def list_jobs(
         self,
         workshop_id: str,
         page: int = 1,
         page_size: int = 20,
         mechanic_id: str | None = None,
+        active_only: bool = True,
+        status: str | None = None,
+        payment_status: str | None = None,
+        search: str | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
     ) -> tuple[list[JobCard], int]:
-        base_q = select(JobCard).where(
-            JobCard.workshop_id == workshop_id,
-            JobCard.status != JobStatus.cancelled.value,
-        )
+        base_q = select(JobCard).where(JobCard.workshop_id == workshop_id)
+
+        if active_only:
+            base_q = base_q.where(
+                ~JobCard.status.in_(
+                    [JobStatus.completed.value, JobStatus.cancelled.value]
+                )
+            )
+
+        if status is not None:
+            base_q = base_q.where(JobCard.status == status)
+
+        if payment_status is not None:
+            base_q = base_q.where(JobCard.payment_status == payment_status)
+
+        if search:
+            term = f"%{escape_like(search.strip())}%"
+            base_q = base_q.where(
+                or_(
+                    JobCard.vehicle_number.ilike(term, escape="\\"),
+                    JobCard.customer_name.ilike(term, escape="\\"),
+                    JobCard.customer_phone.ilike(term, escape="\\"),
+                )
+            )
+
+        if start_date is not None:
+            base_q = base_q.where(func.date(JobCard.created_at) >= start_date)
+
+        if end_date is not None:
+            base_q = base_q.where(func.date(JobCard.created_at) <= end_date)
+
         if mechanic_id is not None:
             # Mechanics see: jobs assigned to them + unassigned pending jobs
             base_q = base_q.where(
@@ -137,12 +170,28 @@ class JobCardRepository:
             ),
             0,
         )
+        outstanding = func.coalesce(
+            func.sum(
+                case(
+                    (
+                        and_(
+                            JobCard.status == JobStatus.completed.value,
+                            JobCard.collected_amount < JobCard.total_amount,
+                        ),
+                        JobCard.total_amount - JobCard.collected_amount,
+                    ),
+                    else_=0,
+                )
+            ),
+            0,
+        )
         result = await self._session.execute(
             select(
                 JobCard.customer_phone.label("customer_phone"),
                 func.max(JobCard.customer_name).label("customer_name"),
                 func.count(JobCard.id).label("total_jobs"),
                 completed_spend.label("total_spent"),
+                outstanding.label("total_outstanding"),
                 func.max(JobCard.created_at).label("last_visit"),
             )
             .where(
@@ -160,7 +209,40 @@ class JobCardRepository:
                 "customer_name": row.customer_name,
                 "total_jobs": int(row.total_jobs or 0),
                 "total_spent": float(row.total_spent or 0),
+                "total_outstanding": float(row.total_outstanding or 0),
                 "last_visit": row.last_visit,
+            }
+            for row in result.all()
+        ]
+
+    async def customers_with_outstanding(
+        self, workshop_id: str, limit: int = 20
+    ) -> list[dict[str, object]]:
+        """Customers with unpaid balance on completed jobs (udhaar-lite)."""
+        balance = JobCard.total_amount - JobCard.collected_amount
+        result = await self._session.execute(
+            select(
+                JobCard.customer_phone.label("customer_phone"),
+                func.max(JobCard.customer_name).label("customer_name"),
+                func.coalesce(func.sum(balance), 0).label("total_outstanding"),
+                func.count(JobCard.id).label("open_invoices"),
+            )
+            .where(
+                JobCard.workshop_id == workshop_id,
+                JobCard.status == JobStatus.completed.value,
+                JobCard.collected_amount < JobCard.total_amount,
+            )
+            .group_by(JobCard.customer_phone)
+            .having(func.coalesce(func.sum(balance), 0) > 0)
+            .order_by(func.sum(balance).desc())
+            .limit(limit)
+        )
+        return [
+            {
+                "customer_phone": row.customer_phone,
+                "customer_name": row.customer_name,
+                "total_outstanding": float(row.total_outstanding or 0),
+                "open_invoices": int(row.open_invoices or 0),
             }
             for row in result.all()
         ]

@@ -20,6 +20,7 @@ class Workshop(Base):
     # 0 disables auto-created service reminders; otherwise days until the reminder fires
     reminder_interval_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     digest_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    accent_theme: Mapped[str] = mapped_column(String(20), nullable=False, default="blue")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self) -> str:

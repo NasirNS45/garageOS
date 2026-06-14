@@ -60,3 +60,17 @@ class MechanicResponse(BaseModel):
 
 class MechanicUpdate(BaseModel):
     is_active: bool
+
+
+class ForgotPasswordRequest(BaseModel):
+    mobile: str = Field(..., description="Registered mobile number")
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=8, description="New password (min 8 characters)")
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    reset_token: str | None = None

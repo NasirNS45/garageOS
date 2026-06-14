@@ -22,168 +22,83 @@ import {
   ListChecks,
   Car,
 } from "lucide-react";
+import AuthPhoneMockup from "../components/auth/AuthPhoneMockup";
+import AuthLanguageToggle from "../components/AuthLanguageToggle";
 import Logo from "../components/Logo";
-import { useForceLtr } from "../i18n/useForceLtr";
+import { usePublicLanguage } from "../i18n/usePublicLanguage";
+import { useT } from "../i18n/useT";
+import type { TKey } from "../i18n/translations";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// ── Layout metadata (icons / styling only) ───────────────────────────────────
 
-const FEATURES = [
-  {
-    icon: ClipboardList,
-    title: "Digital Job Cards",
-    description:
-      "Create job cards in seconds. Track vehicle, customer, description, parts, and labour — all in one place. No more paper slipping under oil-stained hands.",
-    accent: "bg-blue-50 text-blue-600",
-  },
-  {
-    icon: Wrench,
-    title: "Mechanic Assignment",
-    description:
-      "See which mechanics are free in real time. Assign a job and it starts automatically. Reassign or unassign with one tap — no hunting through WhatsApp groups.",
-    accent: "bg-amber-50 text-amber-600",
-  },
-  {
-    icon: MessageCircle,
-    title: "WhatsApp Notifications",
-    description:
-      "Customer gets a check-in message when their car arrives and a completion message with the invoice link when the job is done. Zero manual follow-up.",
-    accent: "bg-emerald-50 text-emerald-600",
-  },
-  {
-    icon: FileText,
-    title: "Instant Invoices",
-    description:
-      "Every completed job generates a clean, shareable invoice with a public link. Send it via WhatsApp, save it as a PDF — done in one tap.",
-    accent: "bg-purple-50 text-purple-600",
-  },
-  {
-    icon: BarChart3,
-    title: "Revenue Summary",
-    description:
-      "See daily, weekly, or monthly revenue with per-mechanic breakdowns. Track collected vs outstanding. Every number you need — no manual counting.",
-    accent: "bg-rose-50 text-rose-600",
-  },
-  {
-    icon: Clock,
-    title: "Customer History",
-    description:
-      "Search any vehicle plate or phone number to see every past visit, what was done, and what was charged. Never ask a returning customer to repeat themselves.",
-    accent: "bg-teal-50 text-teal-600",
-  },
-  {
-    icon: ListChecks,
-    title: "Service Presets",
-    description:
-      "Pre-define your most common jobs — oil change, AC regas, brake service. Select from a list and the name, description, and labour fill in automatically. Faster intake, consistent records.",
-    accent: "bg-sky-50 text-sky-600",
-  },
-  {
-    icon: Package,
-    title: "Parts Catalog",
-    description:
-      "Build a catalog of commonly used parts with standard prices. When adding parts to a job, start typing and autocomplete fills the name and price — no looking up prices every time.",
-    accent: "bg-indigo-50 text-indigo-600",
-  },
-  {
-    icon: Download,
-    title: "CSV Export",
-    description:
-      "Download a complete jobs report for any date range. One tap, one file — ready for your accountant or bookkeeper. No manual copying, no WhatsApp screenshots.",
-    accent: "bg-slate-100 text-slate-600",
-  },
+const FEATURE_META: ReadonlyArray<{
+  icon: typeof ClipboardList;
+  accent: string;
+  titleKey: TKey;
+  descKey: TKey;
+}> = [
+  { icon: ClipboardList, accent: "bg-blue-50 text-blue-600", titleKey: "landing.feature.jobCards.title", descKey: "landing.feature.jobCards.desc" },
+  { icon: Wrench, accent: "bg-amber-50 text-amber-600", titleKey: "landing.feature.mechanic.title", descKey: "landing.feature.mechanic.desc" },
+  { icon: MessageCircle, accent: "bg-emerald-50 text-emerald-600", titleKey: "landing.feature.whatsapp.title", descKey: "landing.feature.whatsapp.desc" },
+  { icon: FileText, accent: "bg-purple-50 text-purple-600", titleKey: "landing.feature.invoices.title", descKey: "landing.feature.invoices.desc" },
+  { icon: BarChart3, accent: "bg-rose-50 text-rose-600", titleKey: "landing.feature.revenue.title", descKey: "landing.feature.revenue.desc" },
+  { icon: Clock, accent: "bg-teal-50 text-teal-600", titleKey: "landing.feature.history.title", descKey: "landing.feature.history.desc" },
+  { icon: ListChecks, accent: "bg-sky-50 text-sky-600", titleKey: "landing.feature.presets.title", descKey: "landing.feature.presets.desc" },
+  { icon: Package, accent: "bg-indigo-50 text-indigo-600", titleKey: "landing.feature.catalog.title", descKey: "landing.feature.catalog.desc" },
+  { icon: Download, accent: "bg-slate-100 text-slate-600", titleKey: "landing.feature.csv.title", descKey: "landing.feature.csv.desc" },
 ];
 
-const STEPS = [
-  {
-    number: "01",
-    icon: Car,
-    title: "Create a job card",
-    description:
-      "Car arrives — open the app, type the plate number and customer name, pick a mechanic, and tap Create. Takes under 30 seconds.",
-  },
-  {
-    number: "02",
-    icon: Wrench,
-    title: "Track the work",
-    description:
-      "Add parts as line items while the job runs. Labour updates live. Your team sees real-time job status without calling you.",
-  },
-  {
-    number: "03",
-    icon: CheckCircle2,
-    title: "Complete and get paid",
-    description:
-      "Review the final bill, confirm, and the invoice is generated instantly. Customer gets a WhatsApp message with the payment total and invoice link.",
-  },
+const STEP_META: ReadonlyArray<{ number: string; icon: typeof Car; titleKey: TKey; descKey: TKey }> = [
+  { number: "01", icon: Car, titleKey: "landing.step1.title", descKey: "landing.step1.desc" },
+  { number: "02", icon: Wrench, titleKey: "landing.step2.title", descKey: "landing.step2.desc" },
+  { number: "03", icon: CheckCircle2, titleKey: "landing.step3.title", descKey: "landing.step3.desc" },
 ];
 
-const TESTIMONIALS = [
-  {
-    name: "Arshad Malik",
-    role: "Owner, Malik Motors — Lahore",
-    body: "Pehle har cheez paper pe likhte the. Ab sab mobile pe hai. Customers khush hain kyunke unhe WhatsApp pe invoice milti hai.",
-    rating: 5,
-  },
-  {
-    name: "Tariq Mehmood",
-    role: "Owner, T.M. Auto Works — Karachi",
-    body: "Daily revenue summary ne bohot faida kiya. Roz raat ko dekhta hoon kitna aya — koi hisaab kitaab ka jhanjhat nahi.",
-    rating: 5,
-  },
-  {
-    name: "Usman Raza",
-    role: "Manager, Raza Workshop — Islamabad",
-    body: "Mechanics ko pata rehta hai kaunsa kaam unka hai. No confusion, no missed jobs. Best decision for our workshop.",
-    rating: 5,
-  },
+const TESTIMONIAL_KEYS: ReadonlyArray<{ nameKey: TKey; roleKey: TKey; bodyKey: TKey }> = [
+  { nameKey: "landing.testimonial1.name", roleKey: "landing.testimonial1.role", bodyKey: "landing.testimonial1.body" },
+  { nameKey: "landing.testimonial2.name", roleKey: "landing.testimonial2.role", bodyKey: "landing.testimonial2.body" },
+  { nameKey: "landing.testimonial3.name", roleKey: "landing.testimonial3.role", bodyKey: "landing.testimonial3.body" },
 ];
 
-const FAQS = [
-  {
-    question: "How much does GarageOS cost?",
-    answer:
-      "It is free to start with no credit card required. You can set up your workshop, create job cards, and send invoices right away. Paid plans with advanced features will come later, and early users will get a discount.",
-  },
-  {
-    question: "Will it work on my phone?",
-    answer:
-      "Yes. GarageOS is a mobile-first web app, so it runs in the browser on any Android or iPhone, even a budget PKR 15,000 device. There is nothing to download and no app store account needed.",
-  },
-  {
-    question: "How do WhatsApp notifications work?",
-    answer:
-      "When a car checks in, your customer automatically gets a WhatsApp message confirming the job. When the job is completed, they receive the final bill with a link to the invoice. You do not have to type anything.",
-  },
-  {
-    question: "Is my workshop data safe?",
-    answer:
-      "Yes. Every workshop's data is fully isolated to its own account, connections are encrypted, and only you and the staff you add can see your jobs, customers, and revenue.",
-  },
-  {
-    question: "Can my mechanics use it too?",
-    answer:
-      "Yes. You can add mechanic accounts from settings. Mechanics see the jobs assigned to them and can update job status, while owner-only screens like daily revenue and workshop settings stay private to you.",
-  },
+const FAQ_KEYS: ReadonlyArray<{ qKey: TKey; aKey: TKey }> = [
+  { qKey: "landing.faq.cost.q", aKey: "landing.faq.cost.a" },
+  { qKey: "landing.faq.phone.q", aKey: "landing.faq.phone.a" },
+  { qKey: "landing.faq.whatsapp.q", aKey: "landing.faq.whatsapp.a" },
+  { qKey: "landing.faq.safe.q", aKey: "landing.faq.safe.a" },
+  { qKey: "landing.faq.mechanics.q", aKey: "landing.faq.mechanics.a" },
 ];
 
-const MARQUEE_ITEMS = [
-  "Oil change",
-  "Brake service",
-  "AC regas",
-  "Engine diagnostics",
-  "Wheel alignment",
-  "Battery replacement",
-  "Suspension work",
-  "Tuning",
-  "Denting & painting",
-  "Car wash",
+const MARQUEE_KEYS: readonly TKey[] = [
+  "landing.marquee.oilChange",
+  "landing.marquee.brakeService",
+  "landing.marquee.acRegas",
+  "landing.marquee.engineDiagnostics",
+  "landing.marquee.wheelAlignment",
+  "landing.marquee.batteryReplacement",
+  "landing.marquee.suspensionWork",
+  "landing.marquee.tuning",
+  "landing.marquee.dentingPainting",
+  "landing.marquee.carWash",
 ];
 
-const STATS = [
-  { value: "Mobile-first", label: "Works on any Android or iPhone, no app download" },
-  { value: "2 minutes", label: "To set up your workshop and start tracking jobs" },
-  { value: "Free to start", label: "No credit card, no commitments, no hidden fees" },
-  { value: "Pakistan-first", label: "Built around PKR, WhatsApp, and local workshops" },
+const STAT_KEYS: ReadonlyArray<{ valueKey: TKey; labelKey: TKey }> = [
+  { valueKey: "landing.stat.mobile.value", labelKey: "landing.stat.mobile.label" },
+  { valueKey: "landing.stat.setup.value", labelKey: "landing.stat.setup.label" },
+  { valueKey: "landing.stat.free.value", labelKey: "landing.stat.free.label" },
+  { valueKey: "landing.stat.pakistan.value", labelKey: "landing.stat.pakistan.label" },
+];
+
+const TRUST_KEYS: ReadonlyArray<{ icon: typeof Shield; titleKey: TKey; bodyKey: TKey }> = [
+  { icon: Shield, titleKey: "landing.trust.data.title", bodyKey: "landing.trust.data.body" },
+  { icon: Users, titleKey: "landing.trust.roles.title", bodyKey: "landing.trust.roles.body" },
+  { icon: TrendingUp, titleKey: "landing.trust.phone.title", bodyKey: "landing.trust.phone.body" },
+];
+
+const CTA_BULLET_KEYS: readonly TKey[] = [
+  "landing.cta.bullet1",
+  "landing.cta.bullet2",
+  "landing.cta.bullet3",
+  "landing.cta.bullet4",
 ];
 
 // ── Components ────────────────────────────────────────────────────────────────
@@ -198,143 +113,10 @@ function StarRating({ count }: { count: number }) {
   );
 }
 
-/** Simplified phone frame with a mini job-card UI inside */
-function PhoneMockup() {
-  return (
-    <div className="relative mx-auto w-[280px] select-none">
-      {/* Glow behind phone */}
-      <div className="absolute inset-0 -m-8 rounded-full bg-blue-600/20 blur-3xl" />
-
-      {/* Phone shell */}
-      <div className="relative rounded-[42px] bg-slate-900 p-[10px] shadow-2xl shadow-blue-900/40 ring-1 ring-white/10">
-        {/* Screen */}
-        <div className="overflow-hidden rounded-[34px] bg-[#F1F5F9]">
-          {/* Status bar */}
-          <div className="flex items-center justify-between bg-white px-5 pt-3 pb-2">
-            <span className="text-[10px] font-semibold text-slate-600">9:41</span>
-            <div className="h-4 w-20 rounded-full bg-slate-900" />
-            <div className="flex gap-1">
-              {[3, 2, 1].map((h) => (
-                <div key={h} className={`w-1 rounded-sm bg-slate-700`} style={{ height: h * 4 }} />
-              ))}
-            </div>
-          </div>
-
-          {/* App header */}
-          <div className="flex items-center justify-between bg-white px-4 py-2.5 shadow-sm border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-[var(--brand)] flex items-center justify-center">
-                <Wrench size={12} className="text-white" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-900 dark:text-slate-100 leading-none">Ali Motors</p>
-                <p className="text-[8px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">owner</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Job cards */}
-          <div className="px-3 py-3 space-y-2.5">
-            {/* Card 1 */}
-            <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="bg-[#FDE047] border border-slate-800 rounded px-2 py-0.5">
-                  <span className="text-[9px] font-black font-mono text-slate-900 dark:text-slate-100 tracking-wider">LEA-4821</span>
-                </div>
-                <span className="text-[9px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">In Progress</span>
-              </div>
-              <p className="text-[10px] font-semibold text-slate-800">Muhammad Asif</p>
-              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Oil change · Brake pads</p>
-              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 mt-1.5">PKR 4,500</p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="bg-[#FDE047] border border-slate-800 rounded px-2 py-0.5">
-                  <span className="text-[9px] font-black font-mono text-slate-900 dark:text-slate-100 tracking-wider">KHI-1155</span>
-                </div>
-                <span className="text-[9px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Pending</span>
-              </div>
-              <p className="text-[10px] font-semibold text-slate-800">Fatima Zaidi</p>
-              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">AC service · Toyota Corolla</p>
-              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 mt-1.5">PKR 8,000</p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="bg-[#FDE047] border border-slate-800 rounded px-2 py-0.5">
-                  <span className="text-[9px] font-black font-mono text-slate-900 dark:text-slate-100 tracking-wider">ISB-7743</span>
-                </div>
-                <span className="text-[9px] font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Completed</span>
-              </div>
-              <p className="text-[10px] font-semibold text-slate-800">Bilal Ahmed</p>
-              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Engine flush · Honda Civic</p>
-              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 mt-1.5">PKR 3,200</p>
-            </div>
-          </div>
-
-          {/* Bottom nav mockup */}
-          <div className="flex bg-white border-t border-slate-100 dark:border-slate-700 px-2 py-2">
-            {["Jobs", "History", "Summary", "Settings"].map((label, i) => (
-              <div key={label} className={`flex-1 flex flex-col items-center gap-0.5 ${i === 0 ? "text-[var(--brand)]" : "text-slate-300"}`}>
-                <div className={`w-4 h-1 rounded-full mb-0.5 ${i === 0 ? "bg-[var(--brand)]" : "bg-transparent"}`} />
-                <div className={`w-4 h-4 rounded ${i === 0 ? "bg-blue-100" : "bg-slate-100"}`} />
-                <span className="text-[7px] font-semibold">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Today's Jobs card */}
-      <div className="lp-float absolute -left-8 top-6 bg-white rounded-2xl shadow-xl px-3 py-2.5 border border-slate-100 min-w-[148px]" style={{ animationDelay: "0s" }}>
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <Car size={11} className="text-[var(--brand)]" />
-          <span className="text-[9px] font-bold text-slate-700 uppercase tracking-wide">Today's Jobs</span>
-        </div>
-        <div className="space-y-1">
-          {[
-            { plate: "LEA-4821", label: "In Progress", color: "bg-blue-400" },
-            { plate: "KHI-1155", label: "Pending", color: "bg-amber-400" },
-            { plate: "ISB-7743", label: "Completed", color: "bg-emerald-400" },
-          ].map(({ plate, label, color }) => (
-            <div key={plate} className="flex items-center gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${color} shrink-0`} />
-              <span className="text-[8px] font-mono font-semibold text-slate-700">{plate}</span>
-              <span className="text-[7px] text-slate-400 ml-auto">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Floating notification bubble */}
-      <div className="lp-float absolute -right-4 top-20 bg-white rounded-2xl shadow-xl px-3 py-2 flex items-center gap-2 border border-slate-100 dark:border-slate-700 max-w-[160px]" style={{ animationDelay: "0.6s" }}>
-        <div className="w-7 h-7 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
-          <MessageCircle size={12} className="text-white" />
-        </div>
-        <div>
-          <p className="text-[9px] font-bold text-slate-900 dark:text-slate-100 leading-tight">WhatsApp Sent</p>
-          <p className="text-[8px] text-slate-400 dark:text-slate-500 leading-tight">Invoice delivered ✓</p>
-        </div>
-      </div>
-
-      {/* Revenue bubble */}
-      <div className="lp-float absolute -left-6 bottom-28 bg-white rounded-2xl shadow-xl px-3 py-2 border border-slate-100" style={{ animationDelay: "1.2s" }}>
-        <p className="text-[8px] text-slate-500 dark:text-slate-400 font-medium">Today's Revenue</p>
-        <p className="text-sm font-extrabold text-slate-900">PKR 47,500</p>
-        <div className="flex items-center gap-1 mt-0.5">
-          <TrendingUp size={9} className="text-emerald-500" />
-          <span className="text-[8px] text-emerald-600 font-semibold">+12% vs yesterday</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /** Workshop floor — 3 bays, side-view cars, live status */
 function WorkshopFloorIllustration() {
+  const t = useT();
+
   const carBody = (color: string, darkColor: string, windowTint: string) => (
     <>
       {/* Body (main slab) */}
@@ -405,7 +187,7 @@ function WorkshopFloorIllustration() {
       </g>
       {/* Status badge */}
       <rect x="90" y="186" width="140" height="26" rx="13" fill="#DBEAFE" />
-      <text x="160" y="203" textAnchor="middle" fontSize="11" fontWeight="700" fill="#1E40AF" fontFamily="system-ui, sans-serif">In Progress</text>
+      <text x="160" y="203" textAnchor="middle" fontSize="11" fontWeight="700" fill="#1E40AF" fontFamily="Noto Naskh Arabic, system-ui, sans-serif">{t("landing.workshop.inProgress")}</text>
       <text x="160" y="222" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.38)" fontFamily="system-ui, sans-serif">Ali Raza</text>
 
       {/* ── Bay 2: Pending ── */}
@@ -420,8 +202,8 @@ function WorkshopFloorIllustration() {
       </g>
       {/* Status badge */}
       <rect x="410" y="186" width="140" height="26" rx="13" fill="#FEF3C7" />
-      <text x="480" y="203" textAnchor="middle" fontSize="11" fontWeight="700" fill="#92400E" fontFamily="system-ui, sans-serif">Pending</text>
-      <text x="480" y="222" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="system-ui, sans-serif">Unassigned</text>
+      <text x="480" y="203" textAnchor="middle" fontSize="11" fontWeight="700" fill="#92400E" fontFamily="Noto Naskh Arabic, system-ui, sans-serif">{t("landing.workshop.pending")}</text>
+      <text x="480" y="222" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="Noto Naskh Arabic, system-ui, sans-serif">{t("landing.workshop.unassigned")}</text>
 
       {/* ── Bay 3: Completed ── */}
       <rect x="660" y="15" width="280" height="232" rx="10" fill="rgba(5,150,105,0.07)" />
@@ -435,17 +217,17 @@ function WorkshopFloorIllustration() {
       </g>
       {/* Status badge */}
       <rect x="730" y="186" width="140" height="26" rx="13" fill="#D1FAE5" />
-      <text x="800" y="203" textAnchor="middle" fontSize="11" fontWeight="700" fill="#065F46" fontFamily="system-ui, sans-serif">Completed</text>
+      <text x="800" y="203" textAnchor="middle" fontSize="11" fontWeight="700" fill="#065F46" fontFamily="Noto Naskh Arabic, system-ui, sans-serif">{t("landing.workshop.completed")}</text>
       <text x="800" y="222" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="system-ui, sans-serif">Karim Khan</text>
 
       {/* ── Bottom status bar ── */}
       <rect x="0" y="257" width="960" height="33" fill="rgba(0,0,0,0.25)" />
       <circle cx="280" cy="273" r="4" fill="#3B82F6" />
-      <text x="290" y="277" fontSize="9.5" fill="rgba(255,255,255,0.5)" fontFamily="system-ui, sans-serif">3 jobs open</text>
+      <text x="290" y="277" fontSize="9.5" fill="rgba(255,255,255,0.5)" fontFamily="Noto Naskh Arabic, system-ui, sans-serif">{t("landing.workshop.jobsOpen")}</text>
       <circle cx="400" cy="273" r="4" fill="#F59E0B" />
-      <text x="410" y="277" fontSize="9.5" fill="rgba(255,255,255,0.5)" fontFamily="system-ui, sans-serif">2 mechanics on duty</text>
+      <text x="410" y="277" fontSize="9.5" fill="rgba(255,255,255,0.5)" fontFamily="Noto Naskh Arabic, system-ui, sans-serif">{t("landing.workshop.mechanicsOnDuty")}</text>
       <circle cx="560" cy="273" r="4" fill="#10B981" />
-      <text x="570" y="277" fontSize="9.5" fill="rgba(255,255,255,0.5)" fontFamily="system-ui, sans-serif">PKR 15,700 billed today</text>
+      <text x="570" y="277" fontSize="9.5" fill="rgba(255,255,255,0.5)" fontFamily="Noto Naskh Arabic, system-ui, sans-serif">{t("landing.workshop.billedToday")}</text>
     </svg>
   );
 }
@@ -453,7 +235,8 @@ function WorkshopFloorIllustration() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Landing() {
-  useForceLtr();
+  const t = useT();
+  usePublicLanguage();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
   const [scrolled, setScrolled] = useState(false);
@@ -502,7 +285,7 @@ export default function Landing() {
       {/* ── Back to top ── */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        aria-label="Back to top"
+        aria-label={t("landing.backToTop")}
         className={`lp-top-btn ${showTop ? "show" : ""} fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30`}
       >
         <ChevronUp size={20} />
@@ -521,27 +304,28 @@ export default function Landing() {
         >
           <Logo variant="full" size="sm" to="/" />
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="#features" className="hover:text-slate-900 transition">Features</a>
-            <a href="#how-it-works" className="hover:text-slate-900 transition">How it works</a>
-            <a href="#testimonials" className="hover:text-slate-900 transition">Reviews</a>
+            <a href="#features" className="hover:text-slate-900 transition">{t("landing.nav.features")}</a>
+            <a href="#how-it-works" className="hover:text-slate-900 transition">{t("landing.nav.howItWorks")}</a>
+            <a href="#testimonials" className="hover:text-slate-900 transition">{t("landing.nav.reviews")}</a>
           </nav>
           <div className="flex items-center gap-3">
+            <AuthLanguageToggle />
             <Link
               to="/login"
               className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition hidden sm:block"
             >
-              Sign in
+              {t("landing.signIn")}
             </Link>
             <Link
               to="/signup"
               className="text-sm font-semibold bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white px-4 py-2 rounded-xl transition shadow-sm shadow-blue-500/20 active:scale-95"
             >
-              Start free
+              {t("landing.startFree")}
             </Link>
             <button
               className="md:hidden p-2 -mr-2 text-slate-500 hover:text-slate-900 transition"
               onClick={() => setMobileNavOpen((v) => !v)}
-              aria-label="Toggle navigation"
+              aria-label={t("landing.toggleNav")}
             >
               {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -552,9 +336,9 @@ export default function Landing() {
         {mobileNavOpen && (
           <div className="md:hidden bg-white border-t border-slate-100 px-6 py-4 space-y-1">
             {[
-              { label: "Features", href: "#features" },
-              { label: "How it works", href: "#how-it-works" },
-              { label: "Reviews", href: "#testimonials" },
+              { label: t("landing.nav.features"), href: "#features" },
+              { label: t("landing.nav.howItWorks"), href: "#how-it-works" },
+              { label: t("landing.nav.reviews"), href: "#testimonials" },
             ].map(({ label, href }) => (
               <a
                 key={href}
@@ -570,7 +354,7 @@ export default function Landing() {
               onClick={() => setMobileNavOpen(false)}
               className="block py-2.5 text-sm font-semibold text-[var(--brand)]"
             >
-              Sign in
+              {t("landing.signIn")}
             </Link>
           </div>
         )}
@@ -595,22 +379,20 @@ export default function Landing() {
             <div>
               <div className="lp-fade-in inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium text-blue-200 mb-8 backdrop-blur-sm">
                 <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                Built for Pakistani auto workshops
+                {t("landing.heroBadge")}
               </div>
 
-              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-6">
-                <span className="block lp-fade-up" style={{ animationDelay: "80ms" }}>Run your workshop</span>
+              <h1 className="urdu-display text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-6">
+                <span className="block lp-fade-up" style={{ animationDelay: "80ms" }}>{t("landing.heroTitle1")}</span>
                 <span className="block lp-fade-up" style={{ animationDelay: "180ms" }}>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
-                    like a pro.
+                    {t("landing.heroTitle2")}
                   </span>
                 </span>
               </h1>
 
               <p className="lp-fade-up text-lg text-blue-100 leading-relaxed mb-10 max-w-lg" style={{ animationDelay: "280ms" }}>
-                Digital job cards, mechanic assignment, parts tracking, WhatsApp
-                notifications, and daily revenue — all on your phone.
-                No more paper slips. No more lost invoices.
+                {t("landing.heroSub")}
               </p>
 
               <div className="lp-fade-up flex flex-col sm:flex-row gap-3" style={{ animationDelay: "380ms" }}>
@@ -618,20 +400,20 @@ export default function Landing() {
                   to="/signup"
                   className="lp-glow-cta inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-amber-400 text-slate-900 font-bold px-7 py-3.5 rounded-2xl text-base transition active:scale-95"
                 >
-                  Start for free
+                  {t("landing.heroCtaStart")}
                   <ChevronRight size={18} />
                 </Link>
                 <Link
                   to="/login"
                   className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-7 py-3.5 rounded-2xl text-base transition backdrop-blur-sm"
                 >
-                  Sign in
+                  {t("landing.signIn")}
                 </Link>
               </div>
 
               <p className="lp-fade-in text-blue-300 text-sm mt-5 flex items-center gap-1.5" style={{ animationDelay: "500ms" }}>
                 <CheckCircle2 size={14} className="text-emerald-400" />
-                Free to start. No credit card required.
+                {t("landing.heroNote")}
               </p>
             </div>
 
@@ -651,14 +433,14 @@ export default function Landing() {
 
               {/* Phone mockup — left side, centered vertically, in front of photo */}
               <div className="absolute inset-y-0 left-0 flex items-center z-20 pl-8">
-                <PhoneMockup />
+                <AuthPhoneMockup />
               </div>
             </div>
           </div>
 
           {/* Scroll indicator */}
           <div className="hidden lg:flex absolute bottom-5 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-blue-300/70">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">Scroll to explore</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">{t("landing.scrollExplore")}</span>
             <div className="w-5 h-8 rounded-full border-2 border-blue-300/40 flex justify-center pt-1.5">
               <div className="lp-scroll-dot w-1 h-1.5 rounded-full bg-blue-300/80" />
             </div>
@@ -669,9 +451,9 @@ export default function Landing() {
       {/* ── Services marquee ── */}
       <section className="bg-slate-900 border-y border-white/5 py-4 overflow-hidden" aria-label="Services workshops manage with GarageOS">
         <div className="lp-marquee flex w-max items-center gap-10">
-          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-            <span key={`${item}-${i}`} className="flex items-center gap-10 shrink-0">
-              <span className="text-sm font-semibold text-slate-400 whitespace-nowrap">{item}</span>
+          {[...MARQUEE_KEYS, ...MARQUEE_KEYS].map((key, i) => (
+            <span key={`${key}-${i}`} className="flex items-center gap-10 shrink-0">
+              <span className="text-sm font-semibold text-slate-400 whitespace-nowrap">{t(key)}</span>
               <Wrench size={13} className="text-amber-500/60 shrink-0" />
             </span>
           ))}
@@ -682,14 +464,14 @@ export default function Landing() {
       <section className="bg-slate-950 text-white">
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {STATS.map((s, i) => (
+            {STAT_KEYS.map((s, i) => (
               <div
-                key={s.value}
+                key={s.valueKey}
                 className="lp-reveal text-center"
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
-                <p className="text-2xl font-extrabold text-white leading-tight">{s.value}</p>
-                <p className="text-xs text-slate-400 mt-2 leading-snug">{s.label}</p>
+                <p className="text-2xl font-extrabold text-white leading-tight">{t(s.valueKey)}</p>
+                <p className="text-xs text-slate-400 mt-2 leading-snug">{t(s.labelKey)}</p>
               </div>
             ))}
           </div>
@@ -701,15 +483,13 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="lp-reveal text-center mb-10">
             <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              Workshop floor
+              {t("landing.workshop.badge")}
             </span>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight">
-              Every car tracked in real time
+            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight">
+              {t("landing.workshop.title")}
             </h2>
             <p className="text-slate-500 mt-3 max-w-xl mx-auto">
-              The moment a vehicle arrives it gets a digital job card. You see every
-              car on your floor, who is working on it, and what it will cost — all
-              from your phone.
+              {t("landing.workshop.sub")}
             </p>
           </div>
           <div className="lp-reveal rounded-3xl overflow-hidden ring-1 ring-slate-200 shadow-2xl" style={{ transitionDelay: "120ms" }}>
@@ -723,29 +503,28 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="lp-reveal text-center mb-16">
             <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              Everything you need
+              {t("landing.features.badge")}
             </span>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-              One app. Complete workshop control.
+            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
+              {t("landing.features.title")}
             </h2>
             <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
-              Purpose-built for Pakistani auto workshops. Every feature solves a
-              real problem — no bloat, no subscriptions to features you will never use.
+              {t("landing.features.sub")}
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {FEATURES.map(({ icon: Icon, title, description, accent }, i) => (
+            {FEATURE_META.map(({ icon: Icon, titleKey, descKey, accent }, i) => (
               <div
-                key={title}
+                key={titleKey}
                 className="lp-reveal group p-6 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-slate-200 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-slate-100 transition-all duration-300"
                 style={{ transitionDelay: `${i * 60}ms` }}
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${accent} group-hover:scale-110 transition-transform duration-300`}>
                   <Icon size={22} />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">{title}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{description}</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">{t(titleKey)}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t(descKey)}</p>
               </div>
             ))}
           </div>
@@ -757,10 +536,10 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="lp-reveal text-center mb-16">
             <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              Simple workflow
+              {t("landing.steps.badge")}
             </span>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-              From intake to invoice in 3 steps.
+            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
+              {t("landing.steps.title")}
             </h2>
           </div>
 
@@ -768,7 +547,7 @@ export default function Landing() {
             {/* Connector line */}
             <div className="hidden md:block absolute top-10 left-[calc(16.666%+1rem)] right-[calc(16.666%+1rem)] h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
-            {STEPS.map(({ number, icon: Icon, title, description }, i) => (
+            {STEP_META.map(({ number, icon: Icon, titleKey, descKey }, i) => (
               <div
                 key={number}
                 className="lp-reveal relative text-center"
@@ -780,8 +559,8 @@ export default function Landing() {
                 <div className="w-16 h-16 rounded-2xl bg-[var(--brand)] text-white font-extrabold text-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/25 relative z-10">
                   {number}
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">{title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{description}</p>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">{t(titleKey)}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{t(descKey)}</p>
               </div>
             ))}
           </div>
@@ -793,17 +572,19 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="lp-reveal text-center mb-16">
             <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              Workshop owners say
+              {t("landing.testimonials.badge")}
             </span>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-              Trusted across Pakistan.
+            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
+              {t("landing.testimonials.title")}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {TESTIMONIALS.map(({ name, role, body, rating }, i) => (
+            {TESTIMONIAL_KEYS.map(({ nameKey, roleKey, bodyKey }, i) => {
+              const name = t(nameKey);
+              return (
               <div
-                key={name}
+                key={nameKey}
                 className="lp-reveal relative p-6 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 flex flex-col"
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
@@ -811,9 +592,9 @@ export default function Landing() {
                 <svg className="absolute top-5 right-6 w-8 h-8 text-slate-100" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
                   <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
                 </svg>
-                <StarRating count={rating} />
-                <p className="text-slate-700 text-sm leading-relaxed mt-4 flex-1">
-                  &ldquo;{body}&rdquo;
+                <StarRating count={5} />
+                <p className="urdu-display text-slate-700 text-sm leading-relaxed mt-4 flex-1">
+                  &ldquo;{t(bodyKey)}&rdquo;
                 </p>
                 <div className="mt-6 flex items-center gap-3 pt-4 border-t border-slate-200">
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--brand-panel)] flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2 ring-blue-100">
@@ -821,11 +602,11 @@ export default function Landing() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none">{name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{role}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t(roleKey)}</p>
                   </div>
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         </div>
       </section>
@@ -834,21 +615,17 @@ export default function Landing() {
       <section className="py-16 bg-slate-50 border-y border-slate-100">
         <div className="max-w-4xl mx-auto px-6">
           <div className="grid sm:grid-cols-3 gap-8 text-center">
-            {[
-              { icon: Shield, title: "Your data is yours", body: "Workshop data is fully isolated per account. No sharing, no leaks." },
-              { icon: Users, title: "Owner and mechanic roles", body: "Owners see everything. Mechanics see what they need. Role-based access built in." },
-              { icon: TrendingUp, title: "Works on any phone", body: "Mobile-first design. Runs perfectly on a PKR 15,000 Android — no app download needed." },
-            ].map(({ icon: Icon, title, body }, i) => (
+            {TRUST_KEYS.map(({ icon: Icon, titleKey, bodyKey }, i) => (
               <div
-                key={title}
+                key={titleKey}
                 className="lp-reveal flex flex-col items-center"
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
                 <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[var(--brand)] flex items-center justify-center mb-4 shadow-sm">
                   <Icon size={22} />
                 </div>
-                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1">{title}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{body}</p>
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1">{t(titleKey)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{t(bodyKey)}</p>
               </div>
             ))}
           </div>
@@ -860,39 +637,40 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto px-6">
           <div className="lp-reveal text-center mb-12">
             <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              Common questions
+              {t("landing.faq.badge")}
             </span>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 mb-4">
-              Frequently asked questions.
+            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 mb-4">
+              {t("landing.faq.title")}
             </h2>
           </div>
 
           <div className="space-y-3">
-            {FAQS.map(({ question, answer }, i) => {
+            {FAQ_KEYS.map(({ qKey, aKey }, i) => {
               const isOpen = openFaq === i;
               return (
-                <div
-                  key={question}
-                  className={`lp-reveal rounded-2xl border ${
-                    isOpen ? "border-blue-200 bg-blue-50/40" : "border-slate-100 bg-white hover:border-slate-200"
-                  }`}
-                >
-                  <button
-                    onClick={() => setOpenFaq(isOpen ? null : i)}
-                    aria-expanded={isOpen}
-                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+                <div key={qKey} className="lp-reveal">
+                  <div
+                    className={`rounded-2xl border ${
+                      isOpen ? "border-blue-200 bg-blue-50/40" : "border-slate-100 bg-white hover:border-slate-200"
+                    }`}
                   >
-                    <span className="text-sm font-bold text-slate-900">{question}</span>
-                    <ChevronDown
-                      size={18}
-                      className={`shrink-0 text-slate-400 transition-transform duration-300 ${
-                        isOpen ? "rotate-180 text-[var(--brand)]" : ""
-                      }`}
-                    />
-                  </button>
-                  <div className={`lp-faq-body ${isOpen ? "open" : ""}`}>
-                    <div>
-                      <p className="px-5 pb-4 text-sm text-slate-500 leading-relaxed">{answer}</p>
+                    <button
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      aria-expanded={isOpen}
+                      className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+                    >
+                      <span className="text-sm font-bold text-slate-900">{t(qKey)}</span>
+                      <ChevronDown
+                        size={18}
+                        className={`shrink-0 text-slate-400 transition-transform duration-300 ${
+                          isOpen ? "rotate-180 text-[var(--brand)]" : ""
+                        }`}
+                      />
+                    </button>
+                    <div className={`lp-faq-body ${isOpen ? "open" : ""}`}>
+                      <div>
+                        <p className="px-5 pb-4 text-sm text-slate-500 leading-relaxed">{t(aKey)}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -906,23 +684,17 @@ export default function Landing() {
       <section className="py-24 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-panel)] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0ibTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NGgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
         <div className="relative max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl lg:text-4xl font-extrabold mb-4">
-            Ready to go digital?
+          <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold mb-4">
+            {t("landing.cta.title")}
           </h2>
           <p className="text-blue-200 text-lg mb-8 leading-relaxed">
-            Set up your workshop in under 2 minutes. Free to start,
-            no credit card, no commitments.
+            {t("landing.cta.sub")}
           </p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-10">
-            {[
-              "No credit card required",
-              "Set up in 2 minutes",
-              "Works on any phone",
-              "Cancel anytime",
-            ].map((item) => (
-              <span key={item} className="flex items-center gap-1.5 text-sm text-blue-100">
+            {CTA_BULLET_KEYS.map((key) => (
+              <span key={key} className="flex items-center gap-1.5 text-sm text-blue-100">
                 <CheckCircle2 size={15} className="text-emerald-300 shrink-0" />
-                {item}
+                {t(key)}
               </span>
             ))}
           </div>
@@ -931,14 +703,14 @@ export default function Landing() {
               to="/signup"
               className="lp-glow-cta inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-amber-400 text-slate-900 font-bold px-8 py-4 rounded-2xl text-base transition active:scale-95"
             >
-              Create your workshop
+              {t("landing.cta.create")}
               <ChevronRight size={18} />
             </Link>
             <Link
               to="/login"
               className="inline-flex items-center justify-center bg-white/15 hover:bg-white/25 border border-white/25 text-white font-semibold px-8 py-4 rounded-2xl text-base transition backdrop-blur-sm"
             >
-              Sign in
+              {t("landing.signIn")}
             </Link>
           </div>
         </div>
@@ -952,24 +724,24 @@ export default function Landing() {
             <div>
               <Logo variant="full" size="sm" light to="/" />
               <p className="text-sm text-slate-500 mt-3 leading-relaxed max-w-xs">
-                Built for Pakistani auto workshops. Manage every job, mechanic, and invoice from your phone.
+                {t("landing.footer.tagline")}
               </p>
             </div>
 
             {/* Product */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Product</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">{t("landing.footer.product")}</p>
               <ul className="space-y-2.5 text-sm">
-                <li><a href="#features" className="hover:text-white transition">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-white transition">How it works</a></li>
-                <li><Link to="/signup" className="hover:text-white transition">Create account</Link></li>
-                <li><Link to="/login" className="hover:text-white transition">Sign in</Link></li>
+                <li><a href="#features" className="hover:text-white transition">{t("landing.nav.features")}</a></li>
+                <li><a href="#how-it-works" className="hover:text-white transition">{t("landing.nav.howItWorks")}</a></li>
+                <li><Link to="/signup" className="hover:text-white transition">{t("landing.footer.createAccount")}</Link></li>
+                <li><Link to="/login" className="hover:text-white transition">{t("landing.signIn")}</Link></li>
               </ul>
             </div>
 
             {/* Support */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Support</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">{t("landing.footer.support")}</p>
               <ul className="space-y-2.5 text-sm">
                 <li>
                   <a
@@ -987,7 +759,7 @@ export default function Landing() {
                     className="hover:text-white transition flex items-center gap-1.5"
                   >
                     <MessageCircle size={13} />
-                    WhatsApp support
+                    {t("landing.footer.whatsappSupport")}
                   </a>
                 </li>
               </ul>
@@ -996,7 +768,7 @@ export default function Landing() {
 
           <div className="border-t border-slate-800 pt-6">
             <p className="text-xs text-slate-600 text-center">
-              &copy; {new Date().getFullYear()} GarageOS. Built for Pakistani workshops.
+              &copy; {new Date().getFullYear()} GarageOS. {t("landing.footer.copyright")}
             </p>
           </div>
         </div>

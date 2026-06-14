@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle2, ClipboardList, Users, Wrench } from "lucide-react";
 import { useMechanics } from "../hooks/useMechanics";
+import { useAuthStore } from "../stores/authStore";
 import { useT } from "../i18n/useT";
 
 /** First-run guidance shown to an owner with no jobs yet. */
 export default function OnboardingChecklist({ onNewJob }: { onNewJob: () => void }) {
   const navigate = useNavigate();
   const { data: mechanics = [] } = useMechanics();
+  const workshopName = useAuthStore((s) => s.workshopName);
   const t = useT();
 
   const steps = [
@@ -14,7 +16,7 @@ export default function OnboardingChecklist({ onNewJob }: { onNewJob: () => void
       icon: Wrench,
       title: t("onboarding.s1Title"),
       desc: t("onboarding.s1Desc"),
-      done: false,
+      done: !!workshopName?.trim(),
       cta: t("onboarding.s1Cta"),
       onClick: () => navigate("/settings"),
     },

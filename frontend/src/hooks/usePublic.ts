@@ -15,6 +15,7 @@ export interface PublicInvoice {
   workshop_whatsapp: string;
   workshop_bank_details: string;
   workshop_invoice_footer: string;
+  brand_color: string | null;
   customer_name: string;
   customer_phone: string;
   vehicle_number: string;
@@ -28,6 +29,7 @@ export interface PublicInvoice {
 
 export interface PublicTrack {
   workshop_name: string;
+  brand_color: string | null;
   vehicle_number: string;
   vehicle_make: string;
   status: string;

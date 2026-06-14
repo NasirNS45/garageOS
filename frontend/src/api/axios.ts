@@ -45,7 +45,9 @@ api.interceptors.response.use(
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) {
       isRefreshing = false;
-      localStorage.clear();
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      sessionStorage.removeItem("workshop_name");
       sessionStorage.setItem("session_expired", "1");
       window.location.href = "/login";
       return Promise.reject(error);
@@ -64,7 +66,9 @@ api.interceptors.response.use(
       return api(original);
     } catch (refreshError) {
       drainQueue(null, refreshError);
-      localStorage.clear();
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      sessionStorage.removeItem("workshop_name");
       sessionStorage.setItem("session_expired", "1");
       window.location.href = "/login";
       return Promise.reject(refreshError);

@@ -1,6 +1,12 @@
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class ReminderCreate(BaseModel):
+    job_card_id: str
+    due_date: date
+    service_note: str | None = Field(None, max_length=300)
 
 
 class ReminderResponse(BaseModel):

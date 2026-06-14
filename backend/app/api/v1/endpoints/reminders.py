@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
 from app.core.dependencies import DbSession, OwnerClaims
-from app.schemas.reminder import ReminderResponse
+from app.schemas.reminder import ReminderCreate, ReminderResponse
 from app.services.reminder_service import ReminderService
 
 router = APIRouter(prefix="/reminders", tags=["reminders"])
@@ -12,6 +12,15 @@ async def list_reminders(claims: OwnerClaims, session: DbSession) -> list[Remind
     """Upcoming (pending) service reminders, soonest first (owner only)."""
     async with session.begin():
         return await ReminderService(session).list_upcoming(claims.workshop_id)
+
+
+@router.post("", response_model=ReminderResponse, status_code=status.HTTP_201_CREATED)
+async def create_reminder(
+    payload: ReminderCreate, claims: OwnerClaims, session: DbSession
+) -> ReminderResponse:
+    """Create a manual service reminder (owner only)."""
+    async with session.begin():
+        return await ReminderService(session).create_manual(claims.workshop_id, payload)
 
 
 @router.delete("/{reminder_id}", status_code=status.HTTP_204_NO_CONTENT)

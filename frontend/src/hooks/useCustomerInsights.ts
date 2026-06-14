@@ -6,6 +6,7 @@ export interface TopCustomer {
   customer_phone: string;
   total_jobs: number;
   total_spent: number;
+  total_outstanding?: number;
   last_visit: string | null;
 }
 

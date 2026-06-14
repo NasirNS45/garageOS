@@ -13,11 +13,26 @@ export interface ServiceReminder {
   sent_at: string | null;
 }
 
+export interface ReminderCreate {
+  job_card_id: string;
+  due_date: string;
+  service_note?: string;
+}
+
 export function useReminders() {
   return useQuery({
     queryKey: ["reminders"],
     queryFn: () => api.get<ServiceReminder[]>("/reminders").then((r) => r.data),
     staleTime: 30_000,
+  });
+}
+
+export function useCreateReminder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ReminderCreate) =>
+      api.post<ServiceReminder>("/reminders", data).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reminders"] }),
   });
 }
 

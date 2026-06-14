@@ -23,12 +23,16 @@ class Settings(BaseSettings):
     # Rate limiting (disabled in tests)
     rate_limit_enabled: bool = True
 
-    # Twilio WhatsApp (optional — disabled if SID is blank)
+    # WhatsApp — provider: twilio (default) or meta
+    whatsapp_provider: str = "twilio"
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
     twilio_whatsapp_from: str = "whatsapp:+14155238886"
+    meta_whatsapp_token: str = ""
+    meta_whatsapp_phone_number_id: str = ""
 
     # App
+    debug: bool = False
     environment: str = "development"
     log_level: str = "INFO"
     app_base_url: str = "http://localhost:8000"  # backend self-reference (not customer links)
@@ -51,6 +55,8 @@ class Settings(BaseSettings):
 
     @property
     def whatsapp_enabled(self) -> bool:
+        if self.whatsapp_provider == "meta":
+            return bool(self.meta_whatsapp_token and self.meta_whatsapp_phone_number_id)
         return bool(self.twilio_account_sid and self.twilio_auth_token)
 
     @property

@@ -1,6 +1,7 @@
 from datetime import UTC
 
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy import select
 
 from app.core.dependencies import DbSession
@@ -12,6 +13,8 @@ from app.schemas.public import (
     PublicInvoiceResponse,
     PublicTrackResponse,
 )
+from app.services.pdf_service import build_invoice_pdf
+from app.utils.theme import brand_color_for_theme
 
 # Public, unauthenticated data for the customer-facing invoice and tracking
 # pages (rendered by the frontend). Job-card ids and invoice numbers are
@@ -73,6 +76,26 @@ async def public_invoice(invoice_number: str, session: DbSession) -> PublicInvoi
             for p in parts
         ],
         completed_at=_date(card.completed_at),
+        brand_color=brand_color_for_theme(
+            workshop.accent_theme if workshop else None
+        ),
+    )
+
+
+@router.get(
+    "/invoices/{invoice_number}/pdf",
+    status_code=status.HTTP_200_OK,
+    response_class=Response,
+)
+async def public_invoice_pdf(invoice_number: str, session: DbSession) -> Response:
+    invoice = await public_invoice(invoice_number, session)
+    pdf_bytes = build_invoice_pdf(invoice)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="invoice-{invoice_number}.pdf"'
+        },
     )
 
 
@@ -110,4 +133,7 @@ async def public_track(card_id: str, session: DbSession) -> PublicTrackResponse:
         created_at=_date(card.created_at),
         completed_at=_date(card.completed_at),
         invoice_number=invoice_number,
+        brand_color=brand_color_for_theme(
+            workshop.accent_theme if workshop else None
+        ),
     )

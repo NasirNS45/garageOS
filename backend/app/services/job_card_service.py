@@ -1,9 +1,10 @@
 import logging
+from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, NotFoundError
-from app.models.job_card import JobStatus
+from app.models.job_card import JobStatus, PaymentStatus
 from app.repositories.job_card_repository import JobCardRepository
 from app.repositories.job_part_repository import JobPartRepository
 from app.repositories.workshop_repository import WorkshopRepository
@@ -12,9 +13,11 @@ from app.schemas.job_card import (
     JobCardListResponse,
     JobCardResponse,
     JobCardUpdate,
+    PaymentUpdate,
 )
 from app.schemas.job_part import JobPartResponse
 from app.services.invoice_service import InvoiceService
+from app.services.pilot_analytics_service import PilotAnalyticsService
 from app.services.reminder_service import ReminderService
 from app.services.whatsapp_service import WhatsAppService
 from app.utils.mobile import normalize_mobile
@@ -75,34 +78,52 @@ class JobCardService:
         )
         logger.info("Job card created", extra={"card_id": card.id, "workshop_id": workshop_id})
 
+        analytics = PilotAnalyticsService(self._session)
+        _, total_jobs = await self._repo.list_jobs(
+            workshop_id, page=1, page_size=1, active_only=False
+        )
+        await analytics.track("job_created", workshop_id=workshop_id)
+        if total_jobs == 1:
+            await analytics.track("first_job_created", workshop_id=workshop_id)
+
         if payload.notify_checkin:
             workshop = await self._workshop_repo.get_by_id(workshop_id)
             workshop_name = workshop.name if workshop else "the workshop"
-            try:
-                await self._whatsapp_svc.send_checkin_notification(
-                    customer_phone=phone,
-                    customer_name=payload.customer_name,
-                    vehicle_number=card.vehicle_number,  # type: ignore[union-attr]
-                    workshop_name=workshop_name,
-                    track_url=self._invoice_svc.track_url(card.id),
-                )
-            except Exception as exc:
-                logger.error(
-                    "Check-in WhatsApp notification failed",
-                    extra={"error": str(exc)},
-                )
+            sent = await self._whatsapp_svc.send_checkin_notification(
+                customer_phone=phone,
+                customer_name=payload.customer_name,
+                vehicle_number=card.vehicle_number,  # type: ignore[union-attr]
+                workshop_name=workshop_name,
+                track_url=self._invoice_svc.track_url(card.id),
+            )
+            await analytics.track_whatsapp_result(workshop_id, sent, "checkin")
 
         return _to_response(card, self._invoice_svc)
 
-    async def list_active(
+    async def list_jobs(
         self,
         workshop_id: str,
         page: int = 1,
         page_size: int = 20,
         mechanic_id: str | None = None,
+        active_only: bool = True,
+        status: str | None = None,
+        payment_status: str | None = None,
+        search: str | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
     ) -> JobCardListResponse:
-        cards, total = await self._repo.list_active(
-            workshop_id, page, page_size, mechanic_id=mechanic_id
+        cards, total = await self._repo.list_jobs(
+            workshop_id,
+            page,
+            page_size,
+            mechanic_id=mechanic_id,
+            active_only=active_only,
+            status=status,
+            payment_status=payment_status,
+            search=search,
+            start_date=start_date,
+            end_date=end_date,
         )
         card_ids = [c.id for c in cards]  # type: ignore[union-attr]
         all_parts = await self._part_repo.list_by_jobs(card_ids)
@@ -187,11 +208,15 @@ class JobCardService:
         self,
         card_id: str,
         workshop_id: str,
+        user_id: str,
+        role: str,
         notify_customer: bool = True,
     ) -> JobCardResponse:
         card = await self._repo.get_by_id(card_id, workshop_id)
         if card is None:
             raise NotFoundError("Job card not found")
+        if role == "mechanic" and card.assigned_mechanic_id != user_id:
+            raise ForbiddenError("You can only complete jobs assigned to you")
         if card.status == JobStatus.completed.value:
             raise ForbiddenError("Job card is already completed")
         if card.status == JobStatus.cancelled.value:
@@ -206,21 +231,24 @@ class JobCardService:
 
         logger.info("Job card completed", extra={"card_id": card_id, "invoice": invoice_number})
 
+        analytics = PilotAnalyticsService(self._session)
+        await analytics.track(
+            "job_completed",
+            workshop_id=workshop_id,
+            user_id=user_id,
+            metadata={"invoice_number": invoice_number},
+        )
+
         if notify_customer:
-            try:
-                await self._whatsapp_svc.send_completion_notification(
-                    customer_phone=completed.customer_phone,  # type: ignore[union-attr]
-                    customer_name=completed.customer_name,  # type: ignore[union-attr]
-                    vehicle_number=completed.vehicle_number,  # type: ignore[union-attr]
-                    invoice_number=invoice_number,
-                    total_amount=total,
-                    invoice_url=invoice_url,
-                )
-            except Exception as exc:
-                logger.error(
-                    "WhatsApp completion notification failed",
-                    extra={"error": str(exc)},
-                )
+            sent = await self._whatsapp_svc.send_completion_notification(
+                customer_phone=completed.customer_phone,  # type: ignore[union-attr]
+                customer_name=completed.customer_name,  # type: ignore[union-attr]
+                vehicle_number=completed.vehicle_number,  # type: ignore[union-attr]
+                invoice_number=invoice_number,
+                total_amount=total,
+                invoice_url=invoice_url,
+            )
+            await analytics.track_whatsapp_result(workshop_id, sent, "completion")
 
         # Schedule a follow-up service reminder if the workshop has opted in
         try:
@@ -237,6 +265,27 @@ class JobCardService:
         resp = _to_response(completed, self._invoice_svc, parts=part_responses)
         resp.invoice_url = invoice_url
         return resp
+
+    async def update_payment(
+        self, card_id: str, workshop_id: str, payload: PaymentUpdate
+    ) -> JobCardResponse:
+        card = await self._repo.get_by_id(card_id, workshop_id)
+        if card is None:
+            raise NotFoundError("Job card not found")
+        if card.status != JobStatus.completed.value:
+            raise ForbiddenError("Payment can only be recorded on completed jobs")
+
+        update_fields: dict[str, object] = {
+            "collected_amount": payload.collected_amount,
+            "payment_method": payload.payment_method,
+        }
+        if payload.collected_amount >= float(card.total_amount):
+            update_fields["payment_status"] = PaymentStatus.paid.value
+
+        updated = await self._repo.update(card_id, workshop_id, **update_fields)
+        parts_list = await self._part_repo.list_by_job(card_id)
+        part_responses = [JobPartResponse.model_validate(p) for p in parts_list]
+        return _to_response(updated, self._invoice_svc, parts=part_responses)
 
     async def delete(self, card_id: str, workshop_id: str) -> None:
         card = await self._repo.get_by_id(card_id, workshop_id)

@@ -52,6 +52,8 @@ class JobCard(Base):
     payment_status: Mapped[str] = mapped_column(
         String(10), nullable=False, default=PaymentStatus.unpaid
     )
+    collected_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0)
+    payment_method: Mapped[str | None] = mapped_column(String(30), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

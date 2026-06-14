@@ -3,11 +3,14 @@ from fastapi import APIRouter, Request, status
 from app.core.dependencies import DbSession, OwnerClaims
 from app.core.ratelimit import limiter
 from app.schemas.auth import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     LoginRequest,
     MechanicCreate,
     MechanicResponse,
     MechanicUpdate,
     RefreshRequest,
+    ResetPasswordRequest,
     SignupRequest,
     TokenResponse,
 )
@@ -37,6 +40,30 @@ async def refresh(payload: RefreshRequest, session: DbSession) -> TokenResponse:
     """Exchange a refresh token for a new access token."""
     async with session.begin():
         return await AuthService(session).refresh(payload.refresh_token)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=ForgotPasswordResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("5/minute")
+async def forgot_password(
+    request: Request, payload: ForgotPasswordRequest, session: DbSession
+) -> ForgotPasswordResponse:
+    """Request a password reset link for the registered mobile number."""
+    async with session.begin():
+        return await AuthService(session).forgot_password(payload)
+
+
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("5/minute")
+async def reset_password(
+    request: Request, payload: ResetPasswordRequest, session: DbSession
+) -> None:
+    """Reset password using a valid reset token."""
+    async with session.begin():
+        await AuthService(session).reset_password(payload)
 
 
 @router.post("/mechanics", response_model=MechanicResponse, status_code=status.HTTP_201_CREATED)

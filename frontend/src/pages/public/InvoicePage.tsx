@@ -1,62 +1,84 @@
 import { useParams } from "react-router-dom";
-import { FileX, Loader2, Printer } from "lucide-react";
+import { Download, FileX, Loader2, Printer } from "lucide-react";
 import { usePublicInvoice } from "../../hooks/usePublic";
-import { useForceLtr } from "../../i18n/useForceLtr";
+import { usePublicLanguage } from "../../i18n/usePublicLanguage";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import { useT } from "../../i18n/useT";
+import {
+  brandAccentStyle,
+  brandBorderStyle,
+  brandButtonClass,
+  brandHeaderStyle,
+  resolveBrandColor,
+} from "../../utils/brandColor";
 
 const fmt = (n: number) => `PKR ${Math.round(n).toLocaleString()}`;
+const apiBase = import.meta.env.VITE_API_URL || "/api/v1";
 
 export default function InvoicePage() {
-  useForceLtr();
+  usePublicLanguage();
+  const t = useT();
   const { invoiceNumber } = useParams<{ invoiceNumber: string }>();
   const { data, isLoading, isError } = usePublicInvoice(invoiceNumber);
-  useDocumentTitle(invoiceNumber ? `Invoice ${invoiceNumber}` : "Invoice");
+  useDocumentTitle(invoiceNumber ? `${t("public.invoiceNo")} ${invoiceNumber}` : t("public.taxInvoice"));
 
-  if (isLoading) return <CenterSpinner />;
-  if (isError || !data) return <NotFound label="Invoice not found" />;
+  if (isLoading) return <CenterSpinner brandColor={undefined} />;
+  if (isError || !data) return <NotFound label={t("public.invoiceNotFound")} />;
+
+  const pdfUrl = `${apiBase}/public/invoices/${data.invoice_number}/pdf`;
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-4 print:bg-white print:p-0">
-      <div className="max-w-[600px] mx-auto mb-3.5 flex justify-end print:hidden">
+      <div className="max-w-[600px] mx-auto mb-3.5 flex justify-end gap-2 print:hidden">
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={brandButtonClass(data.brand_color)}
+          className="inline-flex items-center gap-1.5 hover:opacity-90 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition active:scale-95"
+        >
+          <Download size={15} />
+          {t("public.downloadPdf")}
+        </a>
         <button
           onClick={() => window.print()}
-          className="inline-flex items-center gap-1.5 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition active:scale-95"
+          style={brandButtonClass(data.brand_color)}
+          className="inline-flex items-center gap-1.5 hover:opacity-90 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition active:scale-95"
         >
           <Printer size={15} />
-          Print / Save PDF
+          {t("public.printPdf")}
         </button>
       </div>
 
       <div className="max-w-[600px] mx-auto bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.08)] print:shadow-none print:border-0 print:rounded-none">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-[#1d4ed8] to-[#1e3a8a] text-white px-6 py-7">
+        <div className="text-white px-6 py-7" style={brandHeaderStyle(data.brand_color)}>
           <Brand />
           <h1 className="text-[22px] font-extrabold tracking-tight">{data.workshop_name}</h1>
-          <p className="text-[13px] opacity-75 mt-0.5">Tax Invoice</p>
+          <p className="text-[13px] opacity-75 mt-0.5">{t("public.taxInvoice")}</p>
         </div>
 
         <div className="p-6">
-          <Section title="Invoice Details">
-            <Row label="Invoice No." value={data.invoice_number} />
-            <Row label="Date" value={data.completed_at} />
+          <Section title={t("public.invoiceDetails")}>
+            <Row label={t("public.invoiceNo")} value={data.invoice_number} />
+            <Row label={t("public.date")} value={data.completed_at} />
             <Row
-              label="Status"
+              label={t("status.completed")}
               value={
                 <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                  Completed
+                  {t("status.completed")}
                 </span>
               }
             />
           </Section>
 
-          <Section title="Customer & Vehicle">
-            <Row label="Customer" value={data.customer_name} />
-            <Row label="Phone" value={<span data-keep-ltr>{data.customer_phone}</span>} />
-            <Row label="Vehicle No." value={<Plate text={data.vehicle_number} />} />
-            {data.description && <Row label="Work Done" value={data.description} />}
+          <Section title={t("public.customerVehicle")}>
+            <Row label={t("public.customer")} value={data.customer_name} />
+            <Row label={t("public.phone")} value={<span data-keep-ltr>{data.customer_phone}</span>} />
+            <Row label={t("public.vehicleNo")} value={<Plate text={data.vehicle_number} />} />
+            {data.description && <Row label={t("public.workDone")} value={data.description} />}
           </Section>
 
-          <Section title="Charges">
+          <Section title={t("public.charges")}>
             {data.parts.length > 0 && (
               <table className="w-full border-collapse text-sm mb-3">
                 <thead>
@@ -86,21 +108,21 @@ export default function InvoicePage() {
               </table>
             )}
             <div className="flex justify-between py-1.5 text-sm">
-              <span className="text-slate-500">Labour</span>
+              <span className="text-slate-500">{t("public.labour")}</span>
               <span>{fmt(data.labour_charge)}</span>
             </div>
             <div className="flex justify-between py-1.5 text-sm">
-              <span className="text-slate-500">Parts</span>
+              <span className="text-slate-500">{t("public.parts")}</span>
               <span>{fmt(data.parts_charge)}</span>
             </div>
-            <div className="flex justify-between items-center pt-3.5 mt-2.5 border-t-2 border-[#1d4ed8] text-[19px] font-extrabold text-[#1d4ed8]">
-              <span>Total</span>
+            <div className="flex justify-between items-center pt-3.5 mt-2.5 border-t-2 text-[19px] font-extrabold" style={{ ...brandBorderStyle(data.brand_color), ...brandAccentStyle(data.brand_color) }}>
+              <span>{t("public.total")}</span>
               <span>{fmt(data.total_amount)}</span>
             </div>
           </Section>
 
           {data.workshop_bank_details && (
-            <Section title="Payment Details">
+            <Section title={t("public.paymentDetails")}>
               <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5">
                 <p className="text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap">
                   {data.workshop_bank_details}
@@ -115,7 +137,7 @@ export default function InvoicePage() {
             [data.workshop_address, data.workshop_whatsapp && `WhatsApp: ${data.workshop_whatsapp}`]
               .filter(Boolean)
               .join("  |  ")}
-          <div className="mt-2 font-semibold text-slate-300">Powered by GarageOS</div>
+          <div className="mt-2 font-semibold text-slate-300">{t("public.poweredBy")}</div>
         </div>
       </div>
     </div>
@@ -165,10 +187,10 @@ function Plate({ text }: { text: string }) {
   );
 }
 
-function CenterSpinner() {
+function CenterSpinner({ brandColor }: { brandColor?: string | null }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <Loader2 className="animate-spin text-[#1d4ed8]" size={28} />
+      <Loader2 className="animate-spin" size={28} style={{ color: resolveBrandColor(brandColor) }} />
     </div>
   );
 }

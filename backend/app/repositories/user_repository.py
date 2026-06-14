@@ -90,3 +90,9 @@ class UserRepository:
     async def mobile_exists(self, mobile: str) -> bool:
         result = await self._session.execute(select(User.id).where(User.mobile == mobile).limit(1))
         return result.scalar_one_or_none() is not None
+
+    async def update_password(self, user_id: str, password_hash: str) -> None:
+        await self._session.execute(
+            update(User).where(User.id == user_id).values(password_hash=password_hash)
+        )
+        await self._session.flush()

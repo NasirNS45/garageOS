@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { SearchX, Trophy } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { SearchX, Trophy, Wallet } from "lucide-react";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
 import EmptyState from "../../components/EmptyState";
 import VehiclePlate from "../../components/VehiclePlate";
 import { useCustomerInsights } from "../../hooks/useCustomerInsights";
+import { useOutstandingCustomers } from "../../hooks/useOutstandingCustomers";
 import { api } from "../../api/axios";
 import { useT } from "../../i18n/useT";
 
@@ -35,6 +37,7 @@ const HISTORY_STATUS_KEYS: Record<HistoryStatusFilter, "status.all" | "status.co
 
 export default function HistoryTab() {
   const t = useT();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<"vehicle" | "phone">("vehicle");
   const [result, setResult] = useState<HistoryResult | null>(null);
@@ -43,6 +46,7 @@ export default function HistoryTab() {
   const [searchError, setSearchError] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<HistoryStatusFilter>("all");
   const insightsQ = useCustomerInsights(10);
+  const outstandingQ = useOutstandingCustomers(10);
 
   const runSearch = async (searchType: "vehicle" | "phone", value: string) => {
     setLoading(true);
@@ -71,9 +75,7 @@ export default function HistoryTab() {
   };
 
   const openCustomer = (phone: string) => {
-    setType("phone");
-    setQuery(phone);
-    void runSearch("phone", phone);
+    navigate(`/customers/${encodeURIComponent(phone)}`);
   };
 
   const toggle = (active: boolean) =>
@@ -117,6 +119,36 @@ export default function HistoryTab() {
       </form>
 
       {/* Top customers — discovery aid shown before a search is run */}
+      {!searched && (outstandingQ.data?.length ?? 0) > 0 && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-amber-100 dark:border-amber-900/40 mb-4">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
+            <Wallet size={15} className="text-amber-600" />
+            {t("history.outstandingCustomers")}
+          </h3>
+          <div className="space-y-2.5">
+            {outstandingQ.data!.map((c) => (
+              <button
+                key={c.customer_phone}
+                onClick={() => openCustomer(c.customer_phone)}
+                className="w-full flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1.5 rounded-lg transition active:scale-[0.99]"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                    {c.customer_name}
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500" data-keep-ltr>
+                    {c.open_invoices} {t("customer.openInvoices")} · {c.customer_phone}
+                  </p>
+                </div>
+                <p className="text-sm font-bold text-amber-700 dark:text-amber-400 shrink-0">
+                  PKR {c.total_outstanding.toLocaleString()}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!searched && (insightsQ.data?.length ?? 0) > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
@@ -225,7 +257,7 @@ export default function HistoryTab() {
                     </span>
                   </div>
                   <div className="flex justify-between mt-2 text-sm">
-                    <span className="text-slate-500 dark:text-slate-400 capitalize">{j.status.replace("_", " ")}</span>
+                    <span className="text-slate-500 dark:text-slate-400 capitalize">{t(`status.${j.status}` as "status.pending")}</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">
                       PKR {j.total_amount.toLocaleString()}
                     </span>

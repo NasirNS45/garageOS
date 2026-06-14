@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2, Wallet, X } from "lucide-react";
 import {
   useSummary,
@@ -24,12 +24,17 @@ import { parseApiError } from "../../utils/parseApiError";
 import { inputClass } from "./formStyles";
 import { todayStr, shiftDate, weekRange, monthRange } from "../../utils/dates";
 import { useT } from "../../i18n/useT";
+import { trackPilotEvent } from "../../utils/trackPilotEvent";
 
 // ── Summary tab ───────────────────────────────────────────────────────────────
 type SummaryPeriod = "day" | "week" | "month";
 
 export default function SummaryTab() {
   const t = useT();
+
+  useEffect(() => {
+    trackPilotEvent("summary_viewed");
+  }, []);
   const today = todayStr();
   const [period, setPeriod] = useState<SummaryPeriod>("day");
   const [dayStr, setDayStr] = useState<string>(today);
@@ -97,6 +102,11 @@ export default function SummaryTab() {
   const expensesQ = useExpenses(startDate, endDate);
 
   const isLoading = period === "day" ? dailyQ.isLoading : rangeQ.isLoading;
+  const isError = period === "day" ? dailyQ.isError : rangeQ.isError;
+  const refetchSummary = () => {
+    if (period === "day") dailyQ.refetch();
+    else rangeQ.refetch();
+  };
 
   const totalExpenses = expensesQ.data?.total_amount ?? 0;
 
@@ -154,6 +164,18 @@ export default function SummaryTab() {
 
       {isLoading ? (
         <JobCardSkeleton count={2} />
+      ) : isError ? (
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center">
+          <p className="font-semibold text-sm text-red-700 dark:text-red-300 mb-3">
+            {t("summary.loadError")}
+          </p>
+          <button
+            onClick={() => refetchSummary()}
+            className="text-sm font-semibold text-[var(--brand)] underline hover:no-underline"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
       ) : (
         <>
           {/* Revenue hero */}

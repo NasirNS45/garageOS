@@ -29,6 +29,7 @@ import { useToast } from "../../context/ToastContext";
 import BottomSheet from "../../components/BottomSheet";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
 import ThemePicker from "../../components/ThemePicker";
+import { useThemeStore } from "../../stores/themeStore";
 import PhoneInputField from "../../components/PhoneInputField";
 import { api } from "../../api/axios";
 import { parseApiError } from "../../utils/parseApiError";
@@ -36,9 +37,63 @@ import { isValidPhone } from "../../utils/validation";
 import { todayStr, shiftDate } from "../../utils/dates";
 import { inputClass, fieldClass } from "./formStyles";
 import { useT } from "../../i18n/useT";
+import type { TKey } from "../../i18n/translations";
 
 // ── Settings tab ──────────────────────────────────────────────────────────────
 const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "1.0.0";
+
+type SettingsSection = "general" | "automation" | "team" | "catalog" | "data";
+
+const SETTINGS_SECTIONS: {
+  id: SettingsSection;
+  labelKey: TKey;
+  icon: React.ElementType;
+}[] = [
+  { id: "general", labelKey: "settings.tabGeneral", icon: Building2 },
+  { id: "automation", labelKey: "settings.tabAutomation", icon: BellRing },
+  { id: "team", labelKey: "settings.tabTeam", icon: Users },
+  { id: "catalog", labelKey: "settings.tabCatalog", icon: Package },
+  { id: "data", labelKey: "settings.tabData", icon: Download },
+];
+
+function SettingsSectionNav({
+  active,
+  onChange,
+}: {
+  active: SettingsSection;
+  onChange: (section: SettingsSection) => void;
+}) {
+  const t = useT();
+
+  return (
+    <div
+      role="tablist"
+      aria-label={t("settings.title")}
+      className="sticky top-0 z-10 bg-[#F1F5F9] dark:bg-slate-900 flex gap-1.5 mb-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
+    >
+      {SETTINGS_SECTIONS.map(({ id, labelKey, icon: Icon }) => {
+        const selected = active === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            onClick={() => onChange(id)}
+            className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition active:scale-95 whitespace-nowrap ${
+              selected
+                ? "bg-[var(--brand)] text-white shadow-sm"
+                : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+            }`}
+          >
+            <Icon size={14} />
+            {t(labelKey)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 interface SettingsForm {
   name: string;
@@ -67,28 +122,38 @@ function SettingCard({
   icon,
   title,
   action,
+  compact = false,
   children,
 }: {
   icon: React.ReactNode;
   title: string;
   action?: React.ReactNode;
+  compact?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-700">
+      <div
+        className={`flex items-center justify-between border-b border-slate-100 dark:border-slate-700 ${
+          compact ? "px-4 py-2.5" : "px-5 py-3.5"
+        }`}
+      >
         <div className="flex items-center gap-2.5">
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+            className={`rounded-lg flex items-center justify-center shrink-0 ${
+              compact ? "w-6 h-6" : "w-7 h-7"
+            }`}
             style={{ background: "color-mix(in srgb, var(--brand) 12%, transparent)" }}
           >
             <div style={{ color: "var(--brand)" }}>{icon}</div>
           </div>
-          <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{title}</span>
+          <span className={`font-semibold text-slate-900 dark:text-slate-100 ${compact ? "text-xs" : "text-sm"}`}>
+            {title}
+          </span>
         </div>
         {action}
       </div>
-      <div className="p-5">{children}</div>
+      <div className={compact ? "px-4 py-3" : "p-5"}>{children}</div>
     </div>
   );
 }
@@ -141,6 +206,7 @@ export default function SettingsTab() {
   const t = useT();
   const { setWorkshopName } = useAuthStore();
   const { toast } = useToast();
+  const [section, setSection] = useState<SettingsSection>("general");
   const [form, setForm] = useState<SettingsForm>(EMPTY_SETTINGS);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -174,6 +240,19 @@ export default function SettingsTab() {
   useEffect(() => {
     loadSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    api
+      .get<{ accent_theme?: string }>("/settings")
+      .then(({ data }) => {
+        const valid = ["blue", "emerald", "purple", "rose", "teal"] as const;
+        const saved = data.accent_theme as (typeof valid)[number] | undefined;
+        if (saved && valid.includes(saved)) {
+          useThemeStore.getState().setTheme(saved);
+        }
+      })
+      .catch(() => {/* non-critical */});
   }, []);
 
   const setField =
@@ -243,8 +322,16 @@ export default function SettingsTab() {
     <div className="pb-4">
       <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t("settings.title")}</h2>
 
-      <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
-      {/* Workshop */}
+      <div className="mb-3 max-w-2xl">
+        <SettingCard compact icon={<Palette size={13} />} title={t("settings.appearance")}>
+          <ThemePicker compact />
+        </SettingCard>
+      </div>
+
+      <SettingsSectionNav active={section} onChange={setSection} />
+
+      <div role="tabpanel" className="space-y-4 max-w-2xl">
+      {section === "general" && (
       <SettingCard icon={<Building2 size={15} />} title={t("settings.workshop")}>
         <form onSubmit={save} className="space-y-3.5">
           <div className="grid grid-cols-1 gap-3.5">
@@ -281,22 +368,27 @@ export default function SettingsTab() {
                 onChange={(val) => setForm((prev) => ({ ...prev, owner_contact: val }))}
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                {t("settings.whatsappNumber")}
-              </label>
-              <PhoneInputField
-                value={form.whatsapp_number}
-                onChange={(val) => setForm((prev) => ({ ...prev, whatsapp_number: val }))}
-              />
-              <button
-                type="button"
-                onClick={testWhatsApp}
-                disabled={testingWa || !form.whatsapp_number.trim()}
-                className="mt-2 text-xs font-semibold text-[var(--brand)] border border-[var(--brand)] bg-transparent hover:bg-[var(--brand)] hover:text-white px-3 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {testingWa ? t("settings.sending") : t("settings.sendTest")}
-              </button>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-900/40 p-3.5 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                WhatsApp
+              </p>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  {t("settings.whatsappNumber")}
+                </label>
+                <PhoneInputField
+                  value={form.whatsapp_number}
+                  onChange={(val) => setForm((prev) => ({ ...prev, whatsapp_number: val }))}
+                />
+                <button
+                  type="button"
+                  onClick={testWhatsApp}
+                  disabled={testingWa || !form.whatsapp_number.trim()}
+                  className="mt-2 text-xs font-semibold text-[var(--brand)] border border-[var(--brand)] bg-transparent hover:bg-[var(--brand)] hover:text-white px-3 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {testingWa ? t("settings.sending") : t("settings.sendTest")}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
@@ -338,13 +430,9 @@ export default function SettingsTab() {
           </button>
         </form>
       </SettingCard>
+      )}
 
-      {/* Appearance */}
-      <SettingCard icon={<Palette size={15} />} title={t("settings.appearance")}>
-        <ThemePicker />
-      </SettingCard>
-
-      {/* Automation: reminders + digest */}
+      {section === "automation" && (
       <SettingCard icon={<BellRing size={15} />} title={t("settings.automation")}>
         <form onSubmit={save} className="space-y-4">
           <div>
@@ -409,19 +497,22 @@ export default function SettingsTab() {
 
         <RemindersList />
       </SettingCard>
+      )}
 
-      {/* Team */}
-      <MechanicsSection />
+      {section === "team" && <MechanicsSection />}
 
+      {section === "catalog" && (
+        <>
       {/* Service Presets */}
       <PresetsSection />
 
       {/* Parts Catalog */}
       <PartsCatalogSection />
+        </>
+      )}
 
-      {/* Export */}
-      <ExportSection />
-      </div>{/* /lg grid */}
+      {section === "data" && <ExportSection />}
+      </div>
 
       {/* App footer */}
       <p className="text-center text-xs text-slate-400 dark:text-slate-500 pt-5 pb-1">

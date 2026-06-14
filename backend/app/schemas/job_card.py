@@ -39,6 +39,11 @@ class JobCardComplete(BaseModel):
     notify_customer: bool = True
 
 
+class PaymentUpdate(BaseModel):
+    collected_amount: float = Field(..., ge=0)
+    payment_method: str | None = Field(None, max_length=30)
+
+
 class JobCardResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,6 +63,8 @@ class JobCardResponse(BaseModel):
     invoice_url: str | None = None
     track_url: str | None = None
     payment_status: str
+    collected_amount: float
+    payment_method: str | None
     notes: str | None
     created_at: datetime
     updated_at: datetime

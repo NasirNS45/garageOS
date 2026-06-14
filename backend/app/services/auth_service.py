@@ -1,7 +1,10 @@
 import logging
 
+from datetime import UTC, datetime, timedelta
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.exceptions import ConflictError, NotFoundError, UnauthorizedError
 from app.core.security import (
     JWTError,
@@ -12,16 +15,23 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import UserRole
+from app.repositories.password_reset_repository import PasswordResetRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.workshop_repository import WorkshopRepository
 from app.schemas.auth import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     LoginRequest,
     MechanicCreate,
     MechanicResponse,
+    ResetPasswordRequest,
     SignupRequest,
     TokenResponse,
 )
+from app.services.pilot_analytics_service import PilotAnalyticsService
+from app.services.whatsapp_service import WhatsAppService
 from app.utils.mobile import normalize_mobile
+from app.utils.reset_token import generate_reset_token, hash_reset_token
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +40,7 @@ class AuthService:
     def __init__(self, session: AsyncSession) -> None:
         self._user_repo = UserRepository(session)
         self._workshop_repo = WorkshopRepository(session)
+        self._reset_repo = PasswordResetRepository(session)
         self._session = session
 
     async def signup(self, payload: SignupRequest) -> TokenResponse:
@@ -63,6 +74,11 @@ class AuthService:
         logger.info(
             "New workshop registered",
             extra={"workshop_id": workshop.id, "user_id": user.id},
+        )
+        await PilotAnalyticsService(self._session).track(
+            "signup_completed",
+            workshop_id=workshop.id,
+            user_id=user.id,
         )
         return TokenResponse(
             access_token=create_access_token(user.id, workshop.id, user.role),
@@ -168,3 +184,49 @@ class AuthService:
                 "is_available": True,
             }
         )
+
+    async def forgot_password(self, payload: ForgotPasswordRequest) -> ForgotPasswordResponse:
+        message = "If that mobile is registered, a reset link has been sent."
+        try:
+            mobile = normalize_mobile(payload.mobile)
+        except ValueError:
+            return ForgotPasswordResponse(message=message)
+
+        user = await self._user_repo.get_by_mobile(mobile)
+        if user is None:
+            return ForgotPasswordResponse(message=message)
+
+        raw_token = generate_reset_token()
+        token_hash = hash_reset_token(raw_token)
+        expires_at = datetime.now(UTC) + timedelta(hours=1)
+        await self._reset_repo.create(user.id, token_hash, expires_at)
+
+        reset_url = f"{get_settings().web_base_url.rstrip('/')}/reset-password?token={raw_token}"
+        wa = WhatsAppService()
+        sent = await wa.send_password_reset(mobile, user.full_name, reset_url)
+        analytics = PilotAnalyticsService(self._session)
+        if get_settings().whatsapp_enabled:
+            await analytics.track_whatsapp_result(user.workshop_id, sent, "password_reset")
+        else:
+            await analytics.track(
+                "password_reset_token_created",
+                workshop_id=user.workshop_id,
+                user_id=user.id,
+            )
+
+        logger.info("Password reset token created", extra={"user_id": user.id})
+        response = ForgotPasswordResponse(message=message)
+        if get_settings().debug:
+            response.reset_token = raw_token
+        return response
+
+    async def reset_password(self, payload: ResetPasswordRequest) -> None:
+        token_hash = hash_reset_token(payload.token)
+        reset_token = await self._reset_repo.get_valid_by_hash(token_hash)
+        if reset_token is None:
+            raise UnauthorizedError("Invalid or expired reset token")
+
+        password_hash = await hash_password(payload.password)
+        await self._user_repo.update_password(reset_token.user_id, password_hash)
+        await self._reset_repo.delete_by_user(reset_token.user_id)
+        logger.info("Password reset completed", extra={"user_id": reset_token.user_id})

@@ -1,19 +1,30 @@
 import { useParams } from "react-router-dom";
 import { Check, FileText, FileX, Loader2 } from "lucide-react";
 import { usePublicTrack } from "../../hooks/usePublic";
-import { useForceLtr } from "../../i18n/useForceLtr";
+import { usePublicLanguage } from "../../i18n/usePublicLanguage";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import { useT } from "../../i18n/useT";
+import {
+  brandAccentStyle,
+  brandBorderStyle,
+  brandButtonClass,
+  brandHeaderStyle,
+  resolveBrandColor,
+} from "../../utils/brandColor";
 
 const fmt = (n: number) => `PKR ${Math.round(n).toLocaleString()}`;
 
 export default function TrackPage() {
-  useForceLtr();
+  usePublicLanguage();
+  const t = useT();
   const { cardId } = useParams<{ cardId: string }>();
   const { data, isLoading, isError } = usePublicTrack(cardId);
-  useDocumentTitle("Vehicle Status");
+  useDocumentTitle(t("public.trackStatus"));
 
-  if (isLoading) return <CenterSpinner />;
-  if (isError || !data) return <NotFound label="Job not found" />;
+  if (isLoading) return <CenterSpinner brandColor={undefined} />;
+  if (isError || !data) return <NotFound label={t("public.trackNotFound")} />;
+
+  const brandColor = resolveBrandColor(data.brand_color);
 
   const isCancelled = data.status === "cancelled";
   const isCompleted = data.status === "completed";
@@ -23,10 +34,10 @@ export default function TrackPage() {
     <div className="min-h-screen bg-slate-100 py-6 px-4">
       <div className="max-w-[480px] mx-auto bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.08)]">
         {/* Header */}
-        <div className="bg-gradient-to-br from-[#1d4ed8] to-[#1e3a8a] text-white px-6 py-7">
+        <div className="text-white px-6 py-7" style={brandHeaderStyle(data.brand_color)}>
           <Brand />
           <h1 className="text-xl font-extrabold tracking-tight">{data.workshop_name}</h1>
-          <p className="text-[13px] opacity-75 mt-0.5">Live vehicle status</p>
+          <p className="text-[13px] opacity-75 mt-0.5">{t("public.trackStatus")}</p>
         </div>
 
         <div className="p-6">
@@ -53,6 +64,7 @@ export default function TrackPage() {
                   active={isInProgress}
                   index={2}
                   label="Work in progress"
+                  brandColor={brandColor}
                   connector
                 />
                 <Step
@@ -60,6 +72,7 @@ export default function TrackPage() {
                   index={3}
                   label="Ready for pickup"
                   sub={isCompleted ? data.completed_at : undefined}
+                  brandColor={brandColor}
                 />
               </ol>
             </div>
@@ -83,7 +96,7 @@ export default function TrackPage() {
               <span className="text-slate-500">Parts</span>
               <span className="font-semibold">{fmt(data.parts_charge)}</span>
             </div>
-            <div className="flex justify-between items-center pt-3 mt-1 border-t-2 border-[#1d4ed8] text-lg font-extrabold text-[#1d4ed8]">
+            <div className="flex justify-between items-center pt-3 mt-1 border-t-2 text-lg font-extrabold" style={{ ...brandBorderStyle(data.brand_color), ...brandAccentStyle(data.brand_color) }}>
               <span>Total</span>
               <span>{fmt(data.total_amount)}</span>
             </div>
@@ -92,7 +105,8 @@ export default function TrackPage() {
           {data.invoice_number && (
             <a
               href={`/invoices/${data.invoice_number}`}
-              className="mt-4 flex items-center justify-center gap-2 bg-[#1d4ed8] hover:bg-[#1e40af] text-white font-bold text-[15px] py-3.5 rounded-2xl transition active:scale-95"
+              style={brandButtonClass(data.brand_color)}
+              className="mt-4 flex items-center justify-center gap-2 hover:opacity-90 text-white font-bold text-[15px] py-3.5 rounded-2xl transition active:scale-95"
             >
               <FileText size={16} />
               View Invoice
@@ -118,6 +132,7 @@ function Step({
   label,
   sub,
   connector = false,
+  brandColor = "#1d4ed8",
 }: {
   done?: boolean;
   active?: boolean;
@@ -125,6 +140,7 @@ function Step({
   label: string;
   sub?: string;
   connector?: boolean;
+  brandColor?: string;
 }) {
   return (
     <li className="flex items-start gap-3 pb-[18px] last:pb-0 relative">
@@ -136,9 +152,10 @@ function Step({
           done
             ? "bg-emerald-500 text-white"
             : active
-              ? "bg-[#1d4ed8] text-white ring-4 ring-blue-100"
+              ? "text-white ring-4 ring-blue-100"
               : "bg-slate-200 text-slate-400"
         }`}
+        style={active && !done ? { backgroundColor: brandColor } : undefined}
       >
         {done ? <Check size={14} /> : index}
       </span>
@@ -181,10 +198,10 @@ function Plate({ text }: { text: string }) {
   );
 }
 
-function CenterSpinner() {
+function CenterSpinner({ brandColor }: { brandColor?: string | null }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <Loader2 className="animate-spin text-[#1d4ed8]" size={28} />
+      <Loader2 className="animate-spin" size={28} style={{ color: resolveBrandColor(brandColor) }} />
     </div>
   );
 }

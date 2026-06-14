@@ -16,6 +16,7 @@ class WorkshopSettingsUpdate(BaseModel):
     bank_details: str | None = Field(None, max_length=500)
     reminder_interval_days: int | None = Field(None, ge=0, le=365)
     digest_enabled: bool | None = None
+    accent_theme: str | None = Field(None, max_length=20)
 
 
 class WorkshopSettingsResponse(BaseModel):
@@ -30,4 +31,5 @@ class WorkshopSettingsResponse(BaseModel):
     bank_details: str | None
     reminder_interval_days: int
     digest_enabled: bool
+    accent_theme: str
     created_at: datetime

@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { api } from "../api/axios";
+import AuthHeroPanel from "../components/auth/AuthHeroPanel";
+import AuthLanguageToggle from "../components/AuthLanguageToggle";
 import Logo from "../components/Logo";
 import { useAuthStore } from "../stores/authStore";
 import PhoneInputField from "../components/PhoneInputField";
 import { isValidPhone } from "../utils/validation";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { useForceLtr } from "../i18n/useForceLtr";
+import { useT } from "../i18n/useT";
 
 const inputBase =
   "w-full bg-white dark:bg-slate-800 dark:text-slate-100 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition shadow-sm";
@@ -21,6 +23,7 @@ function fieldClass(hasError: boolean) {
 export default function Login() {
   const navigate = useNavigate();
   const setTokens = useAuthStore((s) => s.setTokens);
+  const t = useT();
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,9 +32,7 @@ export default function Login() {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useDocumentTitle("Sign in");
-  useForceLtr();
-
+  useDocumentTitle(t("auth.signIn"));
   useEffect(() => {
     if (sessionStorage.getItem("session_expired")) {
       setSessionExpired(true);
@@ -46,10 +47,9 @@ export default function Login() {
     e.preventDefault();
     setFormError("");
 
-    // Client-side validation
     const errs: Record<string, string> = {};
-    if (!isValidPhone(mobile)) errs.mobile = "Enter a valid mobile number";
-    if (!password) errs.password = "Password is required";
+    if (!isValidPhone(mobile)) errs.mobile = t("auth.errMobileInvalid");
+    if (!password) errs.password = t("auth.errPasswordRequired");
 
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -62,44 +62,31 @@ export default function Login() {
       setTokens(data.access_token, data.refresh_token);
       navigate("/");
     } catch {
-      // Auth failures intentionally stay as a top-level banner (no field disambiguation)
-      setFormError("Invalid mobile number or password.");
+      setFormError(t("auth.errLoginFailed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel — brand hero (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[var(--brand-panel)] flex-col justify-between p-12">
-        <Logo variant="full" size="lg" light to="/" />
-        <div>
-          <p className="text-white text-3xl font-bold leading-snug mb-3">
-            Run your workshop<br />like a professional.
-          </p>
-          <p className="text-blue-200 text-base leading-relaxed">
-            Job cards, invoices, courier booking, and WhatsApp notifications
-            — all in one place.
-          </p>
-        </div>
-        <p className="text-blue-300 text-sm">Built for Pakistani workshops</p>
-      </div>
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex">
+      <AuthHeroPanel headlineKey="auth.heroLoginHeadline" subtextKey="auth.heroLoginSubtext" />
 
-      {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-[#F1F5F9] dark:bg-slate-900">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="lg:hidden mb-8">
+          <div className="lg:hidden mb-8 flex items-start justify-between gap-4">
             <Logo variant="full" size="md" to="/" />
+            <AuthLanguageToggle />
           </div>
 
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">Welcome back</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">Sign in to your workshop</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+            {t("auth.loginTitle")}
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("auth.loginSubtitle")}</p>
 
           {sessionExpired && (
             <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm rounded-xl px-4 py-3 mb-5">
-              Your session expired. Please sign in again.
+              {t("auth.sessionExpired")}
             </div>
           )}
 
@@ -112,7 +99,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Mobile number
+                {t("auth.mobileNumber")}
               </label>
               <PhoneInputField
                 value={mobile}
@@ -125,9 +112,17 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t("auth.password")}
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-[var(--brand)] hover:underline"
+                >
+                  {t("auth.forgotPassword")}
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -155,14 +150,14 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white font-semibold rounded-xl py-3 text-sm transition shadow-sm disabled:opacity-60"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading ? t("auth.signingIn") : t("auth.signIn")}
             </button>
           </form>
 
           <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
-            New workshop?{" "}
+            {t("auth.newWorkshop")}{" "}
             <Link to="/signup" className="text-[var(--brand)] font-semibold hover:underline">
-              Register here
+              {t("auth.registerHere")}
             </Link>
           </p>
         </div>

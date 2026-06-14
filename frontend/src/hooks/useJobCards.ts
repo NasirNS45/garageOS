@@ -25,6 +25,8 @@ export interface JobCard {
   customer_phone: string;
   status: "pending" | "in_progress" | "completed" | "cancelled";
   payment_status: "unpaid" | "paid";
+  collected_amount: number;
+  payment_method: string | null;
   assigned_mechanic_id: string | null;
   description: string | null;
   labour_charge: number;
@@ -59,20 +61,36 @@ export interface CompletePayload {
 }
 
 const KEYS = {
-  list: (page: number) => ["job-cards", page],
+  list: (page: number, filters?: JobCardListFilters) => ["job-cards", page, filters],
   single: (id: string) => ["job-cards", id],
   parts: (id: string) => ["job-cards", id, "parts"],
 };
 
-export function useJobCards(page = 1) {
+export interface JobCardListFilters {
+  activeOnly?: boolean;
+  status?: JobCard["status"];
+  paymentStatus?: JobCard["payment_status"];
+  search?: string;
+}
+
+export function useJobCards(page = 1, filters: JobCardListFilters = { activeOnly: true }) {
   return useQuery({
-    queryKey: KEYS.list(page),
-    queryFn: () =>
-      api
+    queryKey: KEYS.list(page, filters),
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: String(page),
+        page_size: "20",
+        active_only: filters.activeOnly === false ? "false" : "true",
+      });
+      if (filters.status) params.set("status", filters.status);
+      if (filters.paymentStatus) params.set("payment_status", filters.paymentStatus);
+      if (filters.search?.trim()) params.set("search", filters.search.trim());
+      return api
         .get<{ items: JobCard[]; total: number; page: number; page_size: number }>(
-          `/job-cards?page=${page}&page_size=20`
+          `/job-cards?${params.toString()}`
         )
-        .then((r) => r.data),
+        .then((r) => r.data);
+    },
   });
 }
 
@@ -195,6 +213,24 @@ export function useMarkPaid() {
       ctx?.snapshot?.forEach(([key, data]) => qc.setQueryData(key, data));
     },
     onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["job-cards"] });
+      qc.invalidateQueries({ queryKey: ["summary"] });
+    },
+  });
+}
+
+export interface PaymentUpdatePayload {
+  id: string;
+  collected_amount: number;
+  payment_method?: string;
+}
+
+export function useUpdatePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: PaymentUpdatePayload) =>
+      api.patch<JobCard>(`/job-cards/${id}/payment`, data).then((r) => r.data),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["job-cards"] });
       qc.invalidateQueries({ queryKey: ["summary"] });
     },

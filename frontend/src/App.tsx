@@ -9,10 +9,13 @@ import ErrorBoundary from "./components/ErrorBoundary";
 // Route-level code splitting — each page ships as its own chunk
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Landing = lazy(() => import("./pages/Landing"));
 const InvoicePage = lazy(() => import("./pages/public/InvoicePage"));
 const TrackPage = lazy(() => import("./pages/public/TrackPage"));
+const CustomerProfile = lazy(() => import("./pages/CustomerProfile"));
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -59,12 +62,15 @@ export default function App() {
               {/* Auth pages — logged-in users skip to dashboard */}
               <Route path="/login"  element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
+              <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+              <Route path="/reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />
 
               {/* Protected app routes */}
               <Route path="/jobs"     element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/history"  element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/summary"  element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/settings" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+              <Route path="/customers/:phone" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />

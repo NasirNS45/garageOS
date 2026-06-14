@@ -66,6 +66,11 @@ html[lang="ur"] body {
   font-family: "Noto Naskh Arabic", "Inter", system-ui, sans-serif;
   line-height: 1.85;
 }
+/* Nastaliq for marketing headlines only (landing/auth hero, testimonials) */
+html[lang="ur"] .urdu-display {
+  font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif;
+  line-height: 1.9;
+}
 /* Latin content (plates, numbers) stays LTR inside RTL layout */
 html[lang="ur"] [data-keep-ltr] {
   direction: ltr;

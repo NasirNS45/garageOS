@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { DailySeriesPoint } from "../hooks/useJobCards";
+import { useT } from "../i18n/useT";
 
 interface Props {
   points: DailySeriesPoint[];
@@ -10,6 +11,7 @@ const TOP_PAD = 8;
 
 /** Pure-SVG daily revenue/expenses bar chart. No chart library. */
 export default function RevenueChart({ points }: Props) {
+  const t = useT();
   const [selected, setSelected] = useState<number | null>(null);
 
   if (points.length === 0) return null;
@@ -36,13 +38,13 @@ export default function RevenueChart({ points }: Props) {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 mb-3">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Daily Revenue</h3>
+        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">{t("summary.dailyRevenue")}</h3>
         <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400 dark:text-slate-500">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-[var(--brand)]" /> Revenue
+            <span className="w-2 h-2 rounded-sm bg-[var(--brand)]" /> {t("summary.revenue")}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-amber-400" /> Expenses
+            <span className="w-2 h-2 rounded-sm bg-amber-400" /> {t("summary.expenses")}
           </span>
         </div>
       </div>
@@ -62,7 +64,7 @@ export default function RevenueChart({ points }: Props) {
             )}
           </div>
         ) : (
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">Tap a bar for details</p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">{t("summary.tapBar")}</p>
         )}
       </div>
 
