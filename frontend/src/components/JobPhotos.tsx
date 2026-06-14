@@ -75,7 +75,7 @@ export default function JobPhotos({
                     <button
                       onClick={() => setConfirmId(p.id)}
                       aria-label="Delete photo"
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow opacity-90 hover:opacity-100 active:scale-95"
+                      className="absolute -top-1.5 -right-1.5 rtl:right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow opacity-90 hover:opacity-100 active:scale-95"
                     >
                       <Trash2 size={11} />
                     </button>
@@ -147,7 +147,7 @@ export default function JobPhotos({
           <button
             onClick={() => setLightbox(null)}
             aria-label="Close"
-            className="absolute top-4 right-4 text-white/80 hover:text-white"
+            className="absolute top-4 right-4 rtl:right-auto rtl:left-4 text-white/80 hover:text-white"
           >
             <X size={28} />
           </button>

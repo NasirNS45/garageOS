@@ -35,6 +35,7 @@ import { parseApiError } from "../../utils/parseApiError";
 import { isValidPhone } from "../../utils/validation";
 import { todayStr, shiftDate } from "../../utils/dates";
 import { inputClass, fieldClass } from "./formStyles";
+import { useT } from "../../i18n/useT";
 
 // ── Settings tab ──────────────────────────────────────────────────────────────
 const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "1.0.0";
@@ -94,6 +95,7 @@ function SettingCard({
 
 // ── Upcoming service reminders list ──────────────────────────────────────────
 function RemindersList() {
+  const t = useT();
   const { data: reminders = [], isLoading } = useReminders();
   const cancelReminder = useCancelReminder();
   const { toast } = useToast();
@@ -103,7 +105,7 @@ function RemindersList() {
   return (
     <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
       <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2.5 uppercase tracking-wide">
-        Upcoming reminders ({reminders.length})
+        {t("reminders.upcoming")} ({reminders.length})
       </p>
       <div className="space-y-2">
         {reminders.map((r) => (
@@ -113,17 +115,17 @@ function RemindersList() {
                 {r.vehicle_number} · {r.customer_name}
               </p>
               <p className="text-xs text-slate-400 dark:text-slate-500">
-                Due {r.due_date}
+                {t("reminders.due")} {r.due_date}
               </p>
             </div>
             <button
               onClick={() =>
                 cancelReminder.mutate(r.id, {
-                  onSuccess: () => toast("Reminder cancelled", "info"),
-                  onError: () => toast("Could not cancel reminder", "error"),
+                  onSuccess: () => toast(t("reminders.cancelled"), "info"),
+                  onError: () => toast(t("reminders.cancelFailed"), "error"),
                 })
               }
-              aria-label="Cancel reminder"
+              aria-label={t("reminders.cancelAria")}
               className="text-slate-300 hover:text-red-500 transition p-1 active:scale-95 shrink-0"
             >
               <Trash2 size={15} />
@@ -136,6 +138,7 @@ function RemindersList() {
 }
 
 export default function SettingsTab() {
+  const t = useT();
   const { setWorkshopName } = useAuthStore();
   const { toast } = useToast();
   const [form, setForm] = useState<SettingsForm>(EMPTY_SETTINGS);
@@ -183,9 +186,9 @@ export default function SettingsTab() {
     try {
       await api.put("/settings", form);
       setWorkshopName(form.name);
-      toast("Settings saved", "success");
+      toast(t("settings.saved"), "success");
     } catch {
-      toast("Failed to save settings", "error");
+      toast(t("settings.saveFailed"), "error");
     } finally {
       setSaving(false);
     }
@@ -193,17 +196,17 @@ export default function SettingsTab() {
 
   const testWhatsApp = async () => {
     const phone = form.whatsapp_number.trim();
-    if (!phone) { toast("Enter a WhatsApp number first", "info"); return; }
+    if (!phone) { toast(t("settings.enterWhatsappFirst"), "info"); return; }
     setTestingWa(true);
     try {
       await api.post("/settings/test-whatsapp", { phone });
-      toast("Test message sent! Check WhatsApp.", "success");
+      toast(t("settings.testSent"), "success");
     } catch (err: unknown) {
       const msg =
         err instanceof Object && "response" in err
           ? ((err as { response?: { data?: { detail?: string } } }).response?.data?.detail ??
-            "Failed to send test message")
-          : "Failed to send test message";
+            t("settings.testFailed"))
+          : t("settings.testFailed");
       toast(msg, "error");
     } finally {
       setTestingWa(false);
@@ -216,7 +219,7 @@ export default function SettingsTab() {
   if (!loaded) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Settings</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("settings.title")}</h2>
         <JobCardSkeleton count={3} />
       </div>
     );
@@ -225,11 +228,11 @@ export default function SettingsTab() {
   if (loadError) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Settings</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("settings.title")}</h2>
         <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-2xl p-6 text-center">
-          <p className="font-semibold text-sm mb-3">Failed to load settings</p>
+          <p className="font-semibold text-sm mb-3">{t("settings.loadFailed")}</p>
           <button onClick={loadSettings} className="text-sm font-semibold underline hover:no-underline">
-            Try again
+            {t("settings.tryAgain")}
           </button>
         </div>
       </div>
@@ -241,16 +244,16 @@ export default function SettingsTab() {
       <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Settings</h2>
 
       {/* Workshop */}
-      <SettingCard icon={<Building2 size={15} />} title="Workshop">
+      <SettingCard icon={<Building2 size={15} />} title={t("settings.workshop")}>
         <form onSubmit={save} className="space-y-3.5">
           <div className="grid grid-cols-1 gap-3.5">
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Workshop Name
+                {t("settings.workshopName")}
               </label>
               <input
                 type="text"
-                placeholder="Ali Motors"
+                placeholder={t("settings.workshopNamePlaceholder")}
                 value={form.name}
                 onChange={setField("name")}
                 className={settingInput}
@@ -258,11 +261,11 @@ export default function SettingsTab() {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Address
+                {t("settings.address")}
               </label>
               <input
                 type="text"
-                placeholder="Shop 5, GT Road"
+                placeholder={t("settings.addressPlaceholder")}
                 value={form.address}
                 onChange={setField("address")}
                 className={settingInput}
@@ -270,7 +273,7 @@ export default function SettingsTab() {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Owner Contact
+                {t("settings.ownerContact")}
               </label>
               <PhoneInputField
                 value={form.owner_contact}
@@ -279,7 +282,7 @@ export default function SettingsTab() {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                WhatsApp Number
+                {t("settings.whatsappNumber")}
               </label>
               <PhoneInputField
                 value={form.whatsapp_number}
@@ -291,37 +294,37 @@ export default function SettingsTab() {
                 disabled={testingWa || !form.whatsapp_number.trim()}
                 className="mt-2 text-xs font-semibold text-[var(--brand)] border border-[var(--brand)] bg-transparent hover:bg-[var(--brand)] hover:text-white px-3 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {testingWa ? "Sending…" : "Send Test Message"}
+                {testingWa ? t("settings.sending") : t("settings.sendTest")}
               </button>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Invoice Footer
+                {t("settings.invoiceFooter")}
               </label>
               <textarea
                 rows={2}
-                placeholder="Thank you for your business!"
+                placeholder={t("settings.invoiceFooterPlaceholder")}
                 value={form.invoice_footer}
                 onChange={(e) => setForm((prev) => ({ ...prev, invoice_footer: e.target.value }))}
                 className={`${settingInput} resize-none`}
               />
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                Shown at the bottom of every invoice.
+                {t("settings.invoiceFooterHint")}
               </p>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Payment / Bank Details
+                {t("settings.bankDetails")}
               </label>
               <textarea
                 rows={3}
-                placeholder={"Bank: Allied Bank\nAccount: 0123456789\nIBAN: PK00ABCD..."}
+                placeholder={t("settings.bankDetailsPlaceholder")}
                 value={form.bank_details}
                 onChange={(e) => setForm((prev) => ({ ...prev, bank_details: e.target.value }))}
                 className={`${settingInput} resize-none`}
               />
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                Shown on the invoice under "Payment Details".
+                {t("settings.bankDetailsHint")}
               </p>
             </div>
           </div>
@@ -330,22 +333,22 @@ export default function SettingsTab() {
             disabled={saving}
             className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-2.5 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
           >
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? t("settings.saving") : t("settings.saveChanges")}
           </button>
         </form>
       </SettingCard>
 
       {/* Appearance */}
-      <SettingCard icon={<Palette size={15} />} title="Appearance">
+      <SettingCard icon={<Palette size={15} />} title={t("settings.appearance")}>
         <ThemePicker />
       </SettingCard>
 
       {/* Automation: reminders + digest */}
-      <SettingCard icon={<BellRing size={15} />} title="Automation">
+      <SettingCard icon={<BellRing size={15} />} title={t("settings.automation")}>
         <form onSubmit={save} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Service reminder interval (days)
+              {t("settings.reminderInterval")}
             </label>
             <input
               type="number"
@@ -361,14 +364,13 @@ export default function SettingsTab() {
               className={settingInput}
             />
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              When a job is completed, schedule a WhatsApp service reminder this many
-              days later. Set to 0 to turn reminders off. (90 = roughly 3 months.)
+              {t("settings.reminderIntervalHint")}
             </p>
           </div>
 
           <label className="flex items-center justify-between gap-3 cursor-pointer select-none">
             <span className="text-sm text-slate-700 dark:text-slate-300">
-              Daily summary to my WhatsApp
+              {t("settings.dailyDigest")}
             </span>
             <div className="relative shrink-0">
               <input
@@ -385,15 +387,14 @@ export default function SettingsTab() {
                 }`}
               />
               <div
-                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                  form.digest_enabled ? "translate-x-5" : ""
+                className={`absolute top-0.5 start-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  form.digest_enabled ? "translate-x-5 rtl:-translate-x-5" : ""
                 }`}
               />
             </div>
           </label>
           <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
-            Each evening, get a WhatsApp with the day's jobs, revenue, and outstanding
-            amount. Sent to your WhatsApp number above.
+            {t("settings.dailyDigestHint")}
           </p>
 
           <button
@@ -401,7 +402,7 @@ export default function SettingsTab() {
             disabled={saving}
             className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-2.5 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
           >
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? t("settings.saving") : t("settings.saveChanges")}
           </button>
         </form>
 
@@ -430,7 +431,7 @@ export default function SettingsTab() {
           rel="noreferrer"
           className="font-medium text-[var(--brand)] hover:underline"
         >
-          Send feedback
+          {t("settings.sendFeedback")}
         </a>
       </p>
     </div>
@@ -439,6 +440,7 @@ export default function SettingsTab() {
 
 // ── Mechanics management section (inside SettingsTab) ─────────────────────────
 function MechanicsSection() {
+  const t = useT();
   const { data: mechanics = [], isLoading } = useMechanics();
   const addMechanic = useAddMechanic();
   const toggleMechanic = useToggleMechanic();
@@ -455,16 +457,16 @@ function MechanicsSection() {
 
   const validateMechanic = (): Record<string, string> => {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.full_name = "Full name is required";
+    if (!name.trim()) errs.full_name = t("settings.errFullNameRequired");
     if (!mobile.trim()) {
-      errs.mobile = "Mobile number is required";
+      errs.mobile = t("settings.errMobileRequired");
     } else if (!isValidPhone(mobile)) {
-      errs.mobile = "Enter a valid mobile number";
+      errs.mobile = t("settings.errMobileInvalid");
     }
     if (!password) {
-      errs.password = "Password is required";
+      errs.password = t("settings.errPasswordRequired");
     } else if (password.length < 8) {
-      errs.password = "Password must be at least 8 characters";
+      errs.password = t("settings.errPasswordShort");
     }
     return errs;
   };
@@ -481,7 +483,7 @@ function MechanicsSection() {
 
     try {
       await addMechanic.mutateAsync({ full_name: name, mobile, password });
-      toast("Mechanic added", "success");
+      toast(t("settings.mechanicAdded"), "success");
       setShowAddSheet(false);
       setName("");
       setMobile("");
@@ -493,7 +495,7 @@ function MechanicsSection() {
       if (hasFieldErrors) {
         setMechErrors(serverErrors);
       } else {
-        toast(serverErrors._form ?? "Failed to add mechanic", "error");
+        toast(serverErrors._form ?? t("settings.mechanicAddFailed"), "error");
       }
     }
   };
@@ -503,8 +505,8 @@ function MechanicsSection() {
       { id: m.id, is_active: !m.is_active },
       {
         onSuccess: () =>
-          toast(m.is_active ? "Mechanic deactivated" : "Mechanic activated", "info"),
-        onError: () => toast("Failed to update mechanic", "error"),
+          toast(m.is_active ? t("settings.mechanicDeactivated") : t("settings.mechanicActivated"), "info"),
+        onError: () => toast(t("settings.mechanicUpdateFailed"), "error"),
       }
     );
   };
@@ -513,14 +515,14 @@ function MechanicsSection() {
     <>
       <SettingCard
         icon={<Users size={15} />}
-        title="Team"
+        title={t("settings.team")}
         action={
           <button
             onClick={() => setShowAddSheet(true)}
             className="flex items-center gap-1 text-xs font-semibold text-[var(--brand)] hover:underline"
           >
             <Plus size={13} />
-            Add
+            {t("common.add")}
           </button>
         }
       >
@@ -528,7 +530,7 @@ function MechanicsSection() {
 
         {!isLoading && mechanics.length === 0 && (
           <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-            No mechanics yet. Add your first mechanic to start assigning jobs.
+            {t("settings.noMechanics")}
           </p>
         )}
 
@@ -541,7 +543,7 @@ function MechanicsSection() {
                 </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full ${m.is_available ? "bg-emerald-500" : "bg-amber-400"}`} />
-                  {m.mobile} · {m.is_available ? "Available" : "Busy"}
+                  {m.mobile} · {m.is_available ? t("settings.available") : t("settings.busy")}
                 </p>
               </div>
               <button
@@ -553,7 +555,7 @@ function MechanicsSection() {
                     : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
                 }`}
               >
-                {m.is_active ? "Active" : "Inactive"}
+                {m.is_active ? t("settings.active") : t("settings.inactive")}
               </button>
             </div>
           ))}
@@ -566,7 +568,7 @@ function MechanicsSection() {
           setShowAddSheet(false);
           setMechErrors({});
         }}
-        title="Add Mechanic"
+        title={t("settings.addMechanic")}
       >
         <form onSubmit={handleAdd} className="space-y-4" noValidate>
           {mechErrors._form && (
@@ -576,12 +578,12 @@ function MechanicsSection() {
           )}
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Full name
+              {t("settings.fullName")}
             </label>
             <input
               value={name}
               onChange={(e) => { setName(e.target.value); clearMechError("full_name"); }}
-              placeholder="Ali Raza"
+              placeholder={t("settings.fullNamePlaceholder")}
               className={fieldClass(!!mechErrors.full_name)}
             />
             {mechErrors.full_name && (
@@ -590,7 +592,7 @@ function MechanicsSection() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Mobile
+              {t("settings.mobile")}
             </label>
             <PhoneInputField
               value={mobile}
@@ -603,13 +605,13 @@ function MechanicsSection() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Password
+              {t("settings.password")}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => { setPassword(e.target.value); clearMechError("password"); }}
-              placeholder="Min 8 characters"
+              placeholder={t("settings.passwordPlaceholder")}
               className={fieldClass(!!mechErrors.password)}
             />
             {mechErrors.password && (
@@ -621,7 +623,7 @@ function MechanicsSection() {
             disabled={addMechanic.isPending}
             className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
           >
-            {addMechanic.isPending ? "Adding…" : "Add Mechanic"}
+            {addMechanic.isPending ? t("settings.adding") : t("settings.addMechanic")}
           </button>
         </form>
       </BottomSheet>
@@ -631,6 +633,7 @@ function MechanicsSection() {
 
 // ── Service presets section (inside SettingsTab) ───────────────────────────────
 function PresetsSection() {
+  const t = useT();
   const { data: presets = [], isLoading } = useServicePresets();
   const createPreset = useCreatePreset();
   const deletePreset = useDeletePreset();
@@ -655,7 +658,7 @@ function PresetsSection() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!presetName.trim()) errs.name = "Preset name is required";
+    if (!presetName.trim()) errs.name = t("settings.errPresetNameRequired");
     if (Object.keys(errs).length > 0) {
       setPresetErrors(errs);
       return;
@@ -666,18 +669,18 @@ function PresetsSection() {
         description: presetDesc.trim() || undefined,
         default_labour: presetLabour,
       });
-      toast("Preset added", "success");
+      toast(t("settings.presetAdded"), "success");
       setShowAddSheet(false);
       resetForm();
     } catch {
-      toast("Failed to add preset", "error");
+      toast(t("settings.presetAddFailed"), "error");
     }
   };
 
   const handleDelete = (preset: ServicePreset) => {
     deletePreset.mutate(preset.id, {
-      onSuccess: () => toast("Preset deleted", "info"),
-      onError: () => toast("Failed to delete preset", "error"),
+      onSuccess: () => toast(t("settings.presetDeleted"), "info"),
+      onError: () => toast(t("settings.presetDeleteFailed"), "error"),
     });
   };
 
@@ -685,14 +688,14 @@ function PresetsSection() {
     <>
       <SettingCard
         icon={<Wrench size={15} />}
-        title="Service Presets"
+        title={t("settings.servicePresets")}
         action={
           <button
             onClick={() => setShowAddSheet(true)}
             className="flex items-center gap-1 text-xs font-semibold text-[var(--brand)] hover:underline"
           >
             <Plus size={13} />
-            Add
+            {t("common.add")}
           </button>
         }
       >
@@ -700,7 +703,7 @@ function PresetsSection() {
 
         {!isLoading && presets.length === 0 && (
           <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-            No presets yet. Add common services to speed up job creation.
+            {t("settings.noPresets")}
           </p>
         )}
 
@@ -721,7 +724,7 @@ function PresetsSection() {
               <button
                 onClick={() => handleDelete(p)}
                 disabled={deletePreset.isPending}
-                aria-label="Delete preset"
+                aria-label={t("settings.deletePreset")}
                 className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
               >
                 <Trash2 size={14} />
@@ -737,17 +740,17 @@ function PresetsSection() {
           setShowAddSheet(false);
           resetForm();
         }}
-        title="Add Service Preset"
+        title={t("settings.addPreset")}
       >
         <form onSubmit={handleAdd} className="space-y-4" noValidate>
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Preset name
+              {t("settings.presetName")}
             </label>
             <input
               value={presetName}
               onChange={(e) => { setPresetName(e.target.value); clearPresetError("name"); }}
-              placeholder="Oil change"
+              placeholder={t("settings.presetNamePlaceholder")}
               className={fieldClass(!!presetErrors.name)}
             />
             {presetErrors.name && (
@@ -756,18 +759,18 @@ function PresetsSection() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Description (optional)
+              {t("settings.presetDescription")}
             </label>
             <input
               value={presetDesc}
               onChange={(e) => setPresetDesc(e.target.value)}
-              placeholder="Engine oil + filter replacement"
+              placeholder={t("settings.presetDescriptionPlaceholder")}
               className={inputClass}
             />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Default labour charge (PKR)
+              {t("settings.defaultLabour")}
             </label>
             <input
               type="number"
@@ -782,7 +785,7 @@ function PresetsSection() {
             disabled={createPreset.isPending}
             className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
           >
-            {createPreset.isPending ? "Adding…" : "Add Preset"}
+            {createPreset.isPending ? t("settings.adding") : t("settings.addPreset")}
           </button>
         </form>
       </BottomSheet>
@@ -792,6 +795,7 @@ function PresetsSection() {
 
 // ── Parts catalog section (inside SettingsTab) ────────────────────────────────
 function PartsCatalogSection() {
+  const t = useT();
   const { data: items = [], isLoading } = usePartCatalog();
   const createItem = useCreatePartCatalogItem();
   const deleteItem = useDeletePartCatalogItem();
@@ -806,24 +810,24 @@ function PartsCatalogSection() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemName.trim()) { setItemError("Part name is required"); return; }
+    if (!itemName.trim()) { setItemError(t("settings.errPartNameRequired")); return; }
     const price = parseFloat(itemPrice);
-    if (!itemPrice || isNaN(price) || price < 0) { setItemError("Enter a valid price"); return; }
+    if (!itemPrice || isNaN(price) || price < 0) { setItemError(t("settings.errPartPriceInvalid")); return; }
     setItemError("");
     try {
       await createItem.mutateAsync({ name: itemName.trim(), default_price: price });
-      toast("Part added to catalog", "success");
+      toast(t("settings.partAdded"), "success");
       setShowAddSheet(false);
       resetForm();
     } catch {
-      toast("Failed to add part", "error");
+      toast(t("settings.partAddFailed"), "error");
     }
   };
 
   const handleDelete = (item: PartCatalogItem) => {
     deleteItem.mutate(item.id, {
-      onSuccess: () => toast("Part removed from catalog", "info"),
-      onError: () => toast("Failed to remove part", "error"),
+      onSuccess: () => toast(t("settings.partRemoved"), "info"),
+      onError: () => toast(t("settings.partRemoveFailed"), "error"),
     });
   };
 
@@ -831,26 +835,26 @@ function PartsCatalogSection() {
     <>
       <SettingCard
         icon={<Package size={15} />}
-        title="Parts Catalog"
+        title={t("settings.partsCatalog")}
         action={
           <button
             onClick={() => setShowAddSheet(true)}
             className="flex items-center gap-1 text-xs font-semibold text-[var(--brand)] hover:underline"
           >
             <Plus size={13} />
-            Add
+            {t("common.add")}
           </button>
         }
       >
         <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
-          Pre-define parts with standard prices. When adding a part to a job, typing the name will suggest from this list.
+          {t("settings.partsCatalogHint")}
         </p>
 
         {isLoading && <JobCardSkeleton count={1} />}
 
         {!isLoading && items.length === 0 && (
           <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-            No parts yet. Add common parts to speed up job tracking.
+            {t("settings.noParts")}
           </p>
         )}
 
@@ -866,7 +870,7 @@ function PartsCatalogSection() {
               <button
                 onClick={() => handleDelete(item)}
                 disabled={deleteItem.isPending}
-                aria-label="Remove part"
+                aria-label={t("settings.removePart")}
                 className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
               >
                 <Trash2 size={14} />
@@ -879,23 +883,23 @@ function PartsCatalogSection() {
       <BottomSheet
         open={showAddSheet}
         onClose={() => { setShowAddSheet(false); resetForm(); }}
-        title="Add to Parts Catalog"
+        title={t("settings.addToCatalog")}
       >
         <form onSubmit={handleAdd} className="space-y-4" noValidate>
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Part name
+              {t("settings.partName")}
             </label>
             <input
               value={itemName}
               onChange={(e) => { setItemName(e.target.value); setItemError(""); }}
-              placeholder="Engine Oil 1L"
+              placeholder={t("settings.partNamePlaceholder")}
               className={fieldClass(!!itemError && !itemPrice)}
             />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              Default price (PKR)
+              {t("settings.defaultPrice")}
             </label>
             <input
               type="number"
@@ -913,7 +917,7 @@ function PartsCatalogSection() {
             disabled={createItem.isPending}
             className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
           >
-            {createItem.isPending ? "Adding…" : "Add to Catalog"}
+            {createItem.isPending ? t("settings.adding") : t("settings.addToCatalog")}
           </button>
         </form>
       </BottomSheet>
@@ -923,6 +927,7 @@ function PartsCatalogSection() {
 
 // ── CSV Export section (inside SettingsTab) ────────────────────────────────────
 function ExportSection() {
+  const t = useT();
   const today = todayStr();
   const { toast } = useToast();
   const [exportStart, setExportStart] = useState(() => shiftDate(today, -30));
@@ -931,7 +936,7 @@ function ExportSection() {
 
   const handleExport = async () => {
     if (exportStart > exportEnd) {
-      toast("Start date must be before end date", "error");
+      toast(t("settings.exportDateError"), "error");
       return;
     }
     setExporting(true);
@@ -947,7 +952,7 @@ function ExportSection() {
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
-      toast("Failed to export CSV", "error");
+      toast(t("settings.exportFailed"), "error");
     } finally {
       setExporting(false);
     }
@@ -957,17 +962,17 @@ function ExportSection() {
     "w-full bg-slate-50 dark:bg-slate-900 dark:[color-scheme:dark] border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition";
 
   return (
-    <SettingCard icon={<Download size={15} />} title="Export Data">
+    <SettingCard icon={<Download size={15} />} title={t("settings.exportData")}>
       <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
-        Download completed jobs as a CSV file for your accountant.
+        {t("settings.exportHint")}
       </p>
       <div className="flex gap-2 mb-3">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">From</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t("settings.from")}</label>
           <input type="date" value={exportStart} max={exportEnd} onChange={(e) => setExportStart(e.target.value)} className={dateInput} />
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">To</label>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t("settings.to")}</label>
           <input type="date" value={exportEnd} min={exportStart} max={today} onChange={(e) => setExportEnd(e.target.value)} className={dateInput} />
         </div>
       </div>
@@ -977,7 +982,7 @@ function ExportSection() {
         className="w-full flex items-center justify-center gap-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-semibold rounded-xl py-2.5 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
       >
         <Download size={15} />
-        {exporting ? "Exporting…" : "Download CSV"}
+        {exporting ? t("settings.exporting") : t("settings.downloadCsv")}
       </button>
     </SettingCard>
   );

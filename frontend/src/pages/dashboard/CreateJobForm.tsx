@@ -364,8 +364,8 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
                 }`}
               />
               <div
-                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                  notifyCheckin ? "translate-x-5" : ""
+                className={`absolute top-0.5 start-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  notifyCheckin ? "translate-x-5 rtl:-translate-x-5" : ""
                 }`}
               />
             </div>

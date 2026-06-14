@@ -194,8 +194,8 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
               }`}
             />
             <div
-              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                notifyCustomer ? "translate-x-5" : ""
+              className={`absolute top-0.5 start-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                notifyCustomer ? "translate-x-5 rtl:-translate-x-5" : ""
               }`}
             />
           </div>

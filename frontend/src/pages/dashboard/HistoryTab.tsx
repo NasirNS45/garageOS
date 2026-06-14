@@ -5,6 +5,7 @@ import EmptyState from "../../components/EmptyState";
 import VehiclePlate from "../../components/VehiclePlate";
 import { useCustomerInsights } from "../../hooks/useCustomerInsights";
 import { api } from "../../api/axios";
+import { useT } from "../../i18n/useT";
 
 // ── History tab ───────────────────────────────────────────────────────────────
 interface HistoryJob {
@@ -24,15 +25,16 @@ interface HistoryResult {
 
 type HistoryStatusFilter = "all" | "completed" | "in_progress" | "pending" | "cancelled";
 
-const HISTORY_STATUS_LABELS: Record<HistoryStatusFilter, string> = {
-  all: "All",
-  completed: "Completed",
-  in_progress: "In Progress",
-  pending: "Pending",
-  cancelled: "Cancelled",
+const HISTORY_STATUS_KEYS: Record<HistoryStatusFilter, "status.all" | "status.completed" | "status.in_progress" | "status.pending" | "status.cancelled"> = {
+  all: "status.all",
+  completed: "status.completed",
+  in_progress: "status.in_progress",
+  pending: "status.pending",
+  cancelled: "status.cancelled",
 };
 
 export default function HistoryTab() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<"vehicle" | "phone">("vehicle");
   const [result, setResult] = useState<HistoryResult | null>(null);
@@ -83,7 +85,7 @@ export default function HistoryTab() {
 
   return (
     <div>
-      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Customer History</h2>
+      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t("history.title")}</h2>
 
       <form
         onSubmit={search}
@@ -91,16 +93,16 @@ export default function HistoryTab() {
       >
         <div className="flex gap-2">
           <button type="button" onClick={() => setType("vehicle")} className={toggle(type === "vehicle")}>
-            Vehicle No.
+            {t("history.byVehicle")}
           </button>
           <button type="button" onClick={() => setType("phone")} className={toggle(type === "phone")}>
-            Phone
+            {t("history.byPhone")}
           </button>
         </div>
         <input
           type="text"
           required
-          placeholder={type === "vehicle" ? "e.g. ABC-123" : "e.g. 03xx xxx xxxx"}
+          placeholder={type === "vehicle" ? t("history.placeholderVehicle") : t("history.placeholderPhone")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition"
@@ -110,7 +112,7 @@ export default function HistoryTab() {
           disabled={loading}
           className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white text-sm font-semibold rounded-xl py-3 transition active:scale-95 disabled:opacity-60"
         >
-          {loading ? "Searching…" : "Search"}
+          {loading ? t("history.searching") : t("history.search")}
         </button>
       </form>
 
@@ -119,7 +121,7 @@ export default function HistoryTab() {
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
             <Trophy size={15} className="text-amber-500" />
-            Top Customers
+            {t("history.topCustomers")}
           </h3>
           <div className="space-y-2.5">
             {insightsQ.data!.map((c, i) => (
@@ -134,7 +136,7 @@ export default function HistoryTab() {
                     {c.customer_name}
                   </p>
                   <p className="text-xs text-slate-400 dark:text-slate-500" data-keep-ltr>
-                    {c.total_jobs} visit{c.total_jobs !== 1 ? "s" : ""} · {c.customer_phone}
+                    {c.total_jobs} {c.total_jobs === 1 ? t("history.visit") : t("history.visits")} · {c.customer_phone}
                   </p>
                 </div>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 shrink-0">
@@ -150,15 +152,15 @@ export default function HistoryTab() {
 
       {!loading && searched && searchError && (
         <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mt-2">
-          Search failed. Check your connection and try again.
+          {t("history.searchFailed")}
         </div>
       )}
 
       {!loading && searched && !result && !searchError && (
         <EmptyState
           icon={<SearchX size={48} />}
-          title="No records found"
-          description="Try searching by a different vehicle number or phone"
+          title={t("history.noRecords")}
+          description={t("history.noRecordsDesc")}
         />
       )}
 
@@ -176,7 +178,7 @@ export default function HistoryTab() {
           <div className="space-y-2">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
               {result.customer_name}
-              <span className="font-normal text-slate-400"> · {result.total_jobs} job(s)</span>
+              <span className="font-normal text-slate-400"> · {result.total_jobs} {t("history.jobsCount")}</span>
             </p>
 
             {/* Status filter pills */}
@@ -194,7 +196,7 @@ export default function HistoryTab() {
                           : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
                       }`}
                     >
-                      {HISTORY_STATUS_LABELS[f] ?? f}
+                      {t(HISTORY_STATUS_KEYS[f])}
                     </button>
                   ))}
               </div>
@@ -203,8 +205,8 @@ export default function HistoryTab() {
             {filteredJobs.length === 0 ? (
               <EmptyState
                 icon={<SearchX size={40} />}
-                title={`No ${HISTORY_STATUS_LABELS[historyFilter].toLowerCase()} jobs`}
-                description="Try a different filter"
+                title={t("history.noFilterJobs")}
+                description={t("history.tryFilter")}
               />
             ) : (
               filteredJobs.map((j) => (
@@ -235,7 +237,7 @@ export default function HistoryTab() {
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-[var(--brand)] font-medium hover:underline mt-2"
                     >
-                      View Invoice →
+                      {t("history.viewInvoice")} →
                     </a>
                   )}
                 </div>

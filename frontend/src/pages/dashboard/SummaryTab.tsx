@@ -23,11 +23,13 @@ import { useToast } from "../../context/ToastContext";
 import { parseApiError } from "../../utils/parseApiError";
 import { inputClass } from "./formStyles";
 import { todayStr, shiftDate, weekRange, monthRange } from "../../utils/dates";
+import { useT } from "../../i18n/useT";
 
 // ── Summary tab ───────────────────────────────────────────────────────────────
 type SummaryPeriod = "day" | "week" | "month";
 
 export default function SummaryTab() {
+  const t = useT();
   const today = todayStr();
   const [period, setPeriod] = useState<SummaryPeriod>("day");
   const [dayStr, setDayStr] = useState<string>(today);
@@ -61,7 +63,7 @@ export default function SummaryTab() {
   // Human-readable period label
   const periodLabel = (() => {
     if (period === "day") {
-      if (isToday) return "Today";
+      if (isToday) return t("summary.today");
       const [sy, sm, sd] = dayStr.split("-").map(Number);
       return new Date(sy, sm - 1, sd).toLocaleDateString("en-PK", {
         weekday: "short", day: "numeric", month: "short",
@@ -76,7 +78,7 @@ export default function SummaryTab() {
       const fmt = (dt: Date) =>
         dt.toLocaleDateString("en-PK", { day: "numeric", month: "short" });
       return isCurrentWeek
-        ? `This week (${fmt(start)} - ${fmt(end)})`
+        ? `${t("summary.thisWeek")} (${fmt(start)} - ${fmt(end)})`
         : `${fmt(start)} - ${fmt(end)}`;
     }
     // month
@@ -105,10 +107,10 @@ export default function SummaryTab() {
   })();
 
   const stats: { label: string; value: number; accent: boolean; bg: string; textColor: string }[] = [
-    { label: "Total Jobs",  value: d?.total_jobs ?? 0,       accent: false, bg: "bg-white dark:bg-slate-800",          textColor: "text-slate-800 dark:text-slate-100" },
-    { label: "Completed",   value: d?.completed_jobs ?? 0,   accent: true,  bg: "bg-emerald-50 dark:bg-emerald-900/30", textColor: "text-emerald-700 dark:text-emerald-300" },
-    { label: "In Progress", value: d?.in_progress_jobs ?? 0, accent: false, bg: "bg-blue-50 dark:bg-blue-900/30",       textColor: "text-blue-700 dark:text-blue-300" },
-    { label: "Pending",     value: d?.pending_jobs ?? 0,     accent: false, bg: "bg-amber-50 dark:bg-amber-900/30",     textColor: "text-amber-700 dark:text-amber-300" },
+    { label: t("summary.totalJobs"),  value: d?.total_jobs ?? 0,       accent: false, bg: "bg-white dark:bg-slate-800",          textColor: "text-slate-800 dark:text-slate-100" },
+    { label: t("status.completed"),   value: d?.completed_jobs ?? 0,   accent: true,  bg: "bg-emerald-50 dark:bg-emerald-900/30", textColor: "text-emerald-700 dark:text-emerald-300" },
+    { label: t("status.in_progress"), value: d?.in_progress_jobs ?? 0, accent: false, bg: "bg-blue-50 dark:bg-blue-900/30",       textColor: "text-blue-700 dark:text-blue-300" },
+    { label: t("status.pending"),     value: d?.pending_jobs ?? 0,     accent: false, bg: "bg-amber-50 dark:bg-amber-900/30",     textColor: "text-amber-700 dark:text-amber-300" },
   ];
 
   return (
@@ -125,7 +127,7 @@ export default function SummaryTab() {
                 : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
             }`}
           >
-            {p}
+            {t(`summary.${p}`)}
           </button>
         ))}
       </div>
@@ -134,7 +136,7 @@ export default function SummaryTab() {
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={handlePrev}
-          aria-label="Previous period"
+          aria-label={t("summary.prevPeriod")}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition shadow-sm"
         >
           <ChevronLeft size={18} />
@@ -143,7 +145,7 @@ export default function SummaryTab() {
         <button
           onClick={handleNext}
           disabled={disableNext}
-          aria-label="Next period"
+          aria-label={t("summary.nextPeriod")}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <ChevronRight size={18} />
@@ -157,20 +159,20 @@ export default function SummaryTab() {
           {/* Revenue hero */}
           <div className="bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] rounded-2xl p-5 text-white mb-3 shadow-md">
             <p className="text-xs font-semibold uppercase tracking-widest opacity-70">
-              Revenue
+              {t("summary.revenue")}
             </p>
             <p className="text-3xl font-extrabold mt-1">
               PKR {(d?.total_revenue ?? 0).toLocaleString()}
             </p>
             <p className="text-xs opacity-60 mt-0.5">
-              via {d?.completed_jobs ?? 0} completed job(s)
+              {t("summary.via")} {d?.completed_jobs ?? 0} {t("summary.completedJobs")}
               {(d?.completed_jobs ?? 0) > 0 &&
-                ` · avg PKR ${Math.round((d?.total_revenue ?? 0) / (d?.completed_jobs ?? 1)).toLocaleString()}`}
+                ` · ${t("summary.avg")} PKR ${Math.round((d?.total_revenue ?? 0) / (d?.completed_jobs ?? 1)).toLocaleString()}`}
             </p>
             <div className="flex gap-4 mt-3 pt-3 border-t border-white/20">
               <div>
                 <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
-                  Collected
+                  {t("summary.collected")}
                 </p>
                 <p className="text-base font-bold mt-0.5">
                   PKR {(d?.total_collected ?? 0).toLocaleString()}
@@ -178,7 +180,7 @@ export default function SummaryTab() {
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
-                  Outstanding
+                  {t("summary.outstanding")}
                 </p>
                 <p className="text-base font-bold mt-0.5">
                   PKR {((d?.total_revenue ?? 0) - (d?.total_collected ?? 0)).toLocaleString()}
@@ -186,7 +188,7 @@ export default function SummaryTab() {
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
-                  Expenses
+                  {t("summary.expenses")}
                 </p>
                 <p className="text-base font-bold mt-0.5">
                   PKR {totalExpenses.toLocaleString()}
@@ -195,7 +197,7 @@ export default function SummaryTab() {
             </div>
             <div className="flex justify-between items-baseline mt-3 pt-3 border-t border-white/20">
               <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">
-                Net profit
+                {t("summary.netProfit")}
               </p>
               <p className="text-lg font-extrabold">
                 PKR {((d?.total_revenue ?? 0) - totalExpenses).toLocaleString()}
@@ -237,6 +239,7 @@ export default function SummaryTab() {
 // ── Expenses section ──────────────────────────────────────────────────────────
 
 function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: string }) {
+  const t = useT();
   const [showForm, setShowForm] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const expensesQ = useExpenses(startDate, endDate);
@@ -248,8 +251,8 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
   const handleDelete = (id: string) => {
     setConfirmId(null);
     deleteExpense.mutate(id, {
-      onSuccess: () => toast("Expense deleted", "success"),
-      onError: (e) => toast(parseApiError(e)._form ?? "Could not delete expense", "error"),
+      onSuccess: () => toast(t("summary.expenseDeleted"), "success"),
+      onError: (e) => toast(parseApiError(e)._form ?? t("summary.expenseDeleteFailed"), "error"),
     });
   };
 
@@ -258,20 +261,20 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
           <Wallet size={15} className="text-amber-500" />
-          Expenses
+          {t("summary.expenses")}
         </h3>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-1 text-xs font-semibold text-[var(--brand)] hover:underline active:scale-95 transition"
         >
           <Plus size={14} />
-          Add expense
+          {t("summary.addExpense")}
         </button>
       </div>
 
       {items.length === 0 ? (
         <p className="text-xs text-slate-400 dark:text-slate-500">
-          No expenses recorded for this period.
+          {t("summary.noExpenses")}
         </p>
       ) : (
         <div className="space-y-2">
@@ -279,7 +282,7 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
             <div key={e.id} className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                  {EXPENSE_CATEGORY_LABELS[e.category]}
+                  {t(`expcat.${e.category}`)}
                   {e.note ? ` · ${e.note}` : ""}
                 </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{e.expense_date}</p>
@@ -293,11 +296,11 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
                     onClick={() => handleDelete(e.id)}
                     className="text-[11px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95"
                   >
-                    Delete
+                    {t("common.delete")}
                   </button>
                   <button
                     onClick={() => setConfirmId(null)}
-                    aria-label="Cancel"
+                    aria-label={t("common.cancel")}
                     className="text-slate-400 hover:text-slate-600 p-1 active:scale-95"
                   >
                     <X size={14} />
@@ -306,7 +309,7 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
               ) : (
                 <button
                   onClick={() => setConfirmId(e.id)}
-                  aria-label="Delete expense"
+                  aria-label={t("summary.deleteExpense")}
                   className="text-slate-300 hover:text-red-500 transition p-1 active:scale-95 shrink-0"
                 >
                   <Trash2 size={15} />
@@ -317,7 +320,7 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
         </div>
       )}
 
-      <BottomSheet open={showForm} onClose={() => setShowForm(false)} title="Add Expense">
+      <BottomSheet open={showForm} onClose={() => setShowForm(false)} title={t("summary.addExpenseTitle")}>
         <ExpenseForm onSuccess={() => setShowForm(false)} />
       </BottomSheet>
     </div>
@@ -325,6 +328,7 @@ function ExpensesSection({ startDate, endDate }: { startDate: string; endDate: s
 }
 
 function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
+  const t = useT();
   const createExpense = useCreateExpense();
   const { toast } = useToast();
   const [expenseDate, setExpenseDate] = useState(todayStr());
@@ -337,7 +341,7 @@ function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
     e.preventDefault();
     const value = parseFloat(amount);
     if (!amount || isNaN(value) || value <= 0) {
-      setError("Enter a valid amount");
+      setError(t("summary.amountInvalid"));
       return;
     }
     setError("");
@@ -350,11 +354,11 @@ function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
       },
       {
         onSuccess: () => {
-          toast("Expense added", "success");
+          toast(t("summary.expenseAdded"), "success");
           onSuccess();
         },
         onError: (err) =>
-          toast(parseApiError(err)._form ?? "Could not save expense", "error"),
+          toast(parseApiError(err)._form ?? t("summary.expenseSaveFailed"), "error"),
       }
     );
   };
@@ -363,7 +367,7 @@ function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
         <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-          Date
+          {t("summary.date")}
         </label>
         <input
           type="date"
@@ -375,29 +379,29 @@ function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <div>
         <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-          Category
+          {t("summary.category")}
         </label>
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
           className={inputClass}
         >
-          {Object.entries(EXPENSE_CATEGORY_LABELS).map(([value, label]) => (
+          {(Object.keys(EXPENSE_CATEGORY_LABELS) as ExpenseCategory[]).map((value) => (
             <option key={value} value={value}>
-              {label}
+              {t(`expcat.${value}`)}
             </option>
           ))}
         </select>
       </div>
       <div>
         <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-          Amount (PKR)
+          {t("summary.amount")}
         </label>
         <input
           type="number"
           inputMode="decimal"
           min="1"
-          placeholder="e.g. 2500"
+          placeholder={t("summary.amountPlaceholder")}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className={inputClass}
@@ -406,12 +410,12 @@ function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <div>
         <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-          Note (optional)
+          {t("summary.note")}
         </label>
         <input
           type="text"
           maxLength={500}
-          placeholder="e.g. Brake pads stock"
+          placeholder={t("summary.notePlaceholder")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           className={inputClass}
@@ -422,7 +426,7 @@ function ExpenseForm({ onSuccess }: { onSuccess: () => void }) {
         disabled={createExpense.isPending}
         className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-bold py-3 rounded-xl transition active:scale-95 disabled:opacity-50"
       >
-        {createExpense.isPending ? "Saving…" : "Save Expense"}
+        {createExpense.isPending ? t("summary.saving") : t("summary.saveExpense")}
       </button>
     </form>
   );
@@ -435,28 +439,29 @@ function MechanicBreakdown({
   items: MechanicSummaryItem[];
   isLoading: boolean;
 }) {
+  const t = useT();
   if (isLoading) return <JobCardSkeleton count={2} />;
   if (items.length === 0) return null;
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3">Team Performance</h3>
+      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3">{t("summary.team")}</h3>
       <div className="space-y-3">
         {items.map((m) => (
           <div key={m.mechanic_id} className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{m.full_name}</p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                {m.completed_jobs} job{m.completed_jobs !== 1 ? "s" : ""}
+                {m.completed_jobs} {m.completed_jobs === 1 ? t("summary.jobSingular") : t("summary.jobPlural")}
                 {" · "}
-                Labour PKR {m.total_labour.toLocaleString()}
+                {t("summary.labour")} PKR {m.total_labour.toLocaleString()}
               </p>
             </div>
             <div className="text-right shrink-0">
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 PKR {m.total_revenue.toLocaleString()}
               </p>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">revenue</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{t("summary.revenueLabel")}</p>
             </div>
           </div>
         ))}

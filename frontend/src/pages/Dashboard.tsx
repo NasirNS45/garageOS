@@ -170,7 +170,7 @@ export default function Dashboard() {
                 <span className="relative">
                   <Icon size={22} />
                   {navTab === "jobs" && activeCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center" data-keep-ltr>
+                    <span className="absolute -top-1.5 -right-2 rtl:right-auto rtl:-left-2 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center" data-keep-ltr>
                       {activeCount > 9 ? "9+" : activeCount}
                     </span>
                   )}
@@ -189,7 +189,7 @@ export default function Dashboard() {
         <button
           onClick={() => setShowForm(true)}
           aria-label="New job card"
-          className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-[var(--brand)]/15 transition-transform hover:scale-105 active:scale-95"
+          className="fixed bottom-20 right-4 rtl:right-auto rtl:left-4 z-30 w-14 h-14 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-[var(--brand)]/15 transition-transform hover:scale-105 active:scale-95"
         >
           <Plus size={26} />
         </button>
