@@ -11,6 +11,8 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Landing = lazy(() => import("./pages/Landing"));
+const InvoicePage = lazy(() => import("./pages/public/InvoicePage"));
+const TrackPage = lazy(() => import("./pages/public/TrackPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -47,6 +49,10 @@ export default function App() {
           <BrowserRouter>
             <Suspense fallback={<PageFallback />}>
             <Routes>
+              {/* Public customer-facing pages (no auth, work logged-in or not) */}
+              <Route path="/invoices/:invoiceNumber" element={<InvoicePage />} />
+              <Route path="/track/:cardId" element={<TrackPage />} />
+
               {/* Public landing — logged-in users skip to dashboard */}
               <Route path="/" element={<GuestRoute><Landing /></GuestRoute>} />
 

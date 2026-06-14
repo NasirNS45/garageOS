@@ -1,16 +1,12 @@
 import logging
 import uuid
 from contextlib import asynccontextmanager
-from datetime import UTC
-from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from app.api.v1.router import v1_router
 from app.core.config import get_settings
@@ -19,13 +15,8 @@ from app.core.exceptions import AppException
 from app.core.logging import configure_logging, request_id_var
 from app.core.ratelimit import limiter
 from app.core.scheduler import shutdown_scheduler, start_scheduler
-from app.models.job_card import JobCard, JobStatus
-from app.models.job_part import JobPart
-from app.models.workshop import Workshop
 
 logger = logging.getLogger(__name__)
-
-_TEMPLATES = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 
 @asynccontextmanager
@@ -116,125 +107,6 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(v1_router)
-
-    # Public invoice route (no auth required)
-    @app.get(
-        "/invoices/{invoice_number}",
-        response_class=HTMLResponse,
-        include_in_schema=False,
-    )
-    async def render_invoice(request: Request, invoice_number: str) -> HTMLResponse:
-        async for session in get_session():
-            result = await session.execute(
-                select(JobCard).where(
-                    JobCard.invoice_number == invoice_number,
-                    JobCard.status == JobStatus.completed.value,
-                )
-            )
-            card = result.scalar_one_or_none()
-            if card is None:
-                return HTMLResponse("<h2>Invoice not found</h2>", status_code=404)
-
-            ws_result = await session.execute(
-                select(Workshop).where(Workshop.id == card.workshop_id)
-            )
-            workshop = ws_result.scalar_one_or_none()
-
-            parts_result = await session.execute(
-                select(JobPart)
-                .where(JobPart.job_card_id == card.id)
-                .order_by(JobPart.created_at)
-            )
-            parts = parts_result.scalars().all()
-
-        completed_str = (
-            card.completed_at.astimezone(UTC).strftime("%d %b %Y")
-            if card.completed_at
-            else "N/A"
-        )
-
-        parts_data = [
-            {
-                "name": p.name,
-                "quantity": float(p.quantity),
-                "unit_price": float(p.unit_price),
-                "line_total": float(p.line_total),
-            }
-            for p in parts
-        ]
-
-        return _TEMPLATES.TemplateResponse(
-            request,
-            "invoice.html",
-            {
-                "invoice_number": card.invoice_number,
-                "workshop_name": workshop.name if workshop else "Workshop",
-                "workshop_address": workshop.address if workshop else "",
-                "workshop_whatsapp": workshop.whatsapp_number if workshop else "",
-                "workshop_bank_details": workshop.bank_details if workshop else "",
-                "workshop_invoice_footer": workshop.invoice_footer if workshop else "",
-                "customer_name": card.customer_name,
-                "customer_phone": card.customer_phone,
-                "vehicle_number": card.vehicle_number,
-                "description": card.description or "",
-                "labour_charge": float(card.labour_charge),
-                "parts_charge": float(card.parts_charge),
-                "total_amount": float(card.total_amount),
-                "parts": parts_data,
-                "completed_at": completed_str,
-            },
-            headers={"Cache-Control": "no-store, max-age=0"},
-        )
-
-    # Public job-tracking page (no auth — card id is an unguessable UUID)
-    @app.get(
-        "/track/{card_id}",
-        response_class=HTMLResponse,
-        include_in_schema=False,
-    )
-    async def track_job(
-        request: Request,
-        card_id: str,
-        session: AsyncSession = Depends(get_session),
-    ) -> HTMLResponse:
-        result = await session.execute(select(JobCard).where(JobCard.id == card_id))
-        card = result.scalar_one_or_none()
-        if card is None:
-            return HTMLResponse("<h2>Job not found</h2>", status_code=404)
-
-        ws_result = await session.execute(
-            select(Workshop).where(Workshop.id == card.workshop_id)
-        )
-        workshop = ws_result.scalar_one_or_none()
-
-        invoice_url = (
-            f"{settings.app_base_url.rstrip('/')}/invoices/{card.invoice_number}"
-            if card.status == JobStatus.completed.value and card.invoice_number
-            else None
-        )
-
-        return _TEMPLATES.TemplateResponse(
-            request,
-            "track.html",
-            {
-                "workshop_name": workshop.name if workshop else "Workshop",
-                "vehicle_number": card.vehicle_number,
-                "vehicle_make": card.vehicle_make or "",
-                "status": card.status,
-                "description": card.description or "",
-                "labour_charge": float(card.labour_charge),
-                "parts_charge": float(card.parts_charge),
-                "total_amount": float(card.total_amount),
-                "created_at": card.created_at.astimezone(UTC).strftime("%d %b %Y"),
-                "completed_at": (
-                    card.completed_at.astimezone(UTC).strftime("%d %b %Y")
-                    if card.completed_at
-                    else ""
-                ),
-                "invoice_url": invoice_url,
-            },
-            headers={"Cache-Control": "no-store, max-age=0"},
-        )
 
     @app.get("/health", include_in_schema=False)
     async def health() -> dict[str, str]:

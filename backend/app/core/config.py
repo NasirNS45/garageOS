@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     # App
     environment: str = "development"
     log_level: str = "INFO"
-    app_base_url: str = "http://localhost:8000"
+    app_base_url: str = "http://localhost:8000"  # backend self-reference (not customer links)
+    # Public frontend base URL — used to build customer-facing invoice/tracking links.
+    web_base_url: str = "http://localhost:5173"
     cors_origins: str = "*"  # comma-separated in production, e.g. "https://myworkshop.com"
 
     # Background scheduler (APScheduler) — disabled in tests

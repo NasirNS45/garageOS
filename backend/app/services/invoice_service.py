@@ -11,9 +11,9 @@ class InvoiceService:
         return generate_invoice_number(workshop_id, sequence)
 
     def invoice_url(self, invoice_number: str) -> str:
-        base = get_settings().app_base_url.rstrip("/")
+        base = get_settings().web_base_url.rstrip("/")
         return f"{base}/invoices/{invoice_number}"
 
     def track_url(self, card_id: str) -> str:
-        base = get_settings().app_base_url.rstrip("/")
+        base = get_settings().web_base_url.rstrip("/")
         return f"{base}/track/{card_id}"
