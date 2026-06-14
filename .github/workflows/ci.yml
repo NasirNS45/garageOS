@@ -30,8 +30,8 @@ jobs:
 
       - name: Tests (pytest)
         env:
-          SECRET_KEY: test-key-0123456789abcdef0123456789
-          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          SECRET_KEY: "test-key-0123456789abcdef0123456789"
+          DATABASE_URL: "sqlite+aiosqlite:///:memory:"
           RATE_LIMIT_ENABLED: "false"
           SCHEDULER_ENABLED: "false"
         run: pytest --tb=short -q
