@@ -1,35 +1,37 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle2, ClipboardList, Users, Wrench } from "lucide-react";
 import { useMechanics } from "../hooks/useMechanics";
+import { useT } from "../i18n/useT";
 
 /** First-run guidance shown to an owner with no jobs yet. */
 export default function OnboardingChecklist({ onNewJob }: { onNewJob: () => void }) {
   const navigate = useNavigate();
   const { data: mechanics = [] } = useMechanics();
+  const t = useT();
 
   const steps = [
     {
       icon: Wrench,
-      title: "Set up your workshop",
-      desc: "Add your name, WhatsApp number, and invoice details.",
+      title: t("onboarding.s1Title"),
+      desc: t("onboarding.s1Desc"),
       done: false,
-      cta: "Open settings",
+      cta: t("onboarding.s1Cta"),
       onClick: () => navigate("/settings"),
     },
     {
       icon: Users,
-      title: "Add your mechanics",
-      desc: "Give your team accounts so you can assign jobs.",
+      title: t("onboarding.s2Title"),
+      desc: t("onboarding.s2Desc"),
       done: mechanics.length > 0,
-      cta: "Add mechanic",
+      cta: t("onboarding.s2Cta"),
       onClick: () => navigate("/settings"),
     },
     {
       icon: ClipboardList,
-      title: "Create your first job",
-      desc: "Log a vehicle and start tracking the work.",
+      title: t("onboarding.s3Title"),
+      desc: t("onboarding.s3Desc"),
       done: false,
-      cta: "New job card",
+      cta: t("onboarding.s3Cta"),
       onClick: onNewJob,
       primary: true,
     },
@@ -38,10 +40,8 @@ export default function OnboardingChecklist({ onNewJob }: { onNewJob: () => void
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
       <div className="bg-gradient-to-br from-[var(--brand)] to-[var(--brand-panel)] text-white p-5">
-        <h2 className="text-lg font-extrabold">Welcome to GarageOS 👋</h2>
-        <p className="text-sm text-white/80 mt-1">
-          Three quick steps to get your workshop running.
-        </p>
+        <h2 className="text-lg font-extrabold">{t("onboarding.welcome")}</h2>
+        <p className="text-sm text-white/80 mt-1">{t("onboarding.subtitle")}</p>
       </div>
       <div className="divide-y divide-slate-100 dark:divide-slate-700">
         {steps.map(({ icon: Icon, title, desc, done, cta, onClick, primary }, i) => (

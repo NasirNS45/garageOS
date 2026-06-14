@@ -92,15 +92,15 @@ export default function JobDetailSheet({
   const handleCancel = () => {
     cancel.mutate(card.id, {
       onSuccess: () => {
-        toast("Job cancelled", "info");
+        toast(t("toast.jobCancelled"), "info");
         onClose();
       },
-      onError: () => toast("Failed to cancel job", "error"),
+      onError: () => toast(t("toast.cancelFailed"), "error"),
     });
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Job Details">
+    <BottomSheet open={open} onClose={onClose} title={t("job.detailTitle")}>
       <div>
         {/* Plate + make + status + age */}
         <div className="flex items-start justify-between gap-2">
@@ -172,9 +172,9 @@ export default function JobDetailSheet({
                       {
                         onSuccess: () => {
                           setShowMechanicPicker(false);
-                          toast(id ? "Mechanic assigned" : "Mechanic unassigned", "success");
+                          toast(id ? t("toast.mechanicAssigned") : t("toast.mechanicUnassigned"), "success");
                         },
-                        onError: () => toast("Failed to assign mechanic", "error"),
+                        onError: () => toast(t("toast.mechanicFailed"), "error"),
                       }
                     );
                   }}
@@ -193,7 +193,7 @@ export default function JobDetailSheet({
               onClick={() => setShowMechanicPicker(true)}
               className="text-xs text-[var(--brand)] font-medium mt-1 hover:underline"
             >
-              {card.assigned_mechanic_id ? "Change mechanic" : "Assign mechanic"}
+              {card.assigned_mechanic_id ? t("job.changeMechanic") : t("job.assignMechanic")}
             </button>
           )
         )}
@@ -212,7 +212,7 @@ export default function JobDetailSheet({
                 onClick={() => setDescExpanded((v) => !v)}
                 className="text-xs text-[var(--brand)] font-medium mt-0.5 hover:underline"
               >
-                {descExpanded ? "show less" : "show more"}
+                {descExpanded ? t("job.showLess") : t("job.showMore")}
               </button>
             )}
           </div>
@@ -232,7 +232,7 @@ export default function JobDetailSheet({
                 onClick={() => setNotesExpanded((v) => !v)}
                 className="text-xs text-[var(--brand)] font-medium mt-0.5 hover:underline"
               >
-                {notesExpanded ? "show less" : "show more"}
+                {notesExpanded ? t("job.showLess") : t("job.showMore")}
               </button>
             )}
           </div>
@@ -272,7 +272,7 @@ export default function JobDetailSheet({
                   url={card.invoice_url}
                   title="Invoice"
                   label={t("job.share")}
-                  toastMessage="Invoice link copied"
+                  toastMessage={t("toast.linkCopied")}
                 />
               </div>
             ) : (
@@ -290,8 +290,8 @@ export default function JobDetailSheet({
                     markPaid.mutate(
                       { id: card.id, payment_status: "paid" },
                       {
-                        onSuccess: () => toast("Marked as paid", "success"),
-                        onError: () => toast("Failed to update payment status", "error"),
+                        onSuccess: () => toast(t("toast.markedPaid"), "success"),
+                        onError: () => toast(t("toast.paymentFailed"), "error"),
                       }
                     )
                   }
@@ -322,7 +322,7 @@ export default function JobDetailSheet({
               url={card.track_url}
               title="Vehicle tracking"
               label={t("job.shareWithCustomer")}
-              toastMessage="Tracking link copied"
+              toastMessage={t("toast.linkCopied")}
             />
           </div>
         )}
@@ -405,7 +405,7 @@ function ShareLinkButton({
       toast(toastMessage, "success");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast("Could not copy link", "error");
+      toast(t("toast.copyFailed"), "error");
     }
   };
 

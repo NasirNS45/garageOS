@@ -10,7 +10,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
-import { useLanguageStore } from "../stores/languageStore";
+import { useLanguageStore, applyLanguage } from "../stores/languageStore";
 import { useT } from "../i18n/useT";
 import type { TKey } from "../i18n/translations";
 import { useOnline } from "../hooks/useOnline";
@@ -51,6 +51,11 @@ export default function Dashboard() {
   const online = useOnline();
   const t = useT();
   const { language, toggleLanguage } = useLanguageStore();
+
+  // Re-apply lang/dir on mount: a pre-auth page may have forced LTR.
+  useEffect(() => {
+    applyLanguage(language);
+  }, [language]);
 
   // Derive active tab from URL path — defaults to "jobs" for unknown paths
   const pathSegment = location.pathname.replace(/^\//, "") as Tab;

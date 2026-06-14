@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Camera, Check, ImageIcon, Loader2, Trash2, X } from "lucide-react";
 import { usePhotos, useUploadPhoto, useDeletePhoto } from "../hooks/usePhotos";
 import { useToast } from "../context/ToastContext";
+import { useT } from "../i18n/useT";
 
 const ACCEPTED = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
@@ -22,18 +23,19 @@ export default function JobPhotos({
   const upload = useUploadPhoto(cardId);
   const remove = useDeletePhoto(cardId);
   const { toast } = useToast();
+  const t = useT();
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file
     if (!file) return;
     if (file.size > MAX_BYTES) {
-      toast("Image is too large (max 8 MB)", "error");
+      toast(t("toast.imageTooLarge"), "error");
       return;
     }
     upload.mutate(file, {
-      onSuccess: () => toast("Photo added", "success"),
-      onError: () => toast("Upload failed. Photo storage may be unavailable.", "error"),
+      onSuccess: () => toast(t("toast.photoAdded"), "success"),
+      onError: () => toast(t("toast.uploadFailed"), "error"),
     });
   };
 
@@ -44,7 +46,7 @@ export default function JobPhotos({
         className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[var(--brand)] transition"
       >
         <ImageIcon size={13} />
-        {open ? "Hide photos" : "Photos"}
+        {open ? t("photos.hide") : t("photos.show")}
         {open && photos.length > 0 && (
           <span className="text-slate-400">({photos.length})</span>
         )}
@@ -55,7 +57,7 @@ export default function JobPhotos({
           {isLoading ? (
             <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
               <Loader2 size={14} className="animate-spin" />
-              Loading…
+              {t("photos.loading")}
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -83,7 +85,7 @@ export default function JobPhotos({
                       <button
                         onClick={() => {
                           remove.mutate(p.id, {
-                            onError: () => toast("Could not delete photo", "error"),
+                            onError: () => toast(t("toast.photoFailed"), "error"),
                           });
                           setConfirmId(null);
                         }}
@@ -120,7 +122,7 @@ export default function JobPhotos({
               )}
 
               {!canEdit && photos.length === 0 && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 py-2">No photos.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 py-2">{t("photos.none")}</p>
               )}
             </div>
           )}

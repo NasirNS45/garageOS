@@ -138,7 +138,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Step {step} of 2 · {step === 1 ? "Vehicle & Customer" : "Work & Details"}
+            {t("form.step")} {step}/2 · {step === 1 ? t("form.stepVehicle") : t("form.stepWork")}
           </p>
         </div>
         <div className="flex gap-1.5">
@@ -195,7 +195,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
               }}
               className={fieldClass(!!errors.vehicle_make)}
             >
-              <option value="">Select make (optional)</option>
+              <option value="">{t("form.makeSelect")}</option>
               {[
                 "Toyota", "Honda", "Suzuki", "Kia", "Hyundai", "Daihatsu",
                 "Nissan", "Mitsubishi", "Isuzu", "FAW", "Chery", "MG", "BAIC",
@@ -203,12 +203,12 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
               ].map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
-              <option value="Other">Other</option>
+              <option value="Other">{t("form.makeOther")}</option>
             </select>
             {vehicleMake === "Other" && (
               <input
                 type="text"
-                placeholder="Enter make manually"
+                placeholder={t("form.makeManual")}
                 value={customMake}
                 onChange={(e) => { setCustomMake(e.target.value); clearError("vehicle_make"); }}
                 className={`${fieldClass(!!errors.vehicle_make)} mt-2`}
@@ -254,7 +254,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
             onClick={goNext}
             className="w-full inline-flex items-center justify-center gap-1.5 bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 shadow-sm"
           >
-            Continue
+            {t("form.continue")}
             <ArrowRight size={16} />
           </button>
         </>
@@ -266,7 +266,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
           {presets.length > 0 && (
             <div>
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-                Quick-fill from preset
+                {t("form.presetLabel")}
               </label>
               <select
                 defaultValue=""
@@ -280,7 +280,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
                 }}
                 className={inputClass}
               >
-                <option value="">Select a preset…</option>
+                <option value="">{t("form.presetSelect")}</option>
                 {presets.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -314,7 +314,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
           />
           {mechanics.length === 0 && (
             <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
-              No mechanics yet. Add them in the Settings tab.
+              {t("form.noMechanics")}
             </p>
           )}
 
@@ -333,7 +333,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
           </div>
 
           <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
-            Parts are added as line items after creating the job card.
+            {t("form.partsLater")}
           </p>
 
           <div>
@@ -381,7 +381,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
               className="inline-flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded-xl py-3 px-4 text-sm transition active:scale-95 hover:bg-slate-200 dark:hover:bg-slate-600"
             >
               <ArrowLeft size={16} />
-              Back
+              {t("common.back")}
             </button>
             <button
               type="submit"

@@ -8,6 +8,7 @@ import { parseApiError } from "../utils/parseApiError";
 import { isValidPhone } from "../utils/validation";
 import PhoneInputField from "../components/PhoneInputField";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useForceLtr } from "../i18n/useForceLtr";
 
 interface SignupForm {
   full_name: string;
@@ -43,6 +44,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
 
   useDocumentTitle("Create account");
+  useForceLtr();
 
   const set =
     (field: keyof SignupForm) => (e: React.ChangeEvent<HTMLInputElement>) => {

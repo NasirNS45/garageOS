@@ -23,6 +23,7 @@ import {
   Car,
 } from "lucide-react";
 import Logo from "../components/Logo";
+import { useForceLtr } from "../i18n/useForceLtr";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -452,6 +453,7 @@ function WorkshopFloorIllustration() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Landing() {
+  useForceLtr();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [scrollPct, setScrollPct] = useState(0);
   const [scrolled, setScrolled] = useState(false);

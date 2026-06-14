@@ -136,7 +136,7 @@ function JobCardItem({
             ) : (
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                Unpaid
+                {t("job.unpaid")}
               </span>
             ))}
         </div>

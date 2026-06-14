@@ -7,6 +7,7 @@ import { useAuthStore } from "../stores/authStore";
 import PhoneInputField from "../components/PhoneInputField";
 import { isValidPhone } from "../utils/validation";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useForceLtr } from "../i18n/useForceLtr";
 
 const inputBase =
   "w-full bg-white dark:bg-slate-800 dark:text-slate-100 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition shadow-sm";
@@ -29,6 +30,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useDocumentTitle("Sign in");
+  useForceLtr();
 
   useEffect(() => {
     if (sessionStorage.getItem("session_expired")) {
