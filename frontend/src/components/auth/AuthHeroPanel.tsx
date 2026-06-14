@@ -27,14 +27,14 @@ export default function AuthHeroPanel({
       />
 
       <div className="relative z-10 grid h-full w-full min-h-0 grid-cols-[minmax(0,1fr)_auto] gap-x-6 xl:gap-x-10 px-8 xl:px-12 py-10">
-        <div className="relative z-20 flex flex-col justify-between min-w-0 min-h-0">
+        <div className="relative z-20 flex flex-col justify-between min-w-0 min-h-0 text-start">
           <div className="space-y-7">
             <div className="flex items-start justify-between gap-4">
               <Logo variant="full" size="lg" light to="/" />
               <AuthLanguageToggle variant="hero" />
             </div>
             <div>
-              <h1 className="urdu-display text-white text-2xl xl:text-[1.65rem] font-bold leading-snug">
+              <h1 className="urdu-display text-white text-2xl xl:text-[1.65rem] font-bold leading-snug text-start">
                 {t(headlineKey)}
               </h1>
               <p className="text-blue-100/90 text-sm leading-relaxed mt-3">{t(subtextKey)}</p>
@@ -45,7 +45,7 @@ export default function AuthHeroPanel({
           </p>
         </div>
 
-        <div className="relative z-10 flex items-center justify-center self-center shrink-0 w-[270px] xl:w-[290px]">
+        <div className="relative z-10 flex items-center justify-center self-center shrink-0 w-[270px] xl:w-[290px]" data-keep-ltr>
           <AuthPhoneMockup variant="compact" />
         </div>
       </div>

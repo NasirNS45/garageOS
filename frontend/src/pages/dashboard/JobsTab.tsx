@@ -119,7 +119,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
           {search && (
             <button
               onClick={() => setSearch("")}
-              aria-label="Clear search"
+              aria-label={t("jobs.clearSearch")}
               className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 active:scale-95"
             >
               <X size={15} />
@@ -145,7 +145,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
               </button>
             ))}
           </div>
-          <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[#F1F5F9] to-transparent dark:from-slate-900 pointer-events-none" />
+          <div className="absolute end-0 top-0 h-full w-8 bg-gradient-to-l rtl:bg-gradient-to-r from-[#F1F5F9] to-transparent dark:from-slate-900 pointer-events-none" />
         </div>
       )}
 

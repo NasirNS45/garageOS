@@ -14,6 +14,8 @@ import PhoneInputField from "../../components/PhoneInputField";
 import { parseApiError } from "../../utils/parseApiError";
 import { isValidPhone } from "../../utils/validation";
 import { useT } from "../../i18n/useT";
+import { useLanguageStore } from "../../stores/languageStore";
+import { formatLocaleDateStr } from "../../utils/dates";
 import { trackPilotEvent } from "../../utils/trackPilotEvent";
 import { inputClass, fieldClass } from "./formStyles";
 
@@ -24,6 +26,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
   const { data: presets = [] } = useServicePresets();
   const { toast } = useToast();
   const t = useT();
+  const language = useLanguageStore((s) => s.language);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -185,7 +188,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
                 {lastVisit && (
                   <p className="text-emerald-700 dark:text-emerald-300">
                     {t("form.lastVisit")}{" "}
-                    {new Date(lastVisit.created_at).toLocaleDateString("en-PK", {
+                    {formatLocaleDateStr(lastVisit.created_at, language, {
                       day: "numeric",
                       month: "short",
                     })}
@@ -285,7 +288,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
             className="w-full inline-flex items-center justify-center gap-1.5 bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 shadow-sm"
           >
             {t("form.continue")}
-            <ArrowRight size={16} />
+            <ArrowRight size={16} className="rtl:rotate-180" />
           </button>
         </>
       )}

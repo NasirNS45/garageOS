@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CreditCard, MessageCircle, Phone } from "lucide-react";
 import { type JobCard } from "../hooks/useJobCards";
 import { useMechanics } from "../hooks/useMechanics";
+import { useLanguageStore } from "../stores/languageStore";
 import { formatAge } from "../utils/formatAge";
 import VehiclePlate from "./VehiclePlate";
 import ReviewSheet from "./ReviewSheet";
@@ -52,6 +53,7 @@ function JobCardItem({
   const [detailOpen, setDetailOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const t = useT();
+  const language = useLanguageStore((s) => s.language);
 
   const isTerminal = card.status === "completed" || card.status === "cancelled";
   const stop = (e: React.MouseEvent) => e.stopPropagation();
@@ -69,6 +71,7 @@ function JobCardItem({
             setDetailOpen(true);
           }
         }}
+        aria-label={t("job.openDetails").replace("{plate}", card.vehicle_number)}
         className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-4 cursor-pointer transition active:scale-[0.99] hover:border-slate-200 dark:hover:border-slate-600"
       >
         {/* Row 1: plate + make · status + age */}
@@ -87,7 +90,7 @@ function JobCardItem({
             </span>
             {!isTerminal && (
               <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                {formatAge(card.created_at)}
+                {formatAge(card.created_at, language)}
               </span>
             )}
           </div>
@@ -103,7 +106,7 @@ function JobCardItem({
               <a
                 href={`tel:${card.customer_phone}`}
                 onClick={stop}
-                aria-label="Call customer"
+                aria-label={t("job.callCustomer")}
                 className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-50 text-[var(--brand)] hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 transition active:scale-95"
               >
                 <Phone size={13} />
@@ -113,7 +116,7 @@ function JobCardItem({
                 target="_blank"
                 rel="noreferrer"
                 onClick={stop}
-                aria-label="Message customer on WhatsApp"
+                aria-label={t("job.messageWhatsApp")}
                 className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition active:scale-95"
               >
                 <MessageCircle size={13} />

@@ -6,6 +6,9 @@ interface Props {
   onChange: (value: string) => void;
   error?: boolean;
   disabled?: boolean;
+  id?: string;
+  ariaLabel?: string;
+  ariaDescribedBy?: string;
 }
 
 /**
@@ -18,14 +21,25 @@ export default function PhoneInputField({
   onChange,
   error = false,
   disabled = false,
+  id,
+  ariaLabel,
+  ariaDescribedBy,
 }: Props) {
   return (
-    <PhoneInput
-      defaultCountry="pk"
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      className={`phone-field${error ? " phone-field-error" : ""}`}
-    />
+    <div className="phone-field-ltr w-full">
+      <PhoneInput
+        defaultCountry="pk"
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        className={`phone-field${error ? " phone-field-error" : ""}`}
+        inputProps={{
+          id,
+          "aria-label": ariaLabel,
+          "aria-describedby": ariaDescribedBy,
+          "aria-invalid": error || undefined,
+        }}
+      />
+    </div>
   );
 }

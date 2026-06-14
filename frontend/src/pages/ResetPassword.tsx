@@ -29,6 +29,11 @@ export default function ResetPassword() {
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const passwordId = "reset-password";
+  const confirmId = "reset-confirm";
+  const passwordErrorId = "reset-password-error";
+  const confirmErrorId = "reset-confirm-error";
+
   useDocumentTitle(t("auth.resetTitle"));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,7 +50,7 @@ export default function ResetPassword() {
       errs.confirm = t("auth.errPasswordMismatch");
     }
     if (!token) {
-      setFormError("Invalid or missing reset link.");
+      setFormError(t("auth.errResetInvalid"));
       return;
     }
 
@@ -59,7 +64,7 @@ export default function ResetPassword() {
       await api.post("/auth/reset-password", { token, password });
       navigate("/login", { state: { resetSuccess: true } });
     } catch {
-      setFormError("Could not reset password. The link may have expired.");
+      setFormError(t("auth.errResetFailed"));
     } finally {
       setLoading(false);
     }
@@ -79,50 +84,56 @@ export default function ResetPassword() {
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("auth.resetDesc")}</p>
 
         {formError && (
-          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mb-5">
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mb-5" role="alert">
             {formError}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+            <label htmlFor={passwordId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               {t("auth.newPassword")}
             </label>
-            <div className="relative">
+            <div className="relative auth-latin-field">
               <input
+                id={passwordId}
                 type={showPassword ? "text" : "password"}
                 placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
-                className={`${fieldClass(!!errors.password)} pe-10`}
+                className={`${fieldClass(!!errors.password)} auth-latin-input pe-10`}
+                aria-describedby={errors.password ? passwordErrorId : undefined}
+                aria-invalid={!!errors.password}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition"
+                aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+              <p id={passwordErrorId} role="alert" className="text-xs text-red-500 mt-1">{errors.password}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+            <label htmlFor={confirmId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               {t("auth.confirmPassword")}
             </label>
             <input
+              id={confirmId}
               type={showPassword ? "text" : "password"}
               value={confirm}
               onChange={(e) => { setConfirm(e.target.value); setErrors((p) => ({ ...p, confirm: "" })); }}
-              className={fieldClass(!!errors.confirm)}
+              className={`${fieldClass(!!errors.confirm)} auth-latin-input`}
+              aria-describedby={errors.confirm ? confirmErrorId : undefined}
+              aria-invalid={!!errors.confirm}
             />
             {errors.confirm && (
-              <p className="text-xs text-red-500 mt-1">{errors.confirm}</p>
+              <p id={confirmErrorId} role="alert" className="text-xs text-red-500 mt-1">{errors.confirm}</p>
             )}
           </div>
 

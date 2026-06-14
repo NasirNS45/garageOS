@@ -45,7 +45,7 @@ export default function Sidebar({
             {workshopName}
           </span>
           <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-            {role ?? ""}
+            {role === "owner" ? t("role.owner") : role === "mechanic" ? t("role.mechanic") : role ?? ""}
           </span>
         </div>
       </div>

@@ -22,8 +22,9 @@ import BottomSheet from "../../components/BottomSheet";
 import { useToast } from "../../context/ToastContext";
 import { parseApiError } from "../../utils/parseApiError";
 import { inputClass } from "./formStyles";
-import { todayStr, shiftDate, weekRange, monthRange } from "../../utils/dates";
+import { todayStr, shiftDate, weekRange, monthRange, formatLocaleDate } from "../../utils/dates";
 import { useT } from "../../i18n/useT";
+import { useLanguageStore } from "../../stores/languageStore";
 import { trackPilotEvent } from "../../utils/trackPilotEvent";
 
 // ── Summary tab ───────────────────────────────────────────────────────────────
@@ -31,6 +32,9 @@ type SummaryPeriod = "day" | "week" | "month";
 
 export default function SummaryTab() {
   const t = useT();
+  const language = useLanguageStore((s) => s.language);
+  const PrevIcon = language === "ur" ? ChevronRight : ChevronLeft;
+  const NextIcon = language === "ur" ? ChevronLeft : ChevronRight;
 
   useEffect(() => {
     trackPilotEvent("summary_viewed");
@@ -70,7 +74,7 @@ export default function SummaryTab() {
     if (period === "day") {
       if (isToday) return t("summary.today");
       const [sy, sm, sd] = dayStr.split("-").map(Number);
-      return new Date(sy, sm - 1, sd).toLocaleDateString("en-PK", {
+      return formatLocaleDate(new Date(sy, sm - 1, sd), language, {
         weekday: "short", day: "numeric", month: "short",
       });
     }
@@ -81,7 +85,7 @@ export default function SummaryTab() {
       const start = new Date(sy, sm - 1, sd);
       const end = new Date(ey, em - 1, ed);
       const fmt = (dt: Date) =>
-        dt.toLocaleDateString("en-PK", { day: "numeric", month: "short" });
+        formatLocaleDate(dt, language, { day: "numeric", month: "short" });
       return isCurrentWeek
         ? `${t("summary.thisWeek")} (${fmt(start)} - ${fmt(end)})`
         : `${fmt(start)} - ${fmt(end)}`;
@@ -89,7 +93,7 @@ export default function SummaryTab() {
     // month
     const [s] = monthRange(monthOffset);
     const [my, mm] = s.split("-").map(Number);
-    return new Date(my, mm - 1, 1).toLocaleDateString("en-PK", {
+    return formatLocaleDate(new Date(my, mm - 1, 1), language, {
       month: "long", year: "numeric",
     });
   })();
@@ -149,7 +153,7 @@ export default function SummaryTab() {
           aria-label={t("summary.prevPeriod")}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition shadow-sm"
         >
-          <ChevronLeft size={18} />
+          <PrevIcon size={18} />
         </button>
         <span className="text-sm font-bold text-slate-900 dark:text-slate-100 text-center px-2">{periodLabel}</span>
         <button
@@ -158,7 +162,7 @@ export default function SummaryTab() {
           aria-label={t("summary.nextPeriod")}
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <ChevronRight size={18} />
+          <NextIcon size={18} />
         </button>
       </div>
 
@@ -479,7 +483,7 @@ function MechanicBreakdown({
                 {t("summary.labour")} PKR {m.total_labour.toLocaleString()}
               </p>
             </div>
-            <div className="text-right shrink-0">
+            <div className="text-end shrink-0">
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 PKR {m.total_revenue.toLocaleString()}
               </p>

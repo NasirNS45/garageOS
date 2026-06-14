@@ -132,7 +132,7 @@ export default function Dashboard() {
                 {workshopName ?? "GarageOS"}
               </span>
               <span className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-                {role ?? ""}
+                {role === "owner" ? t("role.owner") : role === "mechanic" ? t("role.mechanic") : role ?? ""}
               </span>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function Dashboard() {
       {tab === "jobs" && (
         <button
           onClick={() => setShowForm(true)}
-          aria-label="New job card"
+          aria-label={t("form.submit")}
           className="lg:hidden fixed bottom-20 right-4 rtl:right-auto rtl:left-4 z-30 w-14 h-14 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 ring-4 ring-[var(--brand)]/15 transition-transform hover:scale-105 active:scale-95"
         >
           <Plus size={26} />

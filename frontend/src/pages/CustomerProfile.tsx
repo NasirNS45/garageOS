@@ -6,6 +6,8 @@ import JobCardSkeleton from "../components/JobCardSkeleton";
 import EmptyState from "../components/EmptyState";
 import VehiclePlate from "../components/VehiclePlate";
 import { useT } from "../i18n/useT";
+import { useLanguageStore } from "../stores/languageStore";
+import { formatLocaleDateStr } from "../utils/dates";
 import type { TKey } from "../i18n/translations";
 
 interface HistoryJob {
@@ -35,6 +37,7 @@ export default function CustomerProfile() {
   const { phone } = useParams<{ phone: string }>();
   const navigate = useNavigate();
   const t = useT();
+  const language = useLanguageStore((s) => s.language);
   const [result, setResult] = useState<HistoryResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -122,7 +125,7 @@ export default function CustomerProfile() {
                       {t("customer.lastVisit")}
                     </p>
                     <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                      {new Date(lastVisit.created_at).toLocaleDateString("en-PK", {
+                      {formatLocaleDateStr(lastVisit.created_at, language, {
                         day: "numeric",
                         month: "short",
                       })}
@@ -148,7 +151,7 @@ export default function CustomerProfile() {
                   <div className="flex items-center justify-between">
                     <VehiclePlate number={j.vehicle_number} size="sm" />
                     <span className="text-xs text-slate-400">
-                      {new Date(j.created_at).toLocaleDateString("en-PK", {
+                      {formatLocaleDateStr(j.created_at, language, {
                         day: "numeric",
                         month: "short",
                         year: "numeric",

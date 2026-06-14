@@ -26,7 +26,7 @@ export default function OnboardingChecklist({ onNewJob }: { onNewJob: () => void
       desc: t("onboarding.s2Desc"),
       done: mechanics.length > 0,
       cta: t("onboarding.s2Cta"),
-      onClick: () => navigate("/settings"),
+      onClick: () => navigate("/settings?section=team"),
     },
     {
       icon: ClipboardList,
@@ -79,7 +79,7 @@ export default function OnboardingChecklist({ onNewJob }: { onNewJob: () => void
                 }`}
               >
                 {cta}
-                <ArrowRight size={13} />
+                <ArrowRight size={13} className="rtl:rotate-180" />
               </button>
             )}
           </div>

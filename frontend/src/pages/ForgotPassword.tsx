@@ -15,6 +15,9 @@ export default function ForgotPassword() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const mobileId = "forgot-mobile";
+  const mobileErrorId = "forgot-mobile-error";
+
   useDocumentTitle(t("auth.forgotTitle"));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,23 +55,26 @@ export default function ForgotPassword() {
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("auth.forgotDesc")}</p>
 
         {success && (
-          <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-sm rounded-xl px-4 py-3 mb-5">
+          <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-sm rounded-xl px-4 py-3 mb-5" role="status">
             {t("auth.forgotSuccess")}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+          <div className="min-w-0">
+            <label htmlFor={mobileId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               {t("auth.mobileNumber")}
             </label>
             <PhoneInputField
+              id={mobileId}
+              ariaLabel={t("auth.mobileNumber")}
+              ariaDescribedBy={fieldError ? mobileErrorId : undefined}
               value={mobile}
               onChange={(val) => { setMobile(val); setFieldError(""); }}
               error={!!fieldError}
             />
             {fieldError && (
-              <p className="text-xs text-red-500 mt-1">{fieldError}</p>
+              <p id={mobileErrorId} role="alert" className="text-xs text-red-500 mt-1">{fieldError}</p>
             )}
           </div>
 

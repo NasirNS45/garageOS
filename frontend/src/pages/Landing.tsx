@@ -286,7 +286,7 @@ export default function Landing() {
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label={t("landing.backToTop")}
-        className={`lp-top-btn ${showTop ? "show" : ""} fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30`}
+        className={`lp-top-btn ${showTop ? "show" : ""} fixed bottom-6 end-6 z-50 w-11 h-11 rounded-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white flex items-center justify-center shadow-lg shadow-blue-500/30`}
       >
         <ChevronUp size={20} />
       </button>
@@ -307,6 +307,7 @@ export default function Landing() {
             <a href="#features" className="hover:text-slate-900 transition">{t("landing.nav.features")}</a>
             <a href="#how-it-works" className="hover:text-slate-900 transition">{t("landing.nav.howItWorks")}</a>
             <a href="#testimonials" className="hover:text-slate-900 transition">{t("landing.nav.reviews")}</a>
+            <a href="#faq" className="hover:text-slate-900 transition">{t("landing.nav.faq")}</a>
           </nav>
           <div className="flex items-center gap-3">
             <AuthLanguageToggle />
@@ -326,6 +327,7 @@ export default function Landing() {
               className="md:hidden p-2 -mr-2 text-slate-500 hover:text-slate-900 transition"
               onClick={() => setMobileNavOpen((v) => !v)}
               aria-label={t("landing.toggleNav")}
+              aria-expanded={mobileNavOpen}
             >
               {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -339,6 +341,7 @@ export default function Landing() {
               { label: t("landing.nav.features"), href: "#features" },
               { label: t("landing.nav.howItWorks"), href: "#how-it-works" },
               { label: t("landing.nav.reviews"), href: "#testimonials" },
+              { label: t("landing.nav.faq"), href: "#faq" },
             ].map(({ label, href }) => (
               <a
                 key={href}
@@ -401,7 +404,7 @@ export default function Landing() {
                   className="lp-glow-cta inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-amber-400 text-slate-900 font-bold px-7 py-3.5 rounded-2xl text-base transition active:scale-95"
                 >
                   {t("landing.heroCtaStart")}
-                  <ChevronRight size={18} />
+                  <ChevronRight size={18} className="rtl:rotate-180" />
                 </Link>
                 <Link
                   to="/login"
@@ -704,7 +707,7 @@ export default function Landing() {
               className="lp-glow-cta inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-amber-400 text-slate-900 font-bold px-8 py-4 rounded-2xl text-base transition active:scale-95"
             >
               {t("landing.cta.create")}
-              <ChevronRight size={18} />
+              <ChevronRight size={18} className="rtl:rotate-180" />
             </Link>
             <Link
               to="/login"
@@ -734,6 +737,7 @@ export default function Landing() {
               <ul className="space-y-2.5 text-sm">
                 <li><a href="#features" className="hover:text-white transition">{t("landing.nav.features")}</a></li>
                 <li><a href="#how-it-works" className="hover:text-white transition">{t("landing.nav.howItWorks")}</a></li>
+                <li><a href="#faq" className="hover:text-white transition">{t("landing.nav.faq")}</a></li>
                 <li><Link to="/signup" className="hover:text-white transition">{t("landing.footer.createAccount")}</Link></li>
                 <li><Link to="/login" className="hover:text-white transition">{t("landing.signIn")}</Link></li>
               </ul>

@@ -47,6 +47,12 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const fullNameId = "signup-full-name";
+  const mobileId = "signup-mobile";
+  const passwordId = "signup-password";
+  const workshopNameId = "signup-workshop-name";
+  const workshopAddressId = "signup-workshop-address";
+
   useDocumentTitle(t("auth.signupTitle"));
 
   const set =
@@ -97,11 +103,9 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex">
-      <AuthHeroPanel headlineKey="auth.heroSignupHeadline" subtextKey="auth.heroSignupSubtext" />
-
-      <div className="flex-1 flex items-center justify-center px-6 py-8 lg:py-6 bg-[#F1F5F9] dark:bg-slate-900 overflow-y-auto lg:overflow-hidden">
-        <div className="w-full max-w-lg my-auto lg:my-0">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row">
+      <div className="lg:order-2 rtl:lg:order-1 flex-1 flex items-center justify-center px-6 py-8 lg:py-6 bg-[#F1F5F9] dark:bg-slate-900 overflow-y-auto lg:overflow-hidden">
+        <div className="w-full max-w-lg my-auto lg:my-0 text-start">
           <div className="lg:hidden mb-6 flex items-start justify-between gap-4">
             <Logo variant="full" size="md" to="/" />
             <AuthLanguageToggle />
@@ -115,103 +119,116 @@ export default function Signup() {
           </div>
 
           {errors._form && (
-            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-2.5 mb-4">
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-2.5 mb-4" role="alert">
               {errors._form}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  {t("auth.fullName")}
-                </label>
-                <input
-                  type="text"
-                  placeholder="Muhammad Ali"
-                  value={form.full_name}
-                  onChange={set("full_name")}
-                  className={fieldClass(!!errors.full_name)}
-                />
-                {errors.full_name && (
-                  <p className="text-xs text-red-500 mt-1">{errors.full_name}</p>
-                )}
-              </div>
+            <div>
+              <label htmlFor={fullNameId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t("auth.fullName")}
+              </label>
+              <input
+                id={fullNameId}
+                type="text"
+                placeholder="Muhammad Ali"
+                value={form.full_name}
+                onChange={set("full_name")}
+                className={`${fieldClass(!!errors.full_name)} auth-latin-input`}
+                aria-describedby={errors.full_name ? `${fullNameId}-error` : undefined}
+                aria-invalid={!!errors.full_name}
+              />
+              {errors.full_name && (
+                <p id={`${fullNameId}-error`} role="alert" className="text-xs text-red-500 mt-1">{errors.full_name}</p>
+              )}
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  {t("auth.mobileNumber")}
-                </label>
-                <PhoneInputField
-                  value={form.mobile}
-                  onChange={(val) => {
-                    setForm((prev) => ({ ...prev, mobile: val }));
-                    setErrors((prev) => ({ ...prev, mobile: "", _form: "" }));
-                  }}
-                  error={!!errors.mobile}
-                />
-                {errors.mobile && (
-                  <p className="text-xs text-red-500 mt-1">{errors.mobile}</p>
-                )}
-              </div>
+            <div className="min-w-0">
+              <label htmlFor={mobileId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t("auth.mobileNumber")}
+              </label>
+              <PhoneInputField
+                id={mobileId}
+                ariaLabel={t("auth.mobileNumber")}
+                ariaDescribedBy={errors.mobile ? `${mobileId}-error` : undefined}
+                value={form.mobile}
+                onChange={(val) => {
+                  setForm((prev) => ({ ...prev, mobile: val }));
+                  setErrors((prev) => ({ ...prev, mobile: "", _form: "" }));
+                }}
+                error={!!errors.mobile}
+              />
+              {errors.mobile && (
+                <p id={`${mobileId}-error`} role="alert" className="text-xs text-red-500 mt-1">{errors.mobile}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor={passwordId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t("auth.password")}
               </label>
-              <div className="relative">
+              <div className="relative auth-latin-field">
                 <input
+                  id={passwordId}
                   type={showPassword ? "text" : "password"}
                   placeholder="At least 8 characters"
                   value={form.password}
                   onChange={set("password")}
-                  className={`${fieldClass(!!errors.password)} pe-10`}
+                  className={`${fieldClass(!!errors.password)} auth-latin-input pe-10`}
+                  aria-describedby={errors.password ? `${passwordId}-error` : undefined}
+                  aria-invalid={!!errors.password}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition"
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+                <p id={`${passwordId}-error`} role="alert" className="text-xs text-red-500 mt-1">{errors.password}</p>
               )}
             </div>
 
             <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <div className="min-w-0">
+                <label htmlFor={workshopNameId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t("auth.workshopName")}
                 </label>
                 <input
+                  id={workshopNameId}
                   type="text"
                   placeholder="Ali Motors"
                   value={form.workshop_name}
                   onChange={set("workshop_name")}
-                  className={fieldClass(!!errors.workshop_name)}
+                  className={`${fieldClass(!!errors.workshop_name)} auth-latin-input`}
+                  aria-describedby={errors.workshop_name ? `${workshopNameId}-error` : undefined}
+                  aria-invalid={!!errors.workshop_name}
                 />
                 {errors.workshop_name && (
-                  <p className="text-xs text-red-500 mt-1">{errors.workshop_name}</p>
+                  <p id={`${workshopNameId}-error`} role="alert" className="text-xs text-red-500 mt-1">{errors.workshop_name}</p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <div className="min-w-0">
+                <label htmlFor={workshopAddressId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t("auth.addressOptional")}
                 </label>
                 <input
+                  id={workshopAddressId}
                   type="text"
                   placeholder="GT Road, Lahore"
                   value={form.workshop_address}
                   onChange={set("workshop_address")}
-                  className={fieldClass(!!errors.workshop_address)}
+                  className={`${fieldClass(!!errors.workshop_address)} auth-latin-input`}
+                  aria-describedby={errors.workshop_address ? `${workshopAddressId}-error` : undefined}
+                  aria-invalid={!!errors.workshop_address}
                 />
                 {errors.workshop_address && (
-                  <p className="text-xs text-red-500 mt-1">{errors.workshop_address}</p>
+                  <p id={`${workshopAddressId}-error`} role="alert" className="text-xs text-red-500 mt-1">{errors.workshop_address}</p>
                 )}
               </div>
             </div>
@@ -232,6 +249,10 @@ export default function Signup() {
             </Link>
           </p>
         </div>
+      </div>
+
+      <div className="lg:order-1 rtl:lg:order-2">
+        <AuthHeroPanel headlineKey="auth.heroSignupHeadline" subtextKey="auth.heroSignupSubtext" />
       </div>
     </div>
   );

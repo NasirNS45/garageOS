@@ -8,6 +8,8 @@ import { useCustomerInsights } from "../../hooks/useCustomerInsights";
 import { useOutstandingCustomers } from "../../hooks/useOutstandingCustomers";
 import { api } from "../../api/axios";
 import { useT } from "../../i18n/useT";
+import { useLanguageStore } from "../../stores/languageStore";
+import { formatLocaleDateStr } from "../../utils/dates";
 
 // ── History tab ───────────────────────────────────────────────────────────────
 interface HistoryJob {
@@ -37,6 +39,7 @@ const HISTORY_STATUS_KEYS: Record<HistoryStatusFilter, "status.all" | "status.co
 
 export default function HistoryTab() {
   const t = useT();
+  const language = useLanguageStore((s) => s.language);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<"vehicle" | "phone">("vehicle");
@@ -118,8 +121,29 @@ export default function HistoryTab() {
         </button>
       </form>
 
+      {!searched && !loading && (
+        <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-4 px-2">
+          {t("history.searchHint")}
+        </p>
+      )}
+
+      {!searched && outstandingQ.isLoading && <JobCardSkeleton count={1} />}
+
+      {!searched && outstandingQ.isError && (
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mb-4" role="alert">
+          <p>{t("history.insightsError")}</p>
+          <button
+            type="button"
+            onClick={() => void outstandingQ.refetch()}
+            className="mt-2 text-xs font-semibold text-[var(--brand)] hover:underline"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      )}
+
       {/* Top customers — discovery aid shown before a search is run */}
-      {!searched && (outstandingQ.data?.length ?? 0) > 0 && (
+      {!searched && !outstandingQ.isLoading && !outstandingQ.isError && (outstandingQ.data?.length ?? 0) > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-amber-100 dark:border-amber-900/40 mb-4">
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
             <Wallet size={15} className="text-amber-600" />
@@ -149,7 +173,22 @@ export default function HistoryTab() {
         </div>
       )}
 
-      {!searched && (insightsQ.data?.length ?? 0) > 0 && (
+      {!searched && insightsQ.isLoading && <JobCardSkeleton count={1} />}
+
+      {!searched && insightsQ.isError && (
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mb-4" role="alert">
+          <p>{t("history.insightsError")}</p>
+          <button
+            type="button"
+            onClick={() => void insightsQ.refetch()}
+            className="mt-2 text-xs font-semibold text-[var(--brand)] hover:underline"
+          >
+            {t("common.retry")}
+          </button>
+        </div>
+      )}
+
+      {!searched && !insightsQ.isLoading && !insightsQ.isError && (insightsQ.data?.length ?? 0) > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
             <Trophy size={15} className="text-amber-500" />
@@ -249,7 +288,7 @@ export default function HistoryTab() {
                   <div className="flex items-center justify-between">
                     <VehiclePlate number={j.vehicle_number} size="sm" />
                     <span className="text-xs text-slate-400 dark:text-slate-500">
-                      {new Date(j.created_at).toLocaleDateString("en-PK", {
+                      {formatLocaleDateStr(j.created_at, language, {
                         day: "numeric",
                         month: "short",
                         year: "numeric",

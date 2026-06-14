@@ -111,7 +111,7 @@ export default function AuthPhoneMockup({ className, variant = "full" }: Props) 
 
       {compact ? (
         <div
-          className="lp-float absolute -right-1 top-16 bg-white rounded-xl shadow-lg px-2.5 py-2 flex items-center gap-2 border border-slate-100 max-w-[148px]"
+          className="lp-float absolute -end-1 top-16 bg-white rounded-xl shadow-lg px-2.5 py-2 flex items-center gap-2 border border-slate-100 max-w-[148px]"
           style={{ animationDelay: "0.5s" }}
         >
           <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">

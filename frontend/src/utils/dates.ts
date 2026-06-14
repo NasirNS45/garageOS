@@ -1,3 +1,5 @@
+import type { Language } from "../i18n/translations";
+
 /** YYYY-MM-DD for today in local time */
 export function todayStr(): string {
   const d = new Date();
@@ -41,4 +43,24 @@ export function monthRange(offset: number): [string, string] {
   const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
   const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
   return [fmtDate(first), fmtDate(last)];
+}
+
+const LOCALE: Record<Language, string> = { en: "en-PK", ur: "ur-PK" };
+
+/** Format a date for display using the active app language. */
+export function formatLocaleDate(
+  date: Date,
+  lang: Language,
+  options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }
+): string {
+  return date.toLocaleDateString(LOCALE[lang], options);
+}
+
+/** Parse ISO-ish date string and format for display. */
+export function formatLocaleDateStr(
+  dateStr: string,
+  lang: Language,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  return formatLocaleDate(new Date(dateStr), lang, options);
 }

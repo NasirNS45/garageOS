@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   BellRing,
   Building2,
@@ -9,6 +10,7 @@ import {
   Trash2,
   Users,
   Wrench,
+  X,
 } from "lucide-react";
 import { useReminders, useCancelReminder } from "../../hooks/useReminders";
 import { useAuthStore } from "../../stores/authStore";
@@ -43,6 +45,15 @@ import type { TKey } from "../../i18n/translations";
 const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "1.0.0";
 
 type SettingsSection = "general" | "automation" | "team" | "catalog" | "data";
+
+const VALID_SECTIONS = new Set<SettingsSection>(["general", "automation", "team", "catalog", "data"]);
+
+function parseSectionParam(value: string | null): SettingsSection {
+  if (value && VALID_SECTIONS.has(value as SettingsSection)) {
+    return value as SettingsSection;
+  }
+  return "general";
+}
 
 const SETTINGS_SECTIONS: {
   id: SettingsSection;
@@ -204,9 +215,10 @@ function RemindersList() {
 
 export default function SettingsTab() {
   const t = useT();
+  const [searchParams] = useSearchParams();
   const { setWorkshopName } = useAuthStore();
   const { toast } = useToast();
-  const [section, setSection] = useState<SettingsSection>("general");
+  const [section, setSection] = useState<SettingsSection>(() => parseSectionParam(searchParams.get("section")));
   const [form, setForm] = useState<SettingsForm>(EMPTY_SETTINGS);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -241,6 +253,10 @@ export default function SettingsTab() {
     loadSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setSection(parseSectionParam(searchParams.get("section")));
+  }, [searchParams]);
 
   useEffect(() => {
     api
@@ -737,6 +753,7 @@ function PresetsSection() {
   const [presetDesc, setPresetDesc] = useState("");
   const [presetLabour, setPresetLabour] = useState(0);
   const [presetErrors, setPresetErrors] = useState<Record<string, string>>({});
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const clearPresetError = (field: string) =>
     setPresetErrors((prev) => ({ ...prev, [field]: "" }));
@@ -772,7 +789,10 @@ function PresetsSection() {
 
   const handleDelete = (preset: ServicePreset) => {
     deletePreset.mutate(preset.id, {
-      onSuccess: () => toast(t("settings.presetDeleted"), "info"),
+      onSuccess: () => {
+        setConfirmId(null);
+        toast(t("settings.presetDeleted"), "info");
+      },
       onError: () => toast(t("settings.presetDeleteFailed"), "error"),
     });
   };
@@ -814,14 +834,35 @@ function PresetsSection() {
                   PKR {p.default_labour.toLocaleString()}
                 </span>
               )}
-              <button
-                onClick={() => handleDelete(p)}
-                disabled={deletePreset.isPending}
-                aria-label={t("settings.deletePreset")}
-                className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
-              >
-                <Trash2 size={14} />
-              </button>
+              {confirmId === p.id ? (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p)}
+                    className="text-[11px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95"
+                  >
+                    {t("common.delete")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmId(null)}
+                    aria-label={t("common.cancel")}
+                    className="text-slate-400 hover:text-slate-600 p-1 active:scale-95"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmId(p.id)}
+                  disabled={deletePreset.isPending}
+                  aria-label={t("settings.deletePreset")}
+                  className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -898,6 +939,7 @@ function PartsCatalogSection() {
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [itemError, setItemError] = useState("");
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const resetForm = () => { setItemName(""); setItemPrice(""); setItemError(""); };
 
@@ -919,7 +961,10 @@ function PartsCatalogSection() {
 
   const handleDelete = (item: PartCatalogItem) => {
     deleteItem.mutate(item.id, {
-      onSuccess: () => toast(t("settings.partRemoved"), "info"),
+      onSuccess: () => {
+        setConfirmId(null);
+        toast(t("settings.partRemoved"), "info");
+      },
       onError: () => toast(t("settings.partRemoveFailed"), "error"),
     });
   };
@@ -960,14 +1005,35 @@ function PartsCatalogSection() {
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">
                 PKR {item.default_price.toLocaleString()}
               </span>
-              <button
-                onClick={() => handleDelete(item)}
-                disabled={deleteItem.isPending}
-                aria-label={t("settings.removePart")}
-                className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
-              >
-                <Trash2 size={14} />
-              </button>
+              {confirmId === item.id ? (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item)}
+                    className="text-[11px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95"
+                  >
+                    {t("common.delete")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmId(null)}
+                    aria-label={t("common.cancel")}
+                    className="text-slate-400 hover:text-slate-600 p-1 active:scale-95"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmId(item.id)}
+                  disabled={deleteItem.isPending}
+                  aria-label={t("settings.removePart")}
+                  className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           ))}
         </div>

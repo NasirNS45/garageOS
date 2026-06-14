@@ -5,6 +5,7 @@ import { useAuthStore } from "./stores/authStore";
 import { useThemeStore } from "./stores/themeStore";
 import { ToastProvider } from "./context/ToastContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { useT } from "./i18n/useT";
 
 // Route-level code splitting — each page ships as its own chunk
 const Login = lazy(() => import("./pages/Login"));
@@ -22,9 +23,11 @@ const queryClient = new QueryClient({
 });
 
 function PageFallback() {
+  const t = useT();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-      <div className="w-8 h-8 rounded-full border-[3px] border-slate-200 border-t-[var(--brand)] animate-spin" />
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]" role="status">
+      <div className="w-8 h-8 rounded-full border-[3px] border-slate-200 border-t-[var(--brand)] animate-spin" aria-hidden />
+      <span className="sr-only">{t("common.loading")}</span>
     </div>
   );
 }
@@ -63,7 +66,7 @@ export default function App() {
               <Route path="/login"  element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
               <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-              <Route path="/reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Protected app routes */}
               <Route path="/jobs"     element={<PrivateRoute><Dashboard /></PrivateRoute>} />

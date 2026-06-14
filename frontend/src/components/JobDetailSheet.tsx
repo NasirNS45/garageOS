@@ -25,8 +25,10 @@ import VehiclePlate from "./VehiclePlate";
 import PartsPanel from "./PartsPanel";
 import JobPhotos from "./JobPhotos";
 import { formatAge } from "../utils/formatAge";
+import { formatLocaleDateStr } from "../utils/dates";
 import { useToast } from "../context/ToastContext";
 import { useAuthStore } from "../stores/authStore";
+import { useLanguageStore } from "../stores/languageStore";
 import { useT } from "../i18n/useT";
 import type { TKey } from "../i18n/translations";
 
@@ -75,6 +77,7 @@ export default function JobDetailSheet({
   const createReminder = useCreateReminder();
   const { toast } = useToast();
   const t = useT();
+  const language = useLanguageStore((s) => s.language);
   const userId = useAuthStore((s) => s.userId);
 
   const isTerminal = card.status === "completed" || card.status === "cancelled";
@@ -123,7 +126,7 @@ export default function JobDetailSheet({
               {t(STATUS_KEYS[card.status])}
             </span>
             <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-              {formatAge(card.created_at)}
+              {formatAge(card.created_at, language)}
             </span>
           </div>
         </div>
@@ -147,7 +150,7 @@ export default function JobDetailSheet({
                 href={`https://wa.me/${card.customer_phone.replace(/[^0-9]/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Message customer on WhatsApp"
+                aria-label={t("job.messageWhatsApp")}
                 className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition active:scale-95"
               >
                 <MessageCircle size={12} />
@@ -253,7 +256,7 @@ export default function JobDetailSheet({
             PKR {card.total_amount.toLocaleString()}
           </span>
           <span className="text-xs text-slate-400">
-            {new Date(card.created_at).toLocaleDateString("en-PK", {
+            {formatLocaleDateStr(card.created_at, language, {
               day: "numeric",
               month: "short",
             })}
@@ -282,12 +285,12 @@ export default function JobDetailSheet({
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 font-medium hover:underline"
                     >
-                      PDF
+                      {t("job.pdf")}
                     </a>
                   )}
                   <ShareLinkButton
                     url={card.invoice_url}
-                    title="Invoice"
+                    title={t("job.shareInvoice")}
                     label={t("job.share")}
                     toastMessage={t("toast.linkCopied")}
                   />
@@ -359,7 +362,7 @@ export default function JobDetailSheet({
             </a>
             <ShareLinkButton
               url={card.track_url}
-              title="Vehicle tracking"
+              title={t("job.shareTrack")}
               label={t("job.shareWithCustomer")}
               toastMessage={t("toast.linkCopied")}
             />
@@ -403,7 +406,7 @@ export default function JobDetailSheet({
                 {showCancel && (
                   <button
                     onClick={() => setConfirmCancel(true)}
-                    aria-label="Cancel job"
+                    aria-label={t("job.cancelAction")}
                     className="w-11 h-11 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition active:scale-95"
                   >
                     <X size={16} />
@@ -512,7 +515,7 @@ function ScheduleReminderPanel({
         disabled={scheduling || !dueDate}
         className="w-full text-xs font-semibold text-[var(--brand)] border border-[var(--brand)] rounded-lg py-2 disabled:opacity-50"
       >
-        {scheduling ? "…" : t("reminder.schedule")}
+        {scheduling ? t("job.saving") : t("reminder.schedule")}
       </button>
     </div>
   );
@@ -555,7 +558,7 @@ function ShareLinkButton({
   return (
     <button
       onClick={handleShare}
-      aria-label={`Share ${title.toLowerCase()}`}
+      aria-label={`${t("job.share")} ${title}`}
       className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-[var(--brand)] transition"
     >
       {copied ? <Copy size={12} /> : <Share2 size={12} />}

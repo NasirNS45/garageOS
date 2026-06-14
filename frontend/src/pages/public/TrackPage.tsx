@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Check, FileText, FileX, Loader2 } from "lucide-react";
+import AuthLanguageToggle from "../../components/AuthLanguageToggle";
 import { usePublicTrack } from "../../hooks/usePublic";
 import { usePublicLanguage } from "../../i18n/usePublicLanguage";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
@@ -21,7 +22,7 @@ export default function TrackPage() {
   const { data, isLoading, isError } = usePublicTrack(cardId);
   useDocumentTitle(t("public.trackStatus"));
 
-  if (isLoading) return <CenterSpinner brandColor={undefined} />;
+  if (isLoading) return <CenterSpinner label={t("common.loading")} brandColor={undefined} />;
   if (isError || !data) return <NotFound label={t("public.trackNotFound")} />;
 
   const brandColor = resolveBrandColor(data.brand_color);
@@ -32,8 +33,10 @@ export default function TrackPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-4">
+      <div className="max-w-[480px] mx-auto mb-3 flex justify-end print:hidden">
+        <AuthLanguageToggle />
+      </div>
       <div className="max-w-[480px] mx-auto bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.08)]">
-        {/* Header */}
         <div className="text-white px-6 py-7" style={brandHeaderStyle(data.brand_color)}>
           <Brand />
           <h1 className="text-xl font-extrabold tracking-tight">{data.workshop_name}</h1>
@@ -41,7 +44,6 @@ export default function TrackPage() {
         </div>
 
         <div className="p-6">
-          {/* Plate */}
           <div className="text-center mb-6">
             <Plate text={data.vehicle_number} />
             {data.vehicle_make && (
@@ -49,28 +51,27 @@ export default function TrackPage() {
             )}
           </div>
 
-          {/* Status */}
           {isCancelled ? (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3.5 text-sm font-semibold text-center">
-              This job has been cancelled. Please contact the workshop.
+              {t("public.jobCancelled")}
             </div>
           ) : (
             <div className="mb-6">
-              <SectionTitle>Status</SectionTitle>
+              <SectionTitle>{t("public.status")}</SectionTitle>
               <ol className="relative">
-                <Step done label="Vehicle received" sub={data.created_at} connector />
+                <Step done label={t("public.stepReceived")} sub={data.created_at} connector />
                 <Step
                   done={isCompleted}
                   active={isInProgress}
                   index={2}
-                  label="Work in progress"
+                  label={t("public.stepInProgress")}
                   brandColor={brandColor}
                   connector
                 />
                 <Step
                   done={isCompleted}
                   index={3}
-                  label="Ready for pickup"
+                  label={t("public.stepReady")}
                   sub={isCompleted ? data.completed_at : undefined}
                   brandColor={brandColor}
                 />
@@ -80,24 +81,28 @@ export default function TrackPage() {
 
           {data.description && (
             <div className="mb-6">
-              <SectionTitle>Work</SectionTitle>
+              <SectionTitle>{t("public.workDone")}</SectionTitle>
               <p className="text-sm text-slate-700 leading-relaxed">{data.description}</p>
             </div>
           )}
 
-          {/* Bill */}
           <div className="mb-2">
-            <SectionTitle>Bill {!isCompleted && "(so far)"}</SectionTitle>
+            <SectionTitle>
+              {isCompleted ? t("public.charges") : t("public.runningBill")}
+            </SectionTitle>
             <div className="flex justify-between py-2 border-b border-slate-100 text-sm">
-              <span className="text-slate-500">Labour</span>
+              <span className="text-slate-500">{t("public.labour")}</span>
               <span className="font-semibold">{fmt(data.labour_charge)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-slate-100 text-sm">
-              <span className="text-slate-500">Parts</span>
+              <span className="text-slate-500">{t("public.parts")}</span>
               <span className="font-semibold">{fmt(data.parts_charge)}</span>
             </div>
-            <div className="flex justify-between items-center pt-3 mt-1 border-t-2 text-lg font-extrabold" style={{ ...brandBorderStyle(data.brand_color), ...brandAccentStyle(data.brand_color) }}>
-              <span>Total</span>
+            <div
+              className="flex justify-between items-center pt-3 mt-1 border-t-2 text-lg font-extrabold"
+              style={{ ...brandBorderStyle(data.brand_color), ...brandAccentStyle(data.brand_color) }}
+            >
+              <span>{t("public.total")}</span>
               <span>{fmt(data.total_amount)}</span>
             </div>
           </div>
@@ -109,21 +114,19 @@ export default function TrackPage() {
               className="mt-4 flex items-center justify-center gap-2 hover:opacity-90 text-white font-bold text-[15px] py-3.5 rounded-2xl transition active:scale-95"
             >
               <FileText size={16} />
-              View Invoice
+              {t("public.viewInvoice")}
             </a>
           )}
         </div>
 
         <div className="text-center px-6 py-4 border-t border-slate-100 text-xs text-slate-400">
-          Thank you for choosing {data.workshop_name}.
-          <div className="mt-1.5 font-semibold text-slate-300">Powered by GarageOS</div>
+          {t("public.thankYou").replace("{workshop}", data.workshop_name)}
+          <div className="mt-1.5 font-semibold text-slate-300">{t("public.poweredBy")}</div>
         </div>
       </div>
     </div>
   );
 }
-
-// ── Shared bits ───────────────────────────────────────────────────────────────
 
 function Step({
   done = false,
@@ -198,10 +201,11 @@ function Plate({ text }: { text: string }) {
   );
 }
 
-function CenterSpinner({ brandColor }: { brandColor?: string | null }) {
+function CenterSpinner({ label, brandColor }: { label: string; brandColor?: string | null }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <Loader2 className="animate-spin" size={28} style={{ color: resolveBrandColor(brandColor) }} />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 gap-3" role="status">
+      <Loader2 className="animate-spin" size={28} style={{ color: resolveBrandColor(brandColor) }} aria-hidden />
+      <span className="sr-only">{label}</span>
     </div>
   );
 }
@@ -209,7 +213,7 @@ function CenterSpinner({ brandColor }: { brandColor?: string | null }) {
 function NotFound({ label }: { label: string }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 text-slate-400 gap-3 px-6 text-center">
-      <FileX size={40} />
+      <FileX size={40} aria-hidden />
       <p className="text-sm font-semibold text-slate-500">{label}</p>
     </div>
   );

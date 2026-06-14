@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Download, FileX, Loader2, Printer } from "lucide-react";
+import AuthLanguageToggle from "../../components/AuthLanguageToggle";
 import { usePublicInvoice } from "../../hooks/usePublic";
 import { usePublicLanguage } from "../../i18n/usePublicLanguage";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
@@ -22,7 +23,7 @@ export default function InvoicePage() {
   const { data, isLoading, isError } = usePublicInvoice(invoiceNumber);
   useDocumentTitle(invoiceNumber ? `${t("public.invoiceNo")} ${invoiceNumber}` : t("public.taxInvoice"));
 
-  if (isLoading) return <CenterSpinner brandColor={undefined} />;
+  if (isLoading) return <CenterSpinner brandColor={undefined} label={t("common.loading")} />;
   if (isError || !data) return <NotFound label={t("public.invoiceNotFound")} />;
 
   const pdfUrl = `${apiBase}/public/invoices/${data.invoice_number}/pdf`;
@@ -30,6 +31,7 @@ export default function InvoicePage() {
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-4 print:bg-white print:p-0">
       <div className="max-w-[600px] mx-auto mb-3.5 flex justify-end gap-2 print:hidden">
+        <AuthLanguageToggle />
         <a
           href={pdfUrl}
           target="_blank"
@@ -83,10 +85,10 @@ export default function InvoicePage() {
               <table className="w-full border-collapse text-sm mb-3">
                 <thead>
                   <tr className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                    <th className="text-left py-1.5 border-b border-slate-200">Part / Item</th>
-                    <th className="text-center py-1.5 border-b border-slate-200">Qty</th>
-                    <th className="text-right py-1.5 border-b border-slate-200">Unit</th>
-                    <th className="text-right py-1.5 border-b border-slate-200">Amount</th>
+                    <th className="text-start py-1.5 border-b border-slate-200">{t("public.partItem")}</th>
+                    <th className="text-center py-1.5 border-b border-slate-200">{t("public.qty")}</th>
+                    <th className="text-end py-1.5 border-b border-slate-200">{t("public.unit")}</th>
+                    <th className="text-end py-1.5 border-b border-slate-200">{t("public.amount")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -96,10 +98,10 @@ export default function InvoicePage() {
                       <td className="py-2 border-b border-slate-100 text-center text-slate-400 text-[13px]">
                         {p.quantity}
                       </td>
-                      <td className="py-2 border-b border-slate-100 text-right text-slate-400 text-[13px]">
+                      <td className="py-2 border-b border-slate-100 text-end text-slate-400 text-[13px]">
                         {p.unit_price.toLocaleString()}
                       </td>
-                      <td className="py-2 border-b border-slate-100 text-right font-semibold">
+                      <td className="py-2 border-b border-slate-100 text-end font-semibold">
                         {p.line_total.toLocaleString()}
                       </td>
                     </tr>
@@ -170,7 +172,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between items-center gap-3 py-2 border-b border-slate-100 last:border-b-0 text-[15px]">
       <span className="text-slate-500">{label}</span>
-      <span className="font-semibold text-right">{value}</span>
+      <span className="font-semibold text-end">{value}</span>
     </div>
   );
 }
@@ -187,10 +189,11 @@ function Plate({ text }: { text: string }) {
   );
 }
 
-function CenterSpinner({ brandColor }: { brandColor?: string | null }) {
+function CenterSpinner({ brandColor, label }: { brandColor?: string | null; label: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <Loader2 className="animate-spin" size={28} style={{ color: resolveBrandColor(brandColor) }} />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 gap-3" role="status">
+      <Loader2 className="animate-spin" size={28} style={{ color: resolveBrandColor(brandColor) }} aria-hidden />
+      <span className="sr-only">{label}</span>
     </div>
   );
 }

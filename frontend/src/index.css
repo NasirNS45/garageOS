@@ -150,16 +150,38 @@ html[lang="ur"] [data-keep-ltr] {
   width: 100%;
 }
 
-/* Text input fills remaining space after the flag selector */
-.phone-field .react-international-phone-input {
-  flex: 1;
+/* Phone numbers stay LTR even in Urdu RTL layout */
+.phone-field-ltr {
+  width: 100%;
   min-width: 0;
-  padding: 0 12px;
+  max-width: 100%;
 }
 
-/* Country selector left padding */
+.phone-field-ltr .react-international-phone-input-container {
+  direction: ltr;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+}
+
+.phone-field-ltr .phone-field {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Text input fills remaining space after the flag selector */
+.phone-field .react-international-phone-input {
+  flex: 1 1 0%;
+  min-width: 0;
+  width: 0;
+  padding-inline: 12px;
+}
+
+/* Country selector padding */
 .phone-field .react-international-phone-country-selector-button {
-  padding: 0 8px 0 12px;
+  padding-inline: 12px 8px;
 }
 
 /* Focus ring on the whole field */
@@ -175,6 +197,16 @@ html[lang="ur"] [data-keep-ltr] {
 }
 .phone-field-error:focus-within {
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Auth fields with Latin placeholders/values stay LTR inside RTL pages */
+.auth-latin-input {
+  direction: ltr;
+  text-align: start;
+}
+
+.auth-latin-field {
+  direction: ltr;
 }
 
 /* ── Landing page animations ─────────────────────────────────────────────── */
@@ -220,6 +252,28 @@ html[lang="ur"] [data-keep-ltr] {
   will-change: transform;
 }
 .lp-marquee:hover { animation-play-state: paused; }
+
+[dir="rtl"] .lp-marquee {
+  animation-direction: reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-fade-up,
+  .lp-fade-in,
+  .lp-slide-right,
+  .lp-float,
+  .lp-scale-in,
+  .lp-glow-cta,
+  .lp-marquee,
+  .lp-orb,
+  .lp-scroll-dot {
+    animation: none !important;
+  }
+
+  .lp-top-btn {
+    transition: none;
+  }
+}
 
 /* Hero gradient orbs — slow drift */
 @keyframes lp-orb-drift {

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { DailySeriesPoint } from "../hooks/useJobCards";
 import { useT } from "../i18n/useT";
+import { useLanguageStore } from "../stores/languageStore";
+import { formatLocaleDate } from "../utils/dates";
 
 interface Props {
   points: DailySeriesPoint[];
@@ -12,6 +14,7 @@ const TOP_PAD = 8;
 /** Pure-SVG daily revenue/expenses bar chart. No chart library. */
 export default function RevenueChart({ points }: Props) {
   const t = useT();
+  const language = useLanguageStore((s) => s.language);
   const [selected, setSelected] = useState<number | null>(null);
 
   if (points.length === 0) return null;
@@ -29,7 +32,7 @@ export default function RevenueChart({ points }: Props) {
 
   const dayLabel = (iso: string) => {
     const [y, m, d] = iso.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("en-PK", {
+    return formatLocaleDate(new Date(y, m - 1, d), language, {
       day: "numeric",
       month: "short",
     });
