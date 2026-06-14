@@ -327,6 +327,16 @@ export const en = {
   "reminders.cancelAria": "Cancel reminder",
   "reminders.cancelled": "Reminder cancelled",
   "reminders.cancelFailed": "Could not cancel reminder",
+
+  // Appearance / theme
+  "theme.accentColor": "Accent color",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
+  "theme.blue": "Blue",
+  "theme.emerald": "Emerald",
+  "theme.purple": "Purple",
+  "theme.rose": "Rose",
+  "theme.teal": "Teal",
 } as const;
 
 export type TKey = keyof typeof en;
@@ -639,6 +649,15 @@ export const ur: Record<TKey, string> = {
   "reminders.cancelAria": "یاد دہانی منسوخ کریں",
   "reminders.cancelled": "یاد دہانی منسوخ ہو گئی",
   "reminders.cancelFailed": "یاد دہانی منسوخ نہیں ہو سکی",
+
+  "theme.accentColor": "نمایاں رنگ",
+  "theme.light": "روشن",
+  "theme.dark": "گہرا",
+  "theme.blue": "نیلا",
+  "theme.emerald": "سبز",
+  "theme.purple": "جامنی",
+  "theme.rose": "گلابی",
+  "theme.teal": "فیروزی",
 };
 
 export const DICTIONARIES = { en, ur } as const;

@@ -1,17 +1,19 @@
 import { Check, Moon, Sun } from "lucide-react";
 import { useThemeStore, THEMES, type ThemeName } from "../stores/themeStore";
+import { useT } from "../i18n/useT";
+import type { TKey } from "../i18n/translations";
 
 export default function ThemePicker() {
   const { theme, setTheme, mode, toggleMode } = useThemeStore();
+  const t = useT();
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 mt-4">
-      {/* Header row: title + light/dark toggle */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Appearance</h3>
+    <div>
+      {/* Light/dark toggle */}
+      <div className="flex justify-end mb-4">
         <button
           onClick={toggleMode}
-          aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={mode === "dark" ? t("theme.light") : t("theme.dark")}
           className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition active:scale-95 ${
             mode === "dark"
               ? "bg-slate-700 text-amber-300 hover:bg-slate-600"
@@ -21,25 +23,26 @@ export default function ThemePicker() {
           {mode === "dark" ? (
             <>
               <Sun size={13} />
-              Light
+              {t("theme.light")}
             </>
           ) : (
             <>
               <Moon size={13} />
-              Dark
+              {t("theme.dark")}
             </>
           )}
         </button>
       </div>
 
       {/* Accent color dots */}
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-3">Accent color</p>
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-3">{t("theme.accentColor")}</p>
       <div className="flex items-center gap-3 flex-wrap">
-        {THEMES.map((t) => (
+        {THEMES.map((opt) => (
           <ThemeDot
-            key={t.name}
-            option={t}
-            active={theme === t.name}
+            key={opt.name}
+            option={opt}
+            label={t(`theme.${opt.name}` as TKey)}
+            active={theme === opt.name}
             onSelect={setTheme}
           />
         ))}
@@ -50,17 +53,19 @@ export default function ThemePicker() {
 
 function ThemeDot({
   option,
+  label,
   active,
   onSelect,
 }: {
   option: { name: ThemeName; label: string; color: string };
+  label: string;
   active: boolean;
   onSelect: (name: ThemeName) => void;
 }) {
   return (
     <button
       onClick={() => onSelect(option.name)}
-      aria-label={`${option.label} theme${active ? " (active)" : ""}`}
+      aria-label={label}
       aria-pressed={active}
       className="flex flex-col items-center gap-1.5 group"
     >
@@ -82,7 +87,7 @@ function ThemeDot({
             : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
         }`}
       >
-        {option.label}
+        {label}
       </span>
     </button>
   );
