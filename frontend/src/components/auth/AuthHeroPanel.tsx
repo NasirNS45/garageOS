@@ -19,7 +19,7 @@ export default function AuthHeroPanel({
   const t = useT();
 
   return (
-    <div className="hidden lg:flex lg:w-1/2 lg:h-screen lg:sticky lg:top-0 bg-[var(--brand-panel)] relative overflow-hidden">
+    <div className="hidden lg:flex lg:w-full lg:h-screen lg:sticky lg:top-0 bg-[var(--brand-panel)] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/25 via-transparent to-blue-950/50 pointer-events-none" />
       <div
         className="absolute inset-0 opacity-50 pointer-events-none"

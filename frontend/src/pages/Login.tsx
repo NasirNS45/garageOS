@@ -196,7 +196,7 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="lg:order-1 rtl:lg:order-2">
+      <div className="lg:order-1 rtl:lg:order-2 lg:w-1/2 lg:shrink-0">
         <AuthHeroPanel headlineKey="auth.heroLoginHeadline" subtextKey="auth.heroLoginSubtext" />
       </div>
     </div>

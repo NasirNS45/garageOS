@@ -251,7 +251,7 @@ export default function Signup() {
         </div>
       </div>
 
-      <div className="lg:order-1 rtl:lg:order-2">
+      <div className="lg:order-1 rtl:lg:order-2 lg:w-1/2 lg:shrink-0">
         <AuthHeroPanel headlineKey="auth.heroSignupHeadline" subtextKey="auth.heroSignupSubtext" />
       </div>
     </div>
