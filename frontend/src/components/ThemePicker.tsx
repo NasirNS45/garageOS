@@ -20,12 +20,8 @@ function ModeToggle({ compact = false }: { compact?: boolean }) {
     <button
       onClick={toggleMode}
       aria-label={mode === "dark" ? t("theme.light") : t("theme.dark")}
-      className={`flex items-center gap-1 text-xs font-semibold rounded-full transition active:scale-95 shrink-0 ${
+      className={`flex items-center gap-1 text-xs font-semibold rounded-full bg-[var(--surface-2)] ring-1 ring-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--surface-raised)] transition active:brightness-90 shrink-0 ${
         compact ? "px-2.5 py-1" : "gap-1.5 px-3 py-1.5"
-      } ${
-        mode === "dark"
-          ? "bg-slate-700 text-amber-300 hover:bg-slate-600"
-          : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
       }`}
     >
       {mode === "dark" ? (
@@ -78,7 +74,7 @@ export default function ThemePicker({ compact = false }: { compact?: boolean }) 
         <ModeToggle />
       </div>
 
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-3">{t("theme.accentColor")}</p>
+      <p className="text-xs font-medium text-[var(--text-muted)] mb-3">{t("theme.accentColor")}</p>
       <div className="flex items-center gap-3 flex-wrap">
         {THEMES.map((opt) => (
           <ThemeDot
@@ -132,9 +128,7 @@ function ThemeDot({
       {!compact && (
         <span
           className={`text-[11px] font-semibold tracking-wide transition-colors ${
-            active
-              ? "text-slate-700 dark:text-slate-200"
-              : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+            active ? "text-[var(--text-strong)]" : "text-[var(--text-faint)] group-hover:text-[var(--text-muted)]"
           }`}
         >
           {label}

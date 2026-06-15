@@ -18,14 +18,14 @@ export default function MechanicSelector({
 
   return (
     <div>
-      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">
+      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1.5">
         {t("job.assignMechanic")}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:opacity-60"
+        className="w-full bg-[var(--surface)] ring-1 ring-[var(--border)] rounded-[var(--r-control)] px-3 py-2.5 text-sm text-[var(--text-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:opacity-60"
       >
         <option value="">{t("job.noMechanicPending")}</option>
         {mechanics.filter((m) => m.is_active).map((m) => (

@@ -3,23 +3,157 @@
 /* Class-based dark mode for Tailwind v4 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  /* Legacy aliases kept for any existing consumers */
-  --brand-blue: #1D4ED8;
-  --brand-blue-dark: #1E3A8A;
-  --brand-amber: #F59E0B;
-  --brand-amber-dark: #D97706;
-  --bg: #F1F5F9;
-  --surface: #FFFFFF;
-  --text: #0F172A;
-  --muted: #64748B;
+/* Tailwind v4 theme — maps CSS custom properties to Tailwind utility classes.
+   This makes shadcn's generated classes (bg-primary, text-muted-foreground, etc.)
+   resolve to our design-token variables. */
+@theme inline {
+  --color-background:           var(--background);
+  --color-foreground:           var(--foreground);
+  --color-card:                 var(--card);
+  --color-card-foreground:      var(--card-foreground);
+  --color-popover:              var(--popover);
+  --color-popover-foreground:   var(--popover-foreground);
+  --color-primary:              var(--primary);
+  --color-primary-foreground:   var(--primary-foreground);
+  --color-secondary:            var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:                var(--muted);
+  --color-muted-foreground:     var(--muted-foreground);
+  --color-accent:               var(--accent);
+  --color-accent-foreground:    var(--accent-foreground);
+  --color-destructive:          var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:               var(--border);
+  --color-input:                var(--input);
+  --color-ring:                 var(--ring);
+  --radius-sm:                  calc(var(--radius) - 4px);
+  --radius-md:                  var(--radius);
+  --radius-lg:                  calc(var(--radius) + 2px);
+  --radius-xl:                  calc(var(--radius) + 4px);
+}
 
-  /* Theme-aware brand variables — overridden by data-theme attribute */
+:root {
+  /* Brand variables — overridden by [data-theme] */
   --brand:       #1D4ED8;
   --brand-hover: #1E40AF;
   --brand-panel: #1E3A8A;
+
+  /* ── Design-system tokens — DARK-FIRST (zinc-950 base) ──────────────────
+     Components consume these via arbitrary values: bg-[var(--surface)] etc.
+     Dark is the default; .light class overrides for light mode. */
+
+  /* Layered surfaces */
+  --page:           #09090B;   /* zinc-950 */
+  --bg:             var(--page);
+  --surface:        #111117;   /* slightly lifted */
+  --surface-2:      #18181B;   /* zinc-900 — cards, inset panels */
+  --surface-raised: #1C1C21;   /* popovers, command palette */
+
+  /* Borders / rings */
+  --border:        #27272A;    /* zinc-800 */
+  --border-strong: #3F3F46;    /* zinc-700 */
+  --ring-subtle:   rgba(255,255,255,0.06);
+
+  /* Text */
+  --text-strong: #FAFAFA;      /* zinc-50 */
+  --text-muted:  #A1A1AA;      /* zinc-400 */
+  --text-faint:  #52525B;      /* zinc-600 */
+
+  /* Typography scale */
+  --text-page-title: 1.5rem;    /* 24px */
+  --text-section:    0.875rem;  /* 14px */
+  --text-label:      0.6875rem; /* 11px */
+
+  /* Row tints — job list status backgrounds */
+  --row-pending:     color-mix(in srgb, var(--warning) 8%, var(--surface));
+  --row-progress:    color-mix(in srgb, var(--info) 8%, var(--surface));
+  --row-completed:   color-mix(in srgb, var(--success) 6%, var(--surface));
+  --row-cancelled:   var(--surface);
+
+  /* App rail — always dark anchor */
+  --rail-bg:         linear-gradient(180deg, #16161E 0%, #12121A 100%);
+  --rail-border:     rgba(255,255,255,0.07);
+  --rail-text:       rgba(255,255,255,0.55);
+  --rail-text-active:#FFFFFF;
+  --rail-hover:      rgba(255,255,255,0.06);
+  --rail-active:     rgba(255,255,255,0.09);
+  --sidebar-width:   220px;
+  --detail-panel-width: 460px;
+
+  /* Dashboard page layout — consistent padding + min-height across tabs */
+  --page-pad-x: 1rem;
+  --page-pad-y: 1rem;
+  --page-pad-x-lg: 2rem;
+  --page-pad-y-lg: 2rem;
+  --mobile-header-h: 3rem;
+  --mobile-nav-h: 4.5rem;
+  --dashboard-content-min-h: calc(100dvh - var(--mobile-header-h) - var(--mobile-nav-h));
+  --dashboard-content-min-h-lg: 100dvh;
+
+  /* Elevation */
+  --shadow-sm: 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-md: 0 4px 24px rgba(0,0,0,0.6);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.8);
+
+  /* Radius scale — tighter, more decisive */
+  --r-pill:    9999px;
+  --r-control: 0.5rem;         /* inputs, buttons */
+  --r-card:    0.75rem;        /* cards, panels */
+  --r-rail:    0.625rem;       /* icon rail items */
+
+  /* Brand tint */
+  --brand-fg: var(--brand);
+  --brand-bg: color-mix(in srgb, var(--brand) 20%, transparent);
+
+  /* Semantic accents — dark defaults */
+  --success:    #22C55E; --success-bg: rgba(34,197,94,0.12);   --success-fg: #4ADE80;
+  --warning:    #EAB308; --warning-bg: rgba(234,179,8,0.12);   --warning-fg: #FDE047;
+  --danger:     #EF4444; --danger-bg:  rgba(239,68,68,0.12);   --danger-fg:  #F87171;
+  --info:       #3B82F6; --info-bg:    rgba(59,130,246,0.12);  --info-fg:    #93C5FD;
+  --neutral-bg: rgba(161,161,170,0.12); --neutral-fg: #A1A1AA;
+
+  /* shadcn/ui variable aliases */
+  --background:           var(--page);
+  --foreground:           var(--text-strong);
+  --card:                 var(--surface);
+  --card-foreground:      var(--text-strong);
+  --popover:              var(--surface-raised);
+  --popover-foreground:   var(--text-strong);
+  --primary:              var(--brand);
+  --primary-foreground:   #ffffff;
+  --secondary:            var(--surface-2);
+  --secondary-foreground: var(--text-strong);
+  --muted:                var(--surface-2);
+  --muted-foreground:     var(--text-muted);
+  --accent:               var(--brand-bg);
+  --accent-foreground:    var(--brand);
+  --destructive:          var(--danger);
+  --destructive-foreground: #ffffff;
+  --input:                var(--border);
+  --ring:                 var(--brand);
+  --radius:               var(--r-control);
+
+  /* react-international-phone — dark defaults */
+  --react-international-phone-background-color: var(--surface-2);
+  --react-international-phone-border-color: #3F3F46;
+  --react-international-phone-text-color: #FAFAFA;
+  --react-international-phone-border-radius: 0.5rem;
+  --react-international-phone-height: 44px;
+  --react-international-phone-font-size: 0.875rem;
+  --react-international-phone-country-selector-background-color-hover: #27272A;
+  --react-international-phone-selected-dropdown-item-background-color: #27272A;
+  --react-international-phone-dropdown-item-background-color: #18181B;
+  --react-international-phone-dropdown-item-dial-code-color: #A1A1AA;
+  --react-international-phone-dropdown-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  --react-international-phone-dropdown-z-index: 9999;
+  --react-international-phone-country-selector-arrow-color: #52525B;
+  --react-international-phone-disabled-background-color: #111117;
+  --react-international-phone-disabled-text-color: #52525B;
+
+  color-scheme: dark;
 }
 
+/* Brand theme overrides — same across light/dark since brand color is brand color */
 [data-theme="emerald"] {
   --brand:       #059669;
   --brand-hover: #047857;
@@ -44,20 +178,96 @@
   --brand-panel: #134E4A;
 }
 
-/* Dark mode semantic overrides */
+/* .dark class — mirrors :root dark values, ensures Tailwind dark: utilities trigger */
 .dark {
-  --bg:   #0F172A;
-  --text: #F1F5F9;
-  --muted: #94A3B8;
+  --page:           #09090B;
+  --bg:             var(--page);
+  --surface:        #111117;
+  --surface-2:      #18181B;
+  --surface-raised: #1C1C21;
+
+  --border:        #27272A;
+  --border-strong: #3F3F46;
+  --ring-subtle:   rgba(255,255,255,0.06);
+
+  --text-strong: #FAFAFA;
+  --text-muted:  #A1A1AA;
+  --text-faint:  #52525B;
+
+  --row-pending:     color-mix(in srgb, var(--warning) 8%, var(--surface));
+  --row-progress:    color-mix(in srgb, var(--info) 8%, var(--surface));
+  --row-completed:   color-mix(in srgb, var(--success) 6%, var(--surface));
+  --row-cancelled:   var(--surface);
+
+  --shadow-sm: 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-md: 0 4px 24px rgba(0,0,0,0.6);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.8);
+
+  --brand-bg: color-mix(in srgb, var(--brand) 20%, transparent);
+
+  --success:    #22C55E; --success-bg: rgba(34,197,94,0.12);   --success-fg: #4ADE80;
+  --warning:    #EAB308; --warning-bg: rgba(234,179,8,0.12);   --warning-fg: #FDE047;
+  --danger:     #EF4444; --danger-bg:  rgba(239,68,68,0.12);   --danger-fg:  #F87171;
+  --info:       #3B82F6; --info-bg:    rgba(59,130,246,0.12);  --info-fg:    #93C5FD;
+  --neutral-bg: rgba(161,161,170,0.12); --neutral-fg: #A1A1AA;
+
   color-scheme: dark;
+}
+
+/* Light mode — activated by .light class on <html> */
+.light {
+  --page:           #F4F4F8;   /* warm neutral — white surfaces lift off clearly */
+  --bg:             var(--page);
+  --surface:        #FFFFFF;
+  --surface-2:      #F7F7FA;
+  --surface-raised: #FFFFFF;
+
+  --border:        #E4E4EC;    /* visible but not heavy */
+  --border-strong: #ADADBB;
+  --ring-subtle:   rgba(15,23,42,0.07);
+
+  --text-strong: #0D0D12;
+  --text-muted:  #6B6B80;
+  --text-faint:  #9898AC;
+
+  --row-pending:     color-mix(in srgb, var(--warning) 10%, var(--surface));
+  --row-progress:    color-mix(in srgb, var(--info) 10%, var(--surface));
+  --row-completed:   color-mix(in srgb, var(--success) 8%, var(--surface));
+  --row-cancelled:   var(--surface);
+
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 2px 8px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08);
+  --shadow-lg: 0 8px 20px rgba(15,23,42,0.08), 0 24px 56px rgba(15,23,42,0.14);
+
+  --brand-bg: color-mix(in srgb, var(--brand) 12%, transparent);
+
+  --success:    #16A34A; --success-bg: #DCFCE7; --success-fg: #15803D;
+  --warning:    #F59E0B; --warning-bg: #FEF3C7; --warning-fg: #B45309;
+  --danger:     #DC2626; --danger-bg:  #FEE2E2; --danger-fg:  #B91C1C;
+  --info:       #2563EB; --info-bg:    #DBEAFE; --info-fg:    #1D4ED8;
+  --neutral-bg: #F4F4F5; --neutral-fg: #71717A;
+
+  /* react-international-phone — light overrides */
+  --react-international-phone-background-color: var(--surface-2);
+  --react-international-phone-border-color: #E4E4E7;
+  --react-international-phone-text-color: #09090B;
+  --react-international-phone-country-selector-background-color-hover: #F4F4F5;
+  --react-international-phone-selected-dropdown-item-background-color: #E4E4E7;
+  --react-international-phone-dropdown-item-background-color: #ffffff;
+  --react-international-phone-dropdown-item-dial-code-color: #71717A;
+  --react-international-phone-dropdown-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  --react-international-phone-country-selector-arrow-color: #A1A1AA;
+  --react-international-phone-disabled-background-color: #F4F4F5;
+  --react-international-phone-disabled-text-color: #A1A1AA;
+
+  color-scheme: light;
 }
 
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--page);
+  color: var(--text-strong);
   -webkit-font-smoothing: antialiased;
-  /* Prevent the browser's own pull-to-refresh so our custom one can run */
   overscroll-behavior-y: contain;
 }
 
@@ -66,22 +276,40 @@ html[lang="ur"] body {
   font-family: "Noto Naskh Arabic", "Inter", system-ui, sans-serif;
   line-height: 1.85;
 }
-/* Nastaliq for marketing headlines only (landing/auth hero, testimonials) */
 html[lang="ur"] .urdu-display {
   font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif;
   line-height: 1.9;
 }
-/* Latin content (plates, numbers) stays LTR inside RTL layout */
 html[lang="ur"] [data-keep-ltr] {
   direction: ltr;
+}
+
+/* Dashboard tab pages — shared frame so tabs do not jump on navigation */
+.dashboard-page {
+  padding: var(--page-pad-y) var(--page-pad-x);
+  min-height: var(--dashboard-content-min-h);
+}
+@media (min-width: 1024px) {
+  .dashboard-page {
+    padding: var(--page-pad-y-lg) var(--page-pad-x-lg);
+    min-height: var(--dashboard-content-min-h-lg);
+  }
+}
+.dashboard-page--split {
+  padding: 0;
+  min-height: var(--dashboard-content-min-h);
+}
+@media (min-width: 1024px) {
+  .dashboard-page--split {
+    min-height: var(--dashboard-content-min-h-lg);
+  }
 }
 
 /* Thin scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
 
-/* Hide scrollbar but keep scrolling (StatusStrip, etc.) */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -91,21 +319,19 @@ html[lang="ur"] [data-keep-ltr] {
   100% { background-position:  400px 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
-.dark .skeleton {
-  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+.light .skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
   background-size: 800px 100%;
 }
 
-/* Safe-area padding for bottom nav (iPhone home bar) */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Line clamp */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -113,44 +339,11 @@ html[lang="ur"] [data-keep-ltr] {
   overflow: hidden;
 }
 
-/* ── react-international-phone theming ──────────────────────────────────── */
-:root {
-  --react-international-phone-background-color: #ffffff;
-  --react-international-phone-border-color: #e2e8f0;
-  --react-international-phone-text-color: #0f172a;
-  --react-international-phone-border-radius: 0.75rem;
-  --react-international-phone-height: 44px;
-  --react-international-phone-font-size: 0.875rem;
-  --react-international-phone-country-selector-background-color-hover: #f1f5f9;
-  --react-international-phone-selected-dropdown-item-background-color: #e2e8f0;
-  --react-international-phone-dropdown-item-background-color: #ffffff;
-  --react-international-phone-dropdown-item-dial-code-color: #64748b;
-  --react-international-phone-dropdown-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --react-international-phone-dropdown-z-index: 9999;
-  --react-international-phone-country-selector-arrow-color: #94a3b8;
-  --react-international-phone-disabled-background-color: #f1f5f9;
-  --react-international-phone-disabled-text-color: #94a3b8;
-}
-
-.dark {
-  --react-international-phone-background-color: #1e293b;
-  --react-international-phone-border-color: #475569;
-  --react-international-phone-text-color: #f1f5f9;
-  --react-international-phone-country-selector-background-color-hover: #334155;
-  --react-international-phone-selected-dropdown-item-background-color: #334155;
-  --react-international-phone-dropdown-item-background-color: #1e293b;
-  --react-international-phone-dropdown-item-dial-code-color: #94a3b8;
-  --react-international-phone-country-selector-arrow-color: #64748b;
-  --react-international-phone-disabled-background-color: #0f172a;
-  --react-international-phone-disabled-text-color: #475569;
-}
-
 /* Full width — stretch to match sibling inputs */
 .phone-field {
   width: 100%;
 }
 
-/* Phone numbers stay LTR even in Urdu RTL layout */
 .phone-field-ltr {
   width: 100%;
   min-width: 0;
@@ -171,7 +364,6 @@ html[lang="ur"] [data-keep-ltr] {
   min-width: 0;
 }
 
-/* Text input fills remaining space after the flag selector */
 .phone-field .react-international-phone-input {
   flex: 1 1 0%;
   min-width: 0;
@@ -179,27 +371,23 @@ html[lang="ur"] [data-keep-ltr] {
   padding-inline: 12px;
 }
 
-/* Country selector padding */
 .phone-field .react-international-phone-country-selector-button {
   padding-inline: 12px 8px;
 }
 
-/* Focus ring on the whole field */
 .phone-field:focus-within {
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 25%, transparent);
 }
 
-/* Error state — red borders on both child elements */
 .phone-field-error .react-international-phone-country-selector-button,
 .phone-field-error .react-international-phone-input {
   border-color: #f87171 !important;
 }
 .phone-field-error:focus-within {
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.2) !important;
 }
 
-/* Auth fields with Latin placeholders/values stay LTR inside RTL pages */
 .auth-latin-input {
   direction: ltr;
   text-align: start;
@@ -242,7 +430,6 @@ html[lang="ur"] [data-keep-ltr] {
 .lp-scale-in    { animation: lp-scale-in    0.55s cubic-bezier(0.16,1,0.3,1) both; }
 .lp-glow-cta    { animation: lp-glow-cta    2.4s ease-in-out infinite; }
 
-/* Infinite marquee — list is duplicated in markup for a seamless loop */
 @keyframes lp-marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
@@ -269,13 +456,11 @@ html[lang="ur"] [data-keep-ltr] {
   .lp-scroll-dot {
     animation: none !important;
   }
-
   .lp-top-btn {
     transition: none;
   }
 }
 
-/* Hero gradient orbs — slow drift */
 @keyframes lp-orb-drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%      { transform: translate(30px, -20px) scale(1.08); }
@@ -283,7 +468,6 @@ html[lang="ur"] [data-keep-ltr] {
 }
 .lp-orb { animation: lp-orb-drift 14s ease-in-out infinite; }
 
-/* Scroll-to-explore mouse dot */
 @keyframes lp-scroll-dot {
   0%   { transform: translateY(0); opacity: 1; }
   70%  { transform: translateY(12px); opacity: 0; }
@@ -291,7 +475,6 @@ html[lang="ur"] [data-keep-ltr] {
 }
 .lp-scroll-dot { animation: lp-scroll-dot 1.8s ease-in-out infinite; }
 
-/* Back-to-top button show/hide */
 .lp-top-btn {
   opacity: 0;
   transform: translateY(12px) scale(0.9);
@@ -304,17 +487,14 @@ html[lang="ur"] [data-keep-ltr] {
   pointer-events: auto;
 }
 
-/* FAQ accordion height animation via grid rows */
 .lp-faq-body {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.35s cubic-bezier(0.16,1,0.3,1);
 }
 .lp-faq-body.open { grid-template-rows: 1fr; }
-/* min-height:0 is required for the 0fr row to actually collapse */
 .lp-faq-body > div { overflow: hidden; min-height: 0; }
 
-/* Scroll reveal — JS adds .in-view when element enters viewport */
 .lp-reveal {
   opacity: 0;
   transform: translateY(22px);
@@ -330,3 +510,48 @@ input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
 }
 input[type="number"] { -moz-appearance: textfield; }
+
+/* ── App design-system utilities ───────────────────────────────────────────
+   Used across the authenticated app (distinct from the lp-* landing set). */
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.u-fade-up { animation: lp-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.u-stagger-1 { animation-delay: 0.04s; }
+.u-stagger-2 { animation-delay: 0.08s; }
+.u-stagger-3 { animation-delay: 0.12s; }
+.u-stagger-4 { animation-delay: 0.16s; }
+.u-stagger-5 { animation-delay: 0.20s; }
+.u-stagger-6 { animation-delay: 0.24s; }
+
+.card-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+.card-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.u-press { transition: transform 0.12s ease; }
+.u-press:active { transform: scale(0.97); }
+
+.u-layout-transition {
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .u-fade-up,
+  .u-stagger-1, .u-stagger-2, .u-stagger-3,
+  .u-stagger-4, .u-stagger-5, .u-stagger-6 {
+    animation: none !important;
+  }
+  .card-lift, .u-press { transition: none; }
+  .card-lift:hover { transform: none; }
+  .u-press:active { transform: none; }
+  .u-layout-transition { transition: none !important; }
+}

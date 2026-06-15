@@ -12,19 +12,26 @@ import {
   ChevronUp,
   ChevronDown,
   Star,
-  Users,
-  TrendingUp,
-  Shield,
   Menu,
   X,
   Package,
   Download,
   ListChecks,
-  Car,
 } from "lucide-react";
 import AuthPhoneMockup from "../components/auth/AuthPhoneMockup";
 import AuthLanguageToggle from "../components/AuthLanguageToggle";
 import Logo from "../components/Logo";
+import {
+  LandingCard,
+  LandingContainer,
+  LandingDarkStrip,
+  LandingHeroBackdrop,
+  LandingSection,
+  LandingSectionHeader,
+} from "../components/landing/LandingShell";
+import LandingProductPreview from "../components/landing/LandingProductPreview";
+import LandingStickyCta from "../components/landing/LandingStickyCta";
+import { Button } from "../components/ui";
 import { usePublicLanguage } from "../i18n/usePublicLanguage";
 import { useT } from "../i18n/useT";
 import type { TKey } from "../i18n/translations";
@@ -32,32 +39,49 @@ import type { TKey } from "../i18n/translations";
 // ── Layout metadata (icons / styling only) ───────────────────────────────────
 
 const FEATURE_META: ReadonlyArray<{
+  id: string;
   icon: typeof ClipboardList;
   accent: string;
   titleKey: TKey;
   descKey: TKey;
+  featured?: boolean;
+  tier: "daily" | "customer" | "business";
 }> = [
-  { icon: ClipboardList, accent: "bg-blue-50 text-blue-600", titleKey: "landing.feature.jobCards.title", descKey: "landing.feature.jobCards.desc" },
-  { icon: Wrench, accent: "bg-amber-50 text-amber-600", titleKey: "landing.feature.mechanic.title", descKey: "landing.feature.mechanic.desc" },
-  { icon: MessageCircle, accent: "bg-emerald-50 text-emerald-600", titleKey: "landing.feature.whatsapp.title", descKey: "landing.feature.whatsapp.desc" },
-  { icon: FileText, accent: "bg-purple-50 text-purple-600", titleKey: "landing.feature.invoices.title", descKey: "landing.feature.invoices.desc" },
-  { icon: BarChart3, accent: "bg-rose-50 text-rose-600", titleKey: "landing.feature.revenue.title", descKey: "landing.feature.revenue.desc" },
-  { icon: Clock, accent: "bg-teal-50 text-teal-600", titleKey: "landing.feature.history.title", descKey: "landing.feature.history.desc" },
-  { icon: ListChecks, accent: "bg-sky-50 text-sky-600", titleKey: "landing.feature.presets.title", descKey: "landing.feature.presets.desc" },
-  { icon: Package, accent: "bg-indigo-50 text-indigo-600", titleKey: "landing.feature.catalog.title", descKey: "landing.feature.catalog.desc" },
-  { icon: Download, accent: "bg-slate-100 text-slate-600", titleKey: "landing.feature.csv.title", descKey: "landing.feature.csv.desc" },
+  { id: "jobCards", icon: ClipboardList, accent: "bg-[var(--brand-bg)] text-[var(--brand)]", titleKey: "landing.feature.jobCards.title", descKey: "landing.feature.jobCards.desc", featured: true, tier: "daily" },
+  { id: "whatsapp", icon: MessageCircle, accent: "bg-[var(--success-bg)] text-[var(--success-fg)]", titleKey: "landing.feature.whatsapp.title", descKey: "landing.feature.whatsapp.desc", featured: true, tier: "customer" },
+  { id: "mechanic", icon: Wrench, accent: "bg-[var(--warning-bg)] text-[var(--warning-fg)]", titleKey: "landing.feature.mechanic.title", descKey: "landing.feature.mechanic.desc", tier: "daily" },
+  { id: "invoices", icon: FileText, accent: "bg-[var(--info-bg)] text-[var(--info-fg)]", titleKey: "landing.feature.invoices.title", descKey: "landing.feature.invoices.desc", tier: "customer" },
+  { id: "revenue", icon: BarChart3, accent: "bg-[var(--danger-bg)] text-[var(--danger-fg)]", titleKey: "landing.feature.revenue.title", descKey: "landing.feature.revenue.desc", tier: "business" },
+  { id: "history", icon: Clock, accent: "bg-[var(--success-bg)] text-[var(--success-fg)]", titleKey: "landing.feature.history.title", descKey: "landing.feature.history.desc", tier: "customer" },
+  { id: "presets", icon: ListChecks, accent: "bg-[var(--brand-bg)] text-[var(--brand)]", titleKey: "landing.feature.presets.title", descKey: "landing.feature.presets.desc", tier: "daily" },
+  { id: "catalog", icon: Package, accent: "bg-[var(--info-bg)] text-[var(--info-fg)]", titleKey: "landing.feature.catalog.title", descKey: "landing.feature.catalog.desc", tier: "business" },
+  { id: "csv", icon: Download, accent: "bg-[var(--neutral-bg)] text-[var(--text-muted)]", titleKey: "landing.feature.csv.title", descKey: "landing.feature.csv.desc", tier: "business" },
 ];
 
-const STEP_META: ReadonlyArray<{ number: string; icon: typeof Car; titleKey: TKey; descKey: TKey }> = [
-  { number: "01", icon: Car, titleKey: "landing.step1.title", descKey: "landing.step1.desc" },
-  { number: "02", icon: Wrench, titleKey: "landing.step2.title", descKey: "landing.step2.desc" },
-  { number: "03", icon: CheckCircle2, titleKey: "landing.step3.title", descKey: "landing.step3.desc" },
+const FEATURE_TIERS: ReadonlyArray<{ tier: "daily" | "customer" | "business"; labelKey: TKey }> = [
+  { tier: "daily", labelKey: "landing.features.tierDaily" },
+  { tier: "customer", labelKey: "landing.features.tierCustomer" },
+  { tier: "business", labelKey: "landing.features.tierBusiness" },
 ];
 
-const TESTIMONIAL_KEYS: ReadonlyArray<{ nameKey: TKey; roleKey: TKey; bodyKey: TKey }> = [
-  { nameKey: "landing.testimonial1.name", roleKey: "landing.testimonial1.role", bodyKey: "landing.testimonial1.body" },
-  { nameKey: "landing.testimonial2.name", roleKey: "landing.testimonial2.role", bodyKey: "landing.testimonial2.body" },
-  { nameKey: "landing.testimonial3.name", roleKey: "landing.testimonial3.role", bodyKey: "landing.testimonial3.body" },
+const STEP_META: ReadonlyArray<{ number: string; titleKey: TKey; descKey: TKey }> = [
+  { number: "01", titleKey: "landing.step1.title", descKey: "landing.step1.desc" },
+  { number: "02", titleKey: "landing.step2.title", descKey: "landing.step2.desc" },
+  { number: "03", titleKey: "landing.step3.title", descKey: "landing.step3.desc" },
+];
+
+const TESTIMONIAL_KEYS: ReadonlyArray<{
+  nameKey: TKey;
+  roleKey: TKey;
+  bodyKey: TKey;
+  cityKey: TKey;
+  baysKey: TKey;
+  painKey: TKey;
+  trustKey: TKey;
+}> = [
+  { nameKey: "landing.testimonial1.name", roleKey: "landing.testimonial1.role", bodyKey: "landing.testimonial1.body", cityKey: "landing.testimonial1.city", baysKey: "landing.testimonial1.bays", painKey: "landing.testimonial1.pain", trustKey: "landing.trust.data.title" },
+  { nameKey: "landing.testimonial2.name", roleKey: "landing.testimonial2.role", bodyKey: "landing.testimonial2.body", cityKey: "landing.testimonial2.city", baysKey: "landing.testimonial2.bays", painKey: "landing.testimonial2.pain", trustKey: "landing.trust.roles.title" },
+  { nameKey: "landing.testimonial3.name", roleKey: "landing.testimonial3.role", bodyKey: "landing.testimonial3.body", cityKey: "landing.testimonial3.city", baysKey: "landing.testimonial3.bays", painKey: "landing.testimonial3.pain", trustKey: "landing.trust.phone.title" },
 ];
 
 const FAQ_KEYS: ReadonlyArray<{ qKey: TKey; aKey: TKey }> = [
@@ -85,13 +109,20 @@ const STAT_KEYS: ReadonlyArray<{ valueKey: TKey; labelKey: TKey }> = [
   { valueKey: "landing.stat.mobile.value", labelKey: "landing.stat.mobile.label" },
   { valueKey: "landing.stat.setup.value", labelKey: "landing.stat.setup.label" },
   { valueKey: "landing.stat.free.value", labelKey: "landing.stat.free.label" },
-  { valueKey: "landing.stat.pakistan.value", labelKey: "landing.stat.pakistan.label" },
+  { valueKey: "landing.stat.whatsapp.value", labelKey: "landing.stat.whatsapp.label" },
 ];
 
-const TRUST_KEYS: ReadonlyArray<{ icon: typeof Shield; titleKey: TKey; bodyKey: TKey }> = [
-  { icon: Shield, titleKey: "landing.trust.data.title", bodyKey: "landing.trust.data.body" },
-  { icon: Users, titleKey: "landing.trust.roles.title", bodyKey: "landing.trust.roles.body" },
-  { icon: TrendingUp, titleKey: "landing.trust.phone.title", bodyKey: "landing.trust.phone.body" },
+const PRICING_FREE_BULLETS: readonly TKey[] = [
+  "landing.pricing.free.bullet1",
+  "landing.pricing.free.bullet2",
+  "landing.pricing.free.bullet3",
+  "landing.pricing.free.bullet4",
+];
+
+const PRICING_FUTURE_BULLETS: readonly TKey[] = [
+  "landing.pricing.future.bullet1",
+  "landing.pricing.future.bullet2",
+  "landing.pricing.future.bullet3",
 ];
 
 const CTA_BULLET_KEYS: readonly TKey[] = [
@@ -110,6 +141,62 @@ function StarRating({ count }: { count: number }) {
         <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
       ))}
     </div>
+  );
+}
+
+function FeatureCard({
+  icon: Icon,
+  accent,
+  titleKey,
+  descKey,
+  featured,
+  delay,
+  expanded,
+  onToggle,
+}: {
+  icon: typeof ClipboardList;
+  accent: string;
+  titleKey: TKey;
+  descKey: TKey;
+  featured?: boolean;
+  delay: number;
+  expanded?: boolean;
+  onToggle?: () => void;
+}) {
+  const t = useT();
+  const collapsible = !featured && onToggle;
+  const showFull = featured || expanded;
+
+  return (
+    <LandingCard
+      className={`lp-reveal group p-6 transition-all duration-300 ${
+        featured ? "lg:p-8 hover:shadow-[var(--shadow-md)]" : "hover:shadow-[var(--shadow-sm)]"
+      } ${featured ? "lg:hover:-translate-y-1" : ""}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div className={`w-12 h-12 rounded-[var(--r-card)] flex items-center justify-center mb-4 ${accent} ${featured ? "lg:w-14 lg:h-14" : ""} group-hover:scale-110 transition-transform duration-300`}>
+        <Icon size={featured ? 24 : 22} />
+      </div>
+      <h3 className={`font-bold text-[var(--text-strong)] mb-2 ${featured ? "text-lg lg:text-xl" : "text-base"}`}>
+        {t(titleKey)}
+      </h3>
+      <p
+        className={`text-sm text-[var(--text-muted)] leading-relaxed ${
+          collapsible && !showFull ? "line-clamp-2 sm:line-clamp-none" : ""
+        }`}
+      >
+        {t(descKey)}
+      </p>
+      {collapsible && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="sm:hidden mt-3 text-xs font-semibold text-[var(--brand)]"
+        >
+          {showFull ? t("landing.feature.showLess") : t("landing.feature.learnMore")}
+        </button>
+      )}
+    </LandingCard>
   );
 }
 
@@ -242,6 +329,19 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false);
   const [showTop, setShowTop] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [expandedFeatures, setExpandedFeatures] = useState<Record<string, boolean>>({});
+
+  const toggleFeature = (id: string) =>
+    setExpandedFeatures((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const navLinks = [
+    { label: t("landing.nav.preview"), href: "#preview" },
+    { label: t("landing.nav.features"), href: "#features" },
+    { label: t("landing.nav.howItWorks"), href: "#how-it-works" },
+    { label: t("landing.nav.reviews"), href: "#testimonials" },
+    { label: t("landing.nav.pricing"), href: "#pricing" },
+    { label: t("landing.nav.faq"), href: "#faq" },
+  ];
 
   useEffect(() => {
     const onScroll = () => {
@@ -272,8 +372,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 antialiased">
-
+    <div className="min-h-screen bg-[var(--page)] text-[var(--text-strong)] antialiased pb-20 md:pb-0">
       {/* ── Scroll progress bar ── */}
       <div className="fixed top-0 left-0 right-0 z-[60] h-[3px] bg-transparent pointer-events-none">
         <div
@@ -293,38 +392,36 @@ export default function Landing() {
 
       {/* ── Navbar ── */}
       <header
-        className={`sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-shadow duration-300 ${
-          scrolled ? "shadow-md shadow-slate-900/5" : ""
+        className={`sticky top-0 z-50 bg-[var(--surface)]/90 backdrop-blur-md border-b border-[var(--border)] transition-shadow duration-300 ${
+          scrolled ? "shadow-[var(--shadow-md)]" : ""
         }`}
       >
-        <div
-          className={`max-w-6xl mx-auto px-6 flex items-center justify-between transition-all duration-300 ${
+        <LandingContainer
+          className={`flex items-center justify-between transition-all duration-300 ${
             scrolled ? "h-14" : "h-16"
           }`}
         >
           <Logo variant="full" size="sm" to="/" />
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="#features" className="hover:text-slate-900 transition">{t("landing.nav.features")}</a>
-            <a href="#how-it-works" className="hover:text-slate-900 transition">{t("landing.nav.howItWorks")}</a>
-            <a href="#testimonials" className="hover:text-slate-900 transition">{t("landing.nav.reviews")}</a>
-            <a href="#faq" className="hover:text-slate-900 transition">{t("landing.nav.faq")}</a>
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[var(--text-muted)]">
+            {navLinks.map(({ label, href }) => (
+              <a key={href} href={href} className="hover:text-[var(--text-strong)] transition">
+                {label}
+              </a>
+            ))}
           </nav>
           <div className="flex items-center gap-3">
             <AuthLanguageToggle />
             <Link
               to="/login"
-              className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition hidden sm:block"
+              className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-strong)] transition hidden sm:block"
             >
               {t("landing.signIn")}
             </Link>
-            <Link
-              to="/signup"
-              className="text-sm font-semibold bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white px-4 py-2 rounded-xl transition shadow-sm shadow-blue-500/20 active:scale-95"
-            >
-              {t("landing.startFree")}
-            </Link>
+            <Button size="sm" asChild>
+              <Link to="/signup">{t("landing.startFree")}</Link>
+            </Button>
             <button
-              className="md:hidden p-2 -mr-2 text-slate-500 hover:text-slate-900 transition"
+              className="md:hidden p-2 -me-2 text-[var(--text-faint)] hover:text-[var(--text-strong)] transition"
               onClick={() => setMobileNavOpen((v) => !v)}
               aria-label={t("landing.toggleNav")}
               aria-expanded={mobileNavOpen}
@@ -332,60 +429,45 @@ export default function Landing() {
               {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
-        </div>
+        </LandingContainer>
 
-        {/* Mobile nav panel */}
         {mobileNavOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 px-6 py-4 space-y-1">
-            {[
-              { label: t("landing.nav.features"), href: "#features" },
-              { label: t("landing.nav.howItWorks"), href: "#how-it-works" },
-              { label: t("landing.nav.reviews"), href: "#testimonials" },
-              { label: t("landing.nav.faq"), href: "#faq" },
-            ].map(({ label, href }) => (
-              <a
-                key={href}
-                href={href}
+          <div className="md:hidden bg-[var(--surface)] border-t border-[var(--border)]">
+            <LandingContainer className="py-4 space-y-1">
+              {navLinks.map(({ label, href }) => (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileNavOpen(false)}
+                  className="block py-2.5 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-strong)] border-b border-[var(--border)] last:border-b-0 transition"
+                >
+                  {label}
+                </a>
+              ))}
+              <Link
+                to="/login"
                 onClick={() => setMobileNavOpen(false)}
-                className="block py-2.5 text-sm font-medium text-slate-700 hover:text-slate-900 border-b border-slate-50 last:border-b-0 transition"
+                className="block py-2.5 text-sm font-semibold text-[var(--brand)]"
               >
-                {label}
-              </a>
-            ))}
-            <Link
-              to="/login"
-              onClick={() => setMobileNavOpen(false)}
-              className="block py-2.5 text-sm font-semibold text-[var(--brand)]"
-            >
-              {t("landing.signIn")}
-            </Link>
+                {t("landing.signIn")}
+              </Link>
+            </LandingContainer>
           </div>
         )}
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#0f1f4a] to-[var(--brand-panel)] text-white">
-        {/* Background texture */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0ibTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NGgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-40" />
-
-        {/* Gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] -translate-y-1/2">
-          <div className="lp-orb w-full h-full bg-blue-600/20 rounded-full blur-3xl" />
-        </div>
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] translate-y-1/2">
-          <div className="lp-orb w-full h-full bg-amber-500/10 rounded-full blur-3xl" style={{ animationDelay: "-7s" }} />
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-20 lg:pt-20 lg:pb-24">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <LandingHeroBackdrop className="lg:min-h-[calc(100dvh-3.5rem)] lg:flex lg:flex-col">
+        <LandingContainer className="relative flex-1 flex flex-col justify-center pt-12 pb-12 lg:pt-16 lg:pb-16">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
             {/* Left: copy */}
             <div>
-              <div className="lp-fade-in inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium text-blue-200 mb-8 backdrop-blur-sm">
+              <div className="lp-fade-in inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium backdrop-blur-sm mb-8" style={{ color: "color-mix(in srgb, white 80%, transparent)" }}>
                 <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                 {t("landing.heroBadge")}
               </div>
 
-              <h1 className="urdu-display text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-6">
+              <h1 className="urdu-display text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-6 text-white">
                 <span className="block lp-fade-up" style={{ animationDelay: "80ms" }}>{t("landing.heroTitle1")}</span>
                 <span className="block lp-fade-up" style={{ animationDelay: "180ms" }}>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300">
@@ -394,33 +476,43 @@ export default function Landing() {
                 </span>
               </h1>
 
-              <p className="lp-fade-up text-lg text-blue-100 leading-relaxed mb-10 max-w-lg" style={{ animationDelay: "280ms" }}>
+              <p className="lp-fade-up text-lg leading-relaxed mb-6 max-w-lg" style={{ animationDelay: "280ms", color: "color-mix(in srgb, white 85%, transparent)" }}>
                 {t("landing.heroSub")}
               </p>
 
-              <div className="lp-fade-up flex flex-col sm:flex-row gap-3" style={{ animationDelay: "380ms" }}>
-                <Link
-                  to="/signup"
-                  className="lp-glow-cta inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-amber-400 text-slate-900 font-bold px-7 py-3.5 rounded-2xl text-base transition active:scale-95"
-                >
-                  {t("landing.heroCtaStart")}
-                  <ChevronRight size={18} className="rtl:rotate-180" />
-                </Link>
-                <Link
-                  to="/login"
-                  className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-7 py-3.5 rounded-2xl text-base transition backdrop-blur-sm"
-                >
-                  {t("landing.signIn")}
-                </Link>
+              <div className="lp-fade-up flex items-start gap-3 mb-8 p-3.5 rounded-[var(--r-card)] bg-white/8 ring-1 ring-white/15 backdrop-blur-sm max-w-lg" style={{ animationDelay: "320ms" }}>
+                <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                  <MessageCircle size={18} className="text-emerald-300" />
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: "color-mix(in srgb, white 88%, transparent)" }}>
+                  {t("landing.heroWhatsapp")}
+                </p>
               </div>
 
-              <p className="lp-fade-in text-blue-300 text-sm mt-5 flex items-center gap-1.5" style={{ animationDelay: "500ms" }}>
+              <div className="lp-fade-up flex flex-col sm:flex-row gap-3" style={{ animationDelay: "380ms" }}>
+                <Button size="lg" asChild className="lp-glow-cta !bg-[#F59E0B] hover:!bg-amber-400 !text-slate-900">
+                  <Link to="/signup">
+                    {t("landing.heroCtaStart")}
+                    <ChevronRight size={18} className="rtl:rotate-180" />
+                  </Link>
+                </Button>
+                <Button variant="secondary" size="lg" asChild className="!bg-white/10 hover:!bg-white/20 !text-white !ring-white/20 backdrop-blur-sm">
+                  <a href="#preview">{t("landing.heroSeeAction")}</a>
+                </Button>
+              </div>
+
+              <p className="lp-fade-in text-sm mt-5 flex items-center gap-1.5" style={{ animationDelay: "500ms", color: "color-mix(in srgb, white 65%, transparent)" }}>
                 <CheckCircle2 size={14} className="text-emerald-400" />
                 {t("landing.heroNote")}
               </p>
             </div>
 
-            {/* Right: phone in foreground, mechanic photo behind it */}
+            {/* Mobile: phone mockup below copy */}
+            <div className="lp-fade-in flex justify-center lg:hidden mt-6" data-keep-ltr>
+              <AuthPhoneMockup variant="compact" />
+            </div>
+
+            {/* Desktop: phone + mechanic photo */}
             <div className="lp-slide-right relative hidden lg:block min-h-[560px]" style={{ animationDelay: "200ms" }}>
               {/* Mechanic photo — right 65%, fades left to match hero bg */}
               <div className="absolute inset-y-0 right-0 left-[30%] rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-2xl shadow-blue-950/60">
@@ -442,30 +534,30 @@ export default function Landing() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="hidden lg:flex absolute bottom-5 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-blue-300/70">
+          <div className="hidden lg:flex absolute bottom-5 left-1/2 -translate-x-1/2 flex-col items-center gap-2" style={{ color: "color-mix(in srgb, white 55%, transparent)" }}>
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em]">{t("landing.scrollExplore")}</span>
-            <div className="w-5 h-8 rounded-full border-2 border-blue-300/40 flex justify-center pt-1.5">
-              <div className="lp-scroll-dot w-1 h-1.5 rounded-full bg-blue-300/80" />
+            <div className="w-5 h-8 rounded-full border-2 border-white/30 flex justify-center pt-1.5">
+              <div className="lp-scroll-dot w-1 h-1.5 rounded-full bg-white/70" />
             </div>
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingHeroBackdrop>
 
-      {/* ── Services marquee ── */}
-      <section className="bg-slate-900 border-y border-white/5 py-4 overflow-hidden" aria-label="Services workshops manage with GarageOS">
-        <div className="lp-marquee flex w-max items-center gap-10">
-          {[...MARQUEE_KEYS, ...MARQUEE_KEYS].map((key, i) => (
-            <span key={`${key}-${i}`} className="flex items-center gap-10 shrink-0">
-              <span className="text-sm font-semibold text-slate-400 whitespace-nowrap">{t(key)}</span>
-              <Wrench size={13} className="text-amber-500/60 shrink-0" />
-            </span>
-          ))}
-        </div>
-      </section>
+      <LandingStickyCta />
 
-      {/* ── Stats bar ── */}
-      <section className="bg-slate-950 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-12">
+      {/* ── Marquee + stats (merged dark band) ── */}
+      <LandingDarkStrip>
+        <div className="py-4 overflow-hidden border-b border-white/5" aria-label="Services workshops manage with GarageOS">
+          <div className="lp-marquee flex w-max items-center gap-10">
+            {[...MARQUEE_KEYS, ...MARQUEE_KEYS].map((key, i) => (
+              <span key={`${key}-${i}`} className="flex items-center gap-10 shrink-0">
+                <span className="text-sm font-semibold text-white/50 whitespace-nowrap">{t(key)}</span>
+                <Wrench size={13} className="text-amber-500/60 shrink-0" />
+              </span>
+            ))}
+          </div>
+        </div>
+        <LandingContainer className="py-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {STAT_KEYS.map((s, i) => (
               <div
@@ -474,284 +566,319 @@ export default function Landing() {
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
                 <p className="text-2xl font-extrabold text-white leading-tight">{t(s.valueKey)}</p>
-                <p className="text-xs text-slate-400 mt-2 leading-snug">{t(s.labelKey)}</p>
+                <p className="text-xs text-white/60 mt-2 leading-snug">{t(s.labelKey)}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingDarkStrip>
+
+      {/* ── Product preview ── */}
+      <LandingSection id="preview">
+        <LandingContainer>
+          <LandingSectionHeader
+            badge={t("landing.preview.badge")}
+            title={t("landing.preview.title")}
+            subtitle={t("landing.preview.sub")}
+          />
+          <div className="lp-reveal" style={{ transitionDelay: "100ms" }}>
+            <LandingProductPreview />
+            <p className="text-center text-sm text-[var(--text-faint)] mt-4">{t("landing.preview.caption")}</p>
+          </div>
+        </LandingContainer>
+      </LandingSection>
 
       {/* ── Workshop Floor Visual ── */}
-      <section className="py-16 lg:py-20 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="lp-reveal text-center mb-10">
-            <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              {t("landing.workshop.badge")}
-            </span>
-            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight">
-              {t("landing.workshop.title")}
-            </h2>
-            <p className="text-slate-500 mt-3 max-w-xl mx-auto">
-              {t("landing.workshop.sub")}
-            </p>
-          </div>
-          <div className="lp-reveal rounded-3xl overflow-hidden ring-1 ring-slate-200 shadow-2xl" style={{ transitionDelay: "120ms" }}>
+      <LandingSection variant="muted">
+        <LandingContainer>
+          <LandingSectionHeader
+            badge={t("landing.workshop.badge")}
+            title={t("landing.workshop.title")}
+            subtitle={t("landing.workshop.sub")}
+          />
+          <div className="lp-reveal relative rounded-[var(--r-card)] overflow-hidden ring-1 ring-[var(--border)] shadow-[var(--shadow-md)]" style={{ transitionDelay: "120ms" }}>
+            <div className="absolute top-3 start-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-[var(--r-pill)] bg-[var(--brand-panel)]/90 text-white text-xs font-semibold ring-1 ring-white/15 backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              {t("landing.workshop.liveLabel")}
+            </div>
             <WorkshopFloorIllustration />
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingSection>
 
       {/* ── Features ── */}
-      <section id="features" className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="lp-reveal text-center mb-16">
-            <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              {t("landing.features.badge")}
-            </span>
-            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-              {t("landing.features.title")}
-            </h2>
-            <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
-              {t("landing.features.sub")}
-            </p>
-          </div>
+      <LandingSection id="features">
+        <LandingContainer>
+          <LandingSectionHeader
+            badge={t("landing.features.badge")}
+            title={t("landing.features.title")}
+            subtitle={t("landing.features.sub")}
+          />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {FEATURE_META.map(({ icon: Icon, titleKey, descKey, accent }, i) => (
-              <div
-                key={titleKey}
-                className="lp-reveal group p-6 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-slate-200 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-slate-100 transition-all duration-300"
-                style={{ transitionDelay: `${i * 60}ms` }}
-              >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${accent} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon size={22} />
-                </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">{t(titleKey)}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t(descKey)}</p>
-              </div>
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            {FEATURE_META.filter((f) => f.featured).map((feature, i) => (
+              <FeatureCard
+                key={feature.id}
+                icon={feature.icon}
+                accent={feature.accent}
+                titleKey={feature.titleKey}
+                descKey={feature.descKey}
+                featured
+                delay={i * 80}
+              />
             ))}
           </div>
-        </div>
-      </section>
+
+          {FEATURE_TIERS.map(({ tier, labelKey }) => {
+            const tierFeatures = FEATURE_META.filter((f) => !f.featured && f.tier === tier);
+            if (tierFeatures.length === 0) return null;
+            return (
+              <div key={tier} className="mb-8 last:mb-0">
+                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-faint)] mb-4">
+                  {t(labelKey)}
+                </p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {tierFeatures.map((feature, i) => (
+                    <FeatureCard
+                      key={feature.id}
+                      icon={feature.icon}
+                      accent={feature.accent}
+                      titleKey={feature.titleKey}
+                      descKey={feature.descKey}
+                      delay={i * 60}
+                      expanded={expandedFeatures[feature.id]}
+                      onToggle={() => toggleFeature(feature.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </LandingContainer>
+      </LandingSection>
 
       {/* ── How it works ── */}
-      <section id="how-it-works" className="py-24 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="lp-reveal text-center mb-16">
-            <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              {t("landing.steps.badge")}
-            </span>
-            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-              {t("landing.steps.title")}
-            </h2>
-          </div>
+      <LandingSection id="how-it-works" variant="muted">
+        <LandingContainer>
+          <LandingSectionHeader badge={t("landing.steps.badge")} title={t("landing.steps.title")} />
 
           <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connector line */}
-            <div className="hidden md:block absolute top-10 left-[calc(16.666%+1rem)] right-[calc(16.666%+1rem)] h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+            <div className="hidden md:block absolute top-10 left-[calc(16.666%+1rem)] right-[calc(16.666%+1rem)] h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
 
-            {STEP_META.map(({ number, icon: Icon, titleKey, descKey }, i) => (
+            {STEP_META.map(({ number, titleKey, descKey }, i) => (
               <div
                 key={number}
                 className="lp-reveal relative text-center"
                 style={{ transitionDelay: `${i * 120}ms` }}
               >
-                <div className="w-12 h-12 rounded-xl bg-blue-50 text-[var(--brand)] flex items-center justify-center mx-auto mb-3">
-                  <Icon size={22} strokeWidth={1.75} />
-                </div>
-                <div className="w-16 h-16 rounded-2xl bg-[var(--brand)] text-white font-extrabold text-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/25 relative z-10">
+                <div className="w-16 h-16 rounded-[var(--r-card)] bg-[var(--brand)] text-white font-extrabold text-2xl flex items-center justify-center mx-auto mb-6 shadow-[var(--shadow-md)] relative z-10">
                   {number}
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">{t(titleKey)}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{t(descKey)}</p>
+                <h3 className="text-lg font-bold text-[var(--text-strong)] mb-3">{t(titleKey)}</h3>
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed">{t(descKey)}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingSection>
 
       {/* ── Testimonials ── */}
-      <section id="testimonials" className="py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="lp-reveal text-center mb-16">
-            <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              {t("landing.testimonials.badge")}
-            </span>
-            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-              {t("landing.testimonials.title")}
-            </h2>
-          </div>
+      <LandingSection id="testimonials">
+        <LandingContainer>
+          <LandingSectionHeader badge={t("landing.testimonials.badge")} title={t("landing.testimonials.title")} />
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {TESTIMONIAL_KEYS.map(({ nameKey, roleKey, bodyKey }, i) => {
+          <div className="grid md:grid-cols-3 gap-6">
+            {TESTIMONIAL_KEYS.map(({ nameKey, roleKey, bodyKey, cityKey, baysKey, painKey, trustKey }, i) => {
               const name = t(nameKey);
               return (
-              <div
+              <LandingCard
                 key={nameKey}
-                className="lp-reveal relative p-6 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 flex flex-col"
+                className="lp-reveal relative p-6 bg-[var(--surface-2)] flex flex-col"
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
-                {/* Decorative quote mark */}
-                <svg className="absolute top-5 right-6 w-8 h-8 text-slate-100" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
+                <svg className="absolute top-5 end-6 w-8 h-8 text-[var(--border)]" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
                   <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
                 </svg>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-[var(--r-pill)] bg-[var(--brand-bg)] text-[var(--brand)]">
+                    {t(cityKey)}
+                  </span>
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-[var(--r-pill)] bg-[var(--surface)] ring-1 ring-[var(--border)] text-[var(--text-muted)]">
+                    {t(baysKey)}
+                  </span>
+                </div>
                 <StarRating count={5} />
-                <p className="urdu-display text-slate-700 text-sm leading-relaxed mt-4 flex-1">
+                <p className="urdu-display text-[var(--text-strong)] text-sm leading-relaxed mt-4 flex-1">
                   &ldquo;{t(bodyKey)}&rdquo;
                 </p>
-                <div className="mt-6 flex items-center gap-3 pt-4 border-t border-slate-200">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--brand-panel)] flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2 ring-blue-100">
+                <p className="text-xs text-[var(--text-faint)] mt-3 italic">{t(painKey)}</p>
+                <div className="mt-6 flex items-center gap-3 pt-4 border-t border-[var(--border)]">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--brand-panel)] flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2 ring-[var(--brand-bg)]">
                     {name[0]}
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none">{name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t(roleKey)}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[var(--text-strong)] leading-none">{name}</p>
+                    <p className="text-xs text-[var(--text-faint)] mt-0.5 truncate">{t(roleKey)}</p>
                   </div>
                 </div>
-              </div>
+                <p className="mt-3 text-[10px] font-semibold text-[var(--brand)]">{t(trustKey)}</p>
+              </LandingCard>
             );})}
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingSection>
 
-      {/* ── Trust strip ── */}
-      <section className="py-16 bg-slate-50 border-y border-slate-100">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="grid sm:grid-cols-3 gap-8 text-center">
-            {TRUST_KEYS.map(({ icon: Icon, titleKey, bodyKey }, i) => (
-              <div
-                key={titleKey}
-                className="lp-reveal flex flex-col items-center"
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[var(--brand)] flex items-center justify-center mb-4 shadow-sm">
-                  <Icon size={22} />
-                </div>
-                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1">{t(titleKey)}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{t(bodyKey)}</p>
-              </div>
-            ))}
+      {/* ── Pricing ── */}
+      <LandingSection id="pricing" variant="muted">
+        <LandingContainer>
+          <LandingSectionHeader
+            badge={t("landing.pricing.badge")}
+            title={t("landing.pricing.title")}
+            subtitle={t("landing.pricing.sub")}
+          />
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <LandingCard className="lp-reveal p-8 ring-[var(--brand)]/30 shadow-[var(--shadow-md)]" style={{ transitionDelay: "80ms" }}>
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--brand)] mb-2">
+                {t("landing.pricing.free.title")}
+              </p>
+              <p className="text-4xl font-extrabold text-[var(--text-strong)]">{t("landing.pricing.free.price")}</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1 mb-6">{t("landing.pricing.free.period")}</p>
+              <ul className="space-y-2.5 mb-8">
+                {PRICING_FREE_BULLETS.map((key) => (
+                  <li key={key} className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                    <CheckCircle2 size={15} className="text-[var(--success-fg)] shrink-0" />
+                    {t(key)}
+                  </li>
+                ))}
+              </ul>
+              <Button size="lg" fullWidth asChild>
+                <Link to="/signup">{t("landing.pricing.free.cta")}</Link>
+              </Button>
+            </LandingCard>
+
+            <LandingCard className="lp-reveal p-8 bg-[var(--surface)]/80" style={{ transitionDelay: "160ms" }}>
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-faint)] mb-2">
+                {t("landing.pricing.future.title")}
+              </p>
+              <p className="text-4xl font-extrabold text-[var(--text-strong)]">{t("landing.pricing.future.price")}</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1 mb-6">{t("landing.pricing.future.period")}</p>
+              <ul className="space-y-2.5 mb-6">
+                {PRICING_FUTURE_BULLETS.map((key) => (
+                  <li key={key} className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                    <CheckCircle2 size={15} className="text-[var(--text-faint)] shrink-0" />
+                    {t(key)}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-[var(--text-faint)] leading-relaxed">{t("landing.pricing.future.note")}</p>
+            </LandingCard>
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingSection>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="py-24 bg-white">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="lp-reveal text-center mb-12">
-            <span className="inline-flex items-center bg-blue-50 text-[var(--brand)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
-              {t("landing.faq.badge")}
-            </span>
-            <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold text-slate-900 mb-4">
-              {t("landing.faq.title")}
-            </h2>
-          </div>
+      <LandingSection id="faq">
+        <LandingContainer narrow>
+          <LandingSectionHeader badge={t("landing.faq.badge")} title={t("landing.faq.title")} />
 
           <div className="space-y-3">
             {FAQ_KEYS.map(({ qKey, aKey }, i) => {
               const isOpen = openFaq === i;
               return (
                 <div key={qKey} className="lp-reveal">
-                  <div
-                    className={`rounded-2xl border ${
-                      isOpen ? "border-blue-200 bg-blue-50/40" : "border-slate-100 bg-white hover:border-slate-200"
-                    }`}
+                  <LandingCard
+                    className={isOpen ? "ring-[var(--brand)]/30 bg-[var(--brand-bg)]/30" : "hover:ring-[var(--border-strong)]"}
                   >
                     <button
                       onClick={() => setOpenFaq(isOpen ? null : i)}
                       aria-expanded={isOpen}
-                      className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+                      className="w-full flex items-center justify-between gap-4 px-5 py-4 text-start"
                     >
-                      <span className="text-sm font-bold text-slate-900">{t(qKey)}</span>
+                      <span className="text-sm font-bold text-[var(--text-strong)]">{t(qKey)}</span>
                       <ChevronDown
                         size={18}
-                        className={`shrink-0 text-slate-400 transition-transform duration-300 ${
+                        className={`shrink-0 text-[var(--text-faint)] transition-transform duration-300 ${
                           isOpen ? "rotate-180 text-[var(--brand)]" : ""
                         }`}
                       />
                     </button>
                     <div className={`lp-faq-body ${isOpen ? "open" : ""}`}>
                       <div>
-                        <p className="px-5 pb-4 text-sm text-slate-500 leading-relaxed">{t(aKey)}</p>
+                        <p className="px-5 pb-4 text-sm text-[var(--text-muted)] leading-relaxed">{t(aKey)}</p>
                       </div>
                     </div>
-                  </div>
+                  </LandingCard>
                 </div>
               );
             })}
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingSection>
 
       {/* ── Final CTA ── */}
-      <section className="py-24 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-panel)] text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0ibTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NGgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
-        <div className="relative max-w-3xl mx-auto px-6 text-center">
+      <LandingHeroBackdrop>
+        <LandingContainer narrow className="py-16 text-center">
           <h2 className="urdu-display text-3xl lg:text-4xl font-extrabold mb-4">
             {t("landing.cta.title")}
           </h2>
-          <p className="text-blue-200 text-lg mb-8 leading-relaxed">
+          <p className="text-white/75 text-lg mb-8 leading-relaxed">
             {t("landing.cta.sub")}
           </p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-10">
             {CTA_BULLET_KEYS.map((key) => (
-              <span key={key} className="flex items-center gap-1.5 text-sm text-blue-100">
+              <span key={key} className="flex items-center gap-1.5 text-sm text-white/80">
                 <CheckCircle2 size={15} className="text-emerald-300 shrink-0" />
                 {t(key)}
               </span>
             ))}
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/signup"
-              className="lp-glow-cta inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-amber-400 text-slate-900 font-bold px-8 py-4 rounded-2xl text-base transition active:scale-95"
-            >
-              {t("landing.cta.create")}
-              <ChevronRight size={18} className="rtl:rotate-180" />
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center justify-center bg-white/15 hover:bg-white/25 border border-white/25 text-white font-semibold px-8 py-4 rounded-2xl text-base transition backdrop-blur-sm"
-            >
-              {t("landing.signIn")}
-            </Link>
+            <Button size="lg" asChild className="!bg-[#F59E0B] hover:!bg-amber-400 !text-slate-900">
+              <Link to="/signup">
+                {t("landing.cta.create")}
+                <ChevronRight size={18} className="rtl:rotate-180" />
+              </Link>
+            </Button>
+            <Button variant="secondary" size="lg" asChild className="!bg-white/10 hover:!bg-white/20 !text-white !ring-white/20 backdrop-blur-sm">
+              <Link to="/login">{t("landing.signIn")}</Link>
+            </Button>
           </div>
-        </div>
-      </section>
+        </LandingContainer>
+      </LandingHeroBackdrop>
 
       {/* ── Footer ── */}
-      <footer className="bg-slate-950 text-slate-400 py-16 border-t border-transparent" style={{ borderImage: "linear-gradient(to right, transparent, rgba(59,130,246,0.3), transparent) 1" }}>
-        <div className="max-w-6xl mx-auto px-6">
+      <footer className="bg-[var(--brand-panel)] text-white/60 py-16 border-t border-white/10">
+        <LandingContainer>
+          <p className="text-center text-xs text-white/50 mb-8 tracking-wide">
+            {t("landing.footer.credibility")}
+          </p>
           <div className="grid md:grid-cols-3 gap-10 mb-10">
-            {/* Brand */}
             <div>
               <Logo variant="full" size="sm" light to="/" />
-              <p className="text-sm text-slate-500 mt-3 leading-relaxed max-w-xs">
+              <p className="text-sm text-white/50 mt-3 leading-relaxed max-w-xs">
                 {t("landing.footer.tagline")}
               </p>
             </div>
 
-            {/* Product */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">{t("landing.footer.product")}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">{t("landing.footer.product")}</p>
               <ul className="space-y-2.5 text-sm">
+                <li><a href="#preview" className="hover:text-white transition">{t("landing.nav.preview")}</a></li>
                 <li><a href="#features" className="hover:text-white transition">{t("landing.nav.features")}</a></li>
                 <li><a href="#how-it-works" className="hover:text-white transition">{t("landing.nav.howItWorks")}</a></li>
+                <li><a href="#pricing" className="hover:text-white transition">{t("landing.nav.pricing")}</a></li>
                 <li><a href="#faq" className="hover:text-white transition">{t("landing.nav.faq")}</a></li>
                 <li><Link to="/signup" className="hover:text-white transition">{t("landing.footer.createAccount")}</Link></li>
                 <li><Link to="/login" className="hover:text-white transition">{t("landing.signIn")}</Link></li>
               </ul>
             </div>
 
-            {/* Support */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">{t("landing.footer.support")}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">{t("landing.footer.support")}</p>
               <ul className="space-y-2.5 text-sm">
                 <li>
-                  <a
-                    href="mailto:support@garageOS.pk"
-                    className="hover:text-white transition"
-                  >
+                  <a href="mailto:support@garageOS.pk" className="hover:text-white transition">
                     support@garageOS.pk
                   </a>
                 </li>
@@ -770,12 +897,12 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="border-t border-slate-800 pt-6">
-            <p className="text-xs text-slate-600 text-center">
+          <div className="border-t border-white/10 pt-6">
+            <p className="text-xs text-white/40 text-center">
               &copy; {new Date().getFullYear()} GarageOS. {t("landing.footer.copyright")}
             </p>
           </div>
-        </div>
+        </LandingContainer>
       </footer>
     </div>
   );

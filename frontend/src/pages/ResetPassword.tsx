@@ -2,19 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { api } from "../api/axios";
-import AuthLanguageToggle from "../components/AuthLanguageToggle";
-import Logo from "../components/Logo";
+import AuthLayout from "../components/auth/AuthLayout";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useT } from "../i18n/useT";
-
-const inputBase =
-  "w-full bg-white dark:bg-slate-800 dark:text-slate-100 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition shadow-sm";
-
-function fieldClass(hasError: boolean) {
-  return hasError
-    ? `${inputBase} border-red-400 focus:ring-red-400`
-    : `${inputBase} border-slate-200 dark:border-slate-600 focus:ring-[var(--brand)]`;
-}
+import { Button, FormField, TextInput } from "../components/ui";
 
 export default function ResetPassword() {
   const t = useT();
@@ -71,87 +62,82 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-[#F1F5F9] dark:bg-slate-900">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <Logo variant="full" size="md" to="/" />
-          <AuthLanguageToggle />
-        </div>
-
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
-          {t("auth.resetTitle")}
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("auth.resetDesc")}</p>
-
-        {formError && (
-          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mb-5" role="alert">
-            {formError}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <div>
-            <label htmlFor={passwordId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-              {t("auth.newPassword")}
-            </label>
-            <div className="relative auth-latin-field">
-              <input
-                id={passwordId}
-                type={showPassword ? "text" : "password"}
-                placeholder={t("auth.passwordPlaceholder")}
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
-                className={`${fieldClass(!!errors.password)} auth-latin-input pe-10`}
-                aria-describedby={errors.password ? passwordErrorId : undefined}
-                aria-invalid={!!errors.password}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 transition"
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {errors.password && (
-              <p id={passwordErrorId} role="alert" className="text-xs text-red-500 mt-1">{errors.password}</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor={confirmId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-              {t("auth.confirmPassword")}
-            </label>
-            <input
-              id={confirmId}
-              type={showPassword ? "text" : "password"}
-              value={confirm}
-              onChange={(e) => { setConfirm(e.target.value); setErrors((p) => ({ ...p, confirm: "" })); }}
-              className={`${fieldClass(!!errors.confirm)} auth-latin-input`}
-              aria-describedby={errors.confirm ? confirmErrorId : undefined}
-              aria-invalid={!!errors.confirm}
-            />
-            {errors.confirm && (
-              <p id={confirmErrorId} role="alert" className="text-xs text-red-500 mt-1">{errors.confirm}</p>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition shadow-sm disabled:opacity-60"
-          >
-            {loading ? t("auth.resetSaving") : t("auth.resetSubmit")}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+    <AuthLayout
+      heroHeadlineKey="auth.heroResetHeadline"
+      heroSubtextKey="auth.heroResetSubtext"
+      title={t("auth.resetTitle")}
+      subtitle={t("auth.resetDesc")}
+      footer={
+        <p className="text-sm text-[var(--text-muted)]">
           <Link to="/login" className="text-[var(--brand)] font-semibold hover:underline">
             {t("auth.backToLogin")}
           </Link>
         </p>
-      </div>
-    </div>
+      }
+    >
+      {formError && (
+        <div
+          className="bg-[var(--danger-bg)] ring-1 ring-[var(--danger)]/25 text-[var(--danger-fg)] text-sm rounded-[var(--r-control)] px-4 py-3 mb-4"
+          role="alert"
+        >
+          {formError}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <FormField
+          label={t("auth.newPassword")}
+          htmlFor={passwordId}
+          error={errors.password}
+          errorId={passwordErrorId}
+        >
+          <div className="relative auth-latin-field">
+            <TextInput
+              id={passwordId}
+              type={showPassword ? "text" : "password"}
+              placeholder={t("auth.passwordPlaceholder")}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrors((p) => ({ ...p, password: "" }));
+              }}
+              hasError={!!errors.password}
+              className="auth-latin-input pe-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)] hover:text-[var(--text-muted)] transition"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </FormField>
+
+        <FormField
+          label={t("auth.confirmPassword")}
+          htmlFor={confirmId}
+          error={errors.confirm}
+          errorId={confirmErrorId}
+        >
+          <TextInput
+            id={confirmId}
+            type={showPassword ? "text" : "password"}
+            value={confirm}
+            onChange={(e) => {
+              setConfirm(e.target.value);
+              setErrors((p) => ({ ...p, confirm: "" }));
+            }}
+            hasError={!!errors.confirm}
+            className="auth-latin-input"
+          />
+        </FormField>
+
+        <Button type="submit" loading={loading} fullWidth>
+          {loading ? t("auth.resetSaving") : t("auth.resetSubmit")}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

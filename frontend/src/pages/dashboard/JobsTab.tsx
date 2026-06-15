@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardList, Search, X } from "lucide-react";
+import { ClipboardList, Plus, Search, X } from "lucide-react";
 import { useJobCards, type JobCard, type JobCardListFilters } from "../../hooks/useJobCards";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useMechanics } from "../../hooks/useMechanics";
 import JobCardList from "../../components/JobCardList";
+import JobDetailPanel from "../../components/JobDetailPanel";
 import StatusStrip from "../../components/StatusStrip";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
 import EmptyState from "../../components/EmptyState";
 import PullToRefresh from "../../components/PullToRefresh";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
+import DashboardPageShell from "../../components/DashboardPageShell";
+import { Button, FilterPill, PageHeader, TextInput } from "../../components/ui";
 import { useT } from "../../i18n/useT";
 import type { TKey } from "../../i18n/translations";
 
@@ -44,7 +48,10 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
   const [allItems, setAllItems] = useState<JobCard[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
+  const [selectedJob, setSelectedJob] = useState<JobCard | null>(null);
   const debouncedSearch = useDebounce(search, 400);
+
+  const { data: mechanics = [] } = useMechanics();
 
   const apiFilters = useMemo(
     () => ({ ...buildApiFilters(statusFilter), search: debouncedSearch }),
@@ -58,6 +65,7 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
   useEffect(() => {
     setPage(1);
     setAllItems([]);
+    setSelectedJob(null);
   }, [statusFilter, debouncedSearch]);
 
   useEffect(() => {
@@ -100,102 +108,131 @@ export default function JobsTab({ role, onNewJob }: { role: string | null; onNew
   });
 
   return (
-    <PullToRefresh onRefresh={() => refetch()}>
-      {displayItems.length > 0 && <StatusStrip jobs={displayItems} />}
-
-      {displayItems.length > 0 && (
-        <div className="relative mb-3">
-          <Search
-            size={16}
-            className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("jobs.search")}
-            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl ps-9 pe-9 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              aria-label={t("jobs.clearSearch")}
-              className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 active:scale-95"
-            >
-              <X size={15} />
-            </button>
-          )}
-        </div>
-      )}
-
-      {displayItems.length > 0 && (
-        <div className="relative mb-3">
-          <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
-            {filterPills.map((f) => (
-              <button
-                key={f}
-                onClick={() => setStatusFilter(f)}
-                className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition active:scale-95 ${
-                  statusFilter === f
-                    ? "bg-[var(--brand)] text-white shadow-sm"
-                    : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
-                }`}
+    <DashboardPageShell variant="split" className="dashboard-page--split">
+      {/* ── Left: list ── */}
+      <div className="flex-1 min-w-0 overflow-y-auto px-[var(--page-pad-x)] py-[var(--page-pad-y)] lg:px-[var(--page-pad-x-lg)] lg:py-[var(--page-pad-y-lg)]">
+        <PullToRefresh onRefresh={() => refetch()}>
+          <PageHeader
+            title={t("nav.jobs")}
+            meta={displayItems.length > 0 ? <StatusStrip jobs={displayItems} /> : undefined}
+            actions={
+              <Button
+                size="sm"
+                leftIcon={<Plus size={15} />}
+                onClick={onNewJob}
+                className="shrink-0"
               >
-                {t(STATUS_FILTER_KEYS[f])}
-              </button>
-            ))}
-          </div>
-          <div className="absolute end-0 top-0 h-full w-8 bg-gradient-to-l rtl:bg-gradient-to-r from-[#F1F5F9] to-transparent dark:from-slate-900 pointer-events-none" />
-        </div>
-      )}
-
-      {isLoading && page === 1 && <JobCardSkeleton count={3} />}
-
-      {isError && (
-        <EmptyState
-          icon={<ClipboardList size={48} />}
-          title={t("jobs.loadError.title")}
-          description={t("jobs.loadError.desc")}
-          action={{ label: t("common.retry"), onClick: () => refetch() }}
-        />
-      )}
-
-      {!isLoading && !isError && displayItems.length === 0 && (
-        role === "owner" ? (
-          <OnboardingChecklist onNewJob={onNewJob} />
-        ) : (
-          <EmptyState
-            icon={<ClipboardList size={48} />}
-            title={t("jobs.empty.title")}
-            description={t("jobs.empty.desc")}
-            action={{ label: t("jobs.empty.action"), onClick: onNewJob }}
+                {t("jobs.empty.action")}
+              </Button>
+            }
           />
-        )
-      )}
 
-      {!isLoading && !isError && displayItems.length > 0 && filteredItems.length === 0 && (
-        <EmptyState
-          icon={q ? <Search size={48} /> : <ClipboardList size={48} />}
-          title={q ? t("jobs.searchEmpty") : `${t(STATUS_FILTER_KEYS[statusFilter])} — 0`}
-          description={t("jobs.filterEmpty.desc")}
-        />
-      )}
+          {displayItems.length > 0 && (
+            <div className="relative mb-3">
+              <Search
+                size={16}
+                className="absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)] pointer-events-none"
+              />
+              <TextInput
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("jobs.search")}
+                className="h-10 ps-9 pe-9 bg-[var(--surface)]"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  aria-label={t("jobs.clearSearch")}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[var(--text-faint)] hover:text-[var(--text-strong)] p-0.5 active:scale-95"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+          )}
 
-      {filteredItems.length > 0 && (
-        <JobCardList cards={filteredItems} isOwner={isOwner} />
-      )}
+          {displayItems.length > 0 && (
+            <div className="relative mb-3">
+              <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
+                {filterPills.map((f) => (
+                  <FilterPill
+                    key={f}
+                    active={statusFilter === f}
+                    onClick={() => setStatusFilter(f)}
+                  >
+                    {t(STATUS_FILTER_KEYS[f])}
+                  </FilterPill>
+                ))}
+              </div>
+              <div className="absolute end-0 top-0 h-full w-8 bg-gradient-to-l rtl:bg-gradient-to-r from-[var(--page)] to-transparent pointer-events-none" />
+            </div>
+          )}
 
-      {hasMore && (
-        <button
-          onClick={() => setPage((p) => p + 1)}
-          disabled={isFetching}
-          className="w-full mt-4 py-3 text-sm font-semibold text-[var(--brand)] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition disabled:opacity-50 shadow-sm"
-        >
-          {isFetching
-            ? t("jobs.loading")
-            : `${t("jobs.loadMore")} (${data!.total - displayItems.length})`}
-        </button>
-      )}
-    </PullToRefresh>
+          {isLoading && page === 1 && <JobCardSkeleton count={3} />}
+
+          {isError && (
+            <EmptyState
+              icon={<ClipboardList size={48} />}
+              title={t("jobs.loadError.title")}
+              description={t("jobs.loadError.desc")}
+              action={{ label: t("common.retry"), onClick: () => refetch() }}
+            />
+          )}
+
+          {!isLoading && !isError && displayItems.length === 0 && (
+            role === "owner" ? (
+              <OnboardingChecklist onNewJob={onNewJob} />
+            ) : (
+              <EmptyState
+                icon={<ClipboardList size={48} />}
+                title={t("jobs.empty.title")}
+                description={t("jobs.empty.desc")}
+                action={{ label: t("jobs.empty.action"), onClick: onNewJob }}
+              />
+            )
+          )}
+
+          {!isLoading && !isError && displayItems.length > 0 && filteredItems.length === 0 && (
+            <EmptyState
+              icon={q ? <Search size={48} /> : <ClipboardList size={48} />}
+              title={q ? t("jobs.searchEmpty") : `${t(STATUS_FILTER_KEYS[statusFilter])} — 0`}
+              description={t("jobs.filterEmpty.desc")}
+            />
+          )}
+
+          {filteredItems.length > 0 && (
+            <JobCardList
+              cards={filteredItems}
+              isOwner={isOwner}
+              onSelectJob={setSelectedJob}
+              selectedJobId={selectedJob?.id}
+            />
+          )}
+
+          {hasMore && (
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => setPage((p) => p + 1)}
+              loading={isFetching}
+              className="mt-4"
+            >
+              {isFetching
+                ? t("jobs.loading")
+                : `${t("jobs.loadMore")} (${data!.total - displayItems.length})`}
+            </Button>
+          )}
+        </PullToRefresh>
+      </div>
+
+      {/* ── Right: persistent detail panel (desktop) ── */}
+      <JobDetailPanel
+        card={selectedJob}
+        isOwner={isOwner}
+        mechanics={mechanics}
+        onClose={() => setSelectedJob(null)}
+      />
+    </DashboardPageShell>
   );
 }

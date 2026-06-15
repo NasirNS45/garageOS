@@ -7,8 +7,16 @@ const GRID_PATTERN =
   "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNiI+PHBhdGggZD0ibTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00ek02IDM0di00SDR2NGgwdjJoNHY0aDJ2LTRoNHYtMkg2ek02IDRWMEg0djRIMHYyaDR2NGgyVjZoNFY0SDZ6Ii8+PC9nPjwvZz48L3N2Zz4=')";
 
 interface AuthHeroPanelProps {
-  headlineKey: "auth.heroLoginHeadline" | "auth.heroSignupHeadline";
-  subtextKey: "auth.heroLoginSubtext" | "auth.heroSignupSubtext";
+  headlineKey:
+    | "auth.heroLoginHeadline"
+    | "auth.heroSignupHeadline"
+    | "auth.heroForgotHeadline"
+    | "auth.heroResetHeadline";
+  subtextKey:
+    | "auth.heroLoginSubtext"
+    | "auth.heroSignupSubtext"
+    | "auth.heroForgotSubtext"
+    | "auth.heroResetSubtext";
 }
 
 /** Desktop auth hero — copy column left, phone column right. */
@@ -19,8 +27,17 @@ export default function AuthHeroPanel({
   const t = useT();
 
   return (
-    <div className="hidden lg:flex lg:w-full lg:h-screen lg:sticky lg:top-0 bg-[var(--brand-panel)] relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/25 via-transparent to-blue-950/50 pointer-events-none" />
+    <div
+      className="hidden lg:flex lg:w-[52%] xl:w-[55%] lg:h-full relative overflow-hidden shrink-0"
+      style={{ background: "var(--brand-panel)", colorScheme: "dark" }}
+    >
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--brand) 30%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--brand-panel) 80%, #000) 100%)",
+        }}
+      />
       <div
         className="absolute inset-0 opacity-50 pointer-events-none"
         style={{ backgroundImage: GRID_PATTERN }}
@@ -37,10 +54,12 @@ export default function AuthHeroPanel({
               <h1 className="urdu-display text-white text-2xl xl:text-[1.65rem] font-bold leading-snug text-start">
                 {t(headlineKey)}
               </h1>
-              <p className="text-blue-100/90 text-sm leading-relaxed mt-3">{t(subtextKey)}</p>
+              <p className="text-sm leading-relaxed mt-3" style={{ color: "color-mix(in srgb, white 85%, transparent)" }}>
+                {t(subtextKey)}
+              </p>
             </div>
           </div>
-          <p className="text-blue-300/75 text-xs tracking-wide pt-6 shrink-0">
+          <p className="text-xs tracking-wide pt-6 shrink-0" style={{ color: "color-mix(in srgb, white 55%, transparent)" }}>
             {t("auth.heroFooter")}
           </p>
         </div>

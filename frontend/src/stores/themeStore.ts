@@ -30,10 +30,13 @@ function applyTheme(theme: ThemeName): void {
 }
 
 function applyMode(mode: ColorMode): void {
+  const root = document.documentElement;
   if (mode === "dark") {
-    document.documentElement.classList.add("dark");
+    root.classList.add("dark");
+    root.classList.remove("light");
   } else {
-    document.documentElement.classList.remove("dark");
+    root.classList.add("light");
+    root.classList.remove("dark");
   }
 }
 
@@ -44,7 +47,9 @@ function loadSavedTheme(): ThemeName {
 }
 
 function loadSavedMode(): ColorMode {
-  return localStorage.getItem(MODE_KEY) === "dark" ? "dark" : "light";
+  const saved = localStorage.getItem(MODE_KEY);
+  if (saved === "light") return "light";
+  return "dark"; // dark-first default
 }
 
 interface ThemeStore {

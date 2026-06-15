@@ -1,25 +1,39 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SearchX, Trophy, Wallet } from "lucide-react";
+import {
+  Car,
+  ChevronRight,
+  Phone,
+  Search,
+  SearchX,
+  Trophy,
+  Wallet,
+  X,
+} from "lucide-react";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
 import EmptyState from "../../components/EmptyState";
-import VehiclePlate from "../../components/VehiclePlate";
+import PullToRefresh from "../../components/PullToRefresh";
+import DashboardPageShell from "../../components/DashboardPageShell";
+import CustomerJobList, {
+  CustomerSummaryCard,
+  computeTotalSpent,
+  type CustomerJob,
+} from "../../components/CustomerJobList";
 import { useCustomerInsights } from "../../hooks/useCustomerInsights";
 import { useOutstandingCustomers } from "../../hooks/useOutstandingCustomers";
 import { api } from "../../api/axios";
 import { useT } from "../../i18n/useT";
 import { useLanguageStore } from "../../stores/languageStore";
-import { formatLocaleDateStr } from "../../utils/dates";
+import {
+  Button,
+  FilterPill,
+  PageHeader,
+  TextInput,
+  cn,
+} from "../../components/ui";
+import type { Language } from "../../i18n/translations";
 
-// ── History tab ───────────────────────────────────────────────────────────────
-interface HistoryJob {
-  id: string;
-  vehicle_number: string;
-  status: string;
-  total_amount: number;
-  created_at: string;
-  invoice_url?: string;
-}
+interface HistoryJob extends CustomerJob {}
 
 interface HistoryResult {
   customer_name: string;
@@ -28,8 +42,12 @@ interface HistoryResult {
 }
 
 type HistoryStatusFilter = "all" | "completed" | "in_progress" | "pending" | "cancelled";
+type SearchType = "vehicle" | "phone";
 
-const HISTORY_STATUS_KEYS: Record<HistoryStatusFilter, "status.all" | "status.completed" | "status.in_progress" | "status.pending" | "status.cancelled"> = {
+const HISTORY_STATUS_KEYS: Record<
+  HistoryStatusFilter,
+  "status.all" | "status.completed" | "status.in_progress" | "status.pending" | "status.cancelled"
+> = {
   all: "status.all",
   completed: "status.completed",
   in_progress: "status.in_progress",
@@ -42,16 +60,16 @@ export default function HistoryTab() {
   const language = useLanguageStore((s) => s.language);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [type, setType] = useState<"vehicle" | "phone">("vehicle");
+  const [type, setType] = useState<SearchType>("vehicle");
   const [result, setResult] = useState<HistoryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [searchError, setSearchError] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<HistoryStatusFilter>("all");
-  const insightsQ = useCustomerInsights(10);
-  const outstandingQ = useOutstandingCustomers(10);
+  const insightsQ = useCustomerInsights(8);
+  const outstandingQ = useOutstandingCustomers(8);
 
-  const runSearch = async (searchType: "vehicle" | "phone", value: string) => {
+  const runSearch = async (searchType: SearchType, value: string) => {
     setLoading(true);
     setSearched(true);
     setResult(null);
@@ -74,157 +92,155 @@ export default function HistoryTab() {
 
   const search = (e: React.FormEvent) => {
     e.preventDefault();
-    void runSearch(type, query);
+    void runSearch(type, query.trim());
   };
 
   const openCustomer = (phone: string) => {
     navigate(`/customers/${encodeURIComponent(phone)}`);
   };
 
-  const toggle = (active: boolean) =>
-    `flex-1 text-sm rounded-xl py-2.5 font-semibold transition active:scale-95 ${
-      active
-        ? "bg-[var(--brand)] text-white shadow-sm"
-        : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
-    }`;
+  const showDiscovery =
+    !searched &&
+    !loading &&
+    ((outstandingQ.data?.length ?? 0) > 0 || (insightsQ.data?.length ?? 0) > 0);
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      outstandingQ.refetch(),
+      insightsQ.refetch(),
+      searched && query.trim() ? runSearch(type, query.trim()) : Promise.resolve(),
+    ]);
+  };
 
   return (
-    <div className="lg:max-w-2xl lg:mx-auto">
-      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t("history.title")}</h2>
+    <DashboardPageShell>
+      <PullToRefresh onRefresh={handleRefresh}>
+      <PageHeader title={t("history.title")} subtitle={t("history.searchHint")} />
 
-      <form
-        onSubmit={search}
-        className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm mb-4 space-y-3 border border-slate-100 dark:border-slate-700"
-      >
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setType("vehicle")} className={toggle(type === "vehicle")}>
+      {/* Search */}
+      <div className="bg-[var(--surface)] rounded-[var(--r-card)] ring-1 ring-[var(--border)] p-4 lg:p-5 mb-6">
+        <div className="flex gap-2 mb-3">
+          <FilterPill
+            active={type === "vehicle"}
+            onClick={() => setType("vehicle")}
+            className="flex items-center gap-1.5"
+          >
+            <Car size={13} />
             {t("history.byVehicle")}
-          </button>
-          <button type="button" onClick={() => setType("phone")} className={toggle(type === "phone")}>
+          </FilterPill>
+          <FilterPill
+            active={type === "phone"}
+            onClick={() => setType("phone")}
+            className="flex items-center gap-1.5"
+          >
+            <Phone size={13} />
             {t("history.byPhone")}
-          </button>
+          </FilterPill>
         </div>
-        <input
-          type="text"
-          required
-          placeholder={type === "vehicle" ? t("history.placeholderVehicle") : t("history.placeholderPhone")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white text-sm font-semibold rounded-xl py-3 transition active:scale-95 disabled:opacity-60"
-        >
-          {loading ? t("history.searching") : t("history.search")}
-        </button>
-      </form>
 
-      {!searched && !loading && (
-        <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-4 px-2">
-          {t("history.searchHint")}
-        </p>
+        <form onSubmit={search} className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search
+              size={16}
+              className="absolute start-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)] pointer-events-none"
+            />
+            <TextInput
+              type="text"
+              required
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={
+                type === "vehicle"
+                  ? t("history.placeholderVehicle")
+                  : t("history.placeholderPhone")
+              }
+              className="h-10 ps-9 pe-9 bg-[var(--surface)]"
+              data-keep-ltr
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label={t("jobs.clearSearch")}
+                className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[var(--text-faint)] hover:text-[var(--text-strong)] p-0.5 active:scale-95"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+          <Button type="submit" loading={loading} className="shrink-0 sm:min-w-[7.5rem]">
+            {loading ? t("history.searching") : t("history.search")}
+          </Button>
+        </form>
+      </div>
+
+      {/* Discovery panels */}
+      {!searched && (outstandingQ.isLoading || insightsQ.isLoading) && (
+        <div className="grid lg:grid-cols-2 gap-4 mb-6">
+          <JobCardSkeleton count={1} />
+          <JobCardSkeleton count={1} />
+        </div>
       )}
-
-      {!searched && outstandingQ.isLoading && <JobCardSkeleton count={1} />}
 
       {!searched && outstandingQ.isError && (
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mb-4" role="alert">
-          <p>{t("history.insightsError")}</p>
-          <button
-            type="button"
-            onClick={() => void outstandingQ.refetch()}
-            className="mt-2 text-xs font-semibold text-[var(--brand)] hover:underline"
-          >
-            {t("common.retry")}
-          </button>
+        <InsightError message={t("history.insightsError")} onRetry={() => void outstandingQ.refetch()} />
+      )}
+
+      {!searched && insightsQ.isError && !outstandingQ.isError && (
+        <InsightError message={t("history.insightsError")} onRetry={() => void insightsQ.refetch()} />
+      )}
+
+      {showDiscovery && (
+        <div className="grid lg:grid-cols-2 gap-4 mb-2">
+          {(outstandingQ.data?.length ?? 0) > 0 && (
+            <InsightPanel
+              title={t("history.outstandingCustomers")}
+              icon={<Wallet size={15} className="text-[var(--warning-fg)]" />}
+            >
+              {outstandingQ.data!.map((c, i) => (
+                <InsightRow
+                  key={c.customer_phone}
+                  rank={i + 1}
+                  name={c.customer_name}
+                  meta={`${c.open_invoices} ${t("customer.openInvoices")} · ${c.customer_phone}`}
+                  amount={`PKR ${c.total_outstanding.toLocaleString()}`}
+                  amountClass="text-[var(--warning-fg)]"
+                  onClick={() => openCustomer(c.customer_phone)}
+                />
+              ))}
+            </InsightPanel>
+          )}
+
+          {(insightsQ.data?.length ?? 0) > 0 && (
+            <InsightPanel
+              title={t("history.topCustomers")}
+              icon={<Trophy size={15} className="text-[var(--warning)]" />}
+            >
+              {insightsQ.data!.map((c, i) => (
+                <InsightRow
+                  key={c.customer_phone}
+                  rank={i + 1}
+                  name={c.customer_name}
+                  meta={`${c.total_jobs} ${
+                    c.total_jobs === 1 ? t("history.visit") : t("history.visits")
+                  } · ${c.customer_phone}`}
+                  amount={`PKR ${c.total_spent.toLocaleString()}`}
+                  onClick={() => openCustomer(c.customer_phone)}
+                />
+              ))}
+            </InsightPanel>
+          )}
         </div>
       )}
 
-      {/* Top customers — discovery aid shown before a search is run */}
-      {!searched && !outstandingQ.isLoading && !outstandingQ.isError && (outstandingQ.data?.length ?? 0) > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-amber-100 dark:border-amber-900/40 mb-4">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
-            <Wallet size={15} className="text-amber-600" />
-            {t("history.outstandingCustomers")}
-          </h3>
-          <div className="space-y-2.5">
-            {outstandingQ.data!.map((c) => (
-              <button
-                key={c.customer_phone}
-                onClick={() => openCustomer(c.customer_phone)}
-                className="w-full flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1.5 rounded-lg transition active:scale-[0.99]"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    {c.customer_name}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500" data-keep-ltr>
-                    {c.open_invoices} {t("customer.openInvoices")} · {c.customer_phone}
-                  </p>
-                </div>
-                <p className="text-sm font-bold text-amber-700 dark:text-amber-400 shrink-0">
-                  PKR {c.total_outstanding.toLocaleString()}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!searched && insightsQ.isLoading && <JobCardSkeleton count={1} />}
-
-      {!searched && insightsQ.isError && (
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mb-4" role="alert">
-          <p>{t("history.insightsError")}</p>
-          <button
-            type="button"
-            onClick={() => void insightsQ.refetch()}
-            className="mt-2 text-xs font-semibold text-[var(--brand)] hover:underline"
-          >
-            {t("common.retry")}
-          </button>
-        </div>
-      )}
-
-      {!searched && !insightsQ.isLoading && !insightsQ.isError && (insightsQ.data?.length ?? 0) > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-1.5">
-            <Trophy size={15} className="text-amber-500" />
-            {t("history.topCustomers")}
-          </h3>
-          <div className="space-y-2.5">
-            {insightsQ.data!.map((c, i) => (
-              <button
-                key={c.customer_phone}
-                onClick={() => openCustomer(c.customer_phone)}
-                className="w-full flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1.5 rounded-lg transition active:scale-[0.99]"
-              >
-                <span className="w-5 text-xs font-bold text-slate-400 shrink-0">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    {c.customer_name}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500" data-keep-ltr>
-                    {c.total_jobs} {c.total_jobs === 1 ? t("history.visit") : t("history.visits")} · {c.customer_phone}
-                  </p>
-                </div>
-                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 shrink-0">
-                  PKR {c.total_spent.toLocaleString()}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {loading && <JobCardSkeleton count={1} />}
+      {loading && <JobCardSkeleton count={3} />}
 
       {!loading && searched && searchError && (
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3 mt-2">
-          {t("history.searchFailed")}
-        </div>
+        <EmptyState
+          icon={<SearchX size={48} />}
+          title={t("history.searchFailed")}
+          action={{ label: t("common.retry"), onClick: () => void runSearch(type, query.trim()) }}
+        />
       )}
 
       {!loading && searched && !result && !searchError && (
@@ -235,88 +251,183 @@ export default function HistoryTab() {
         />
       )}
 
-      {result && (() => {
-        const filteredJobs =
-          historyFilter === "all"
-            ? result.jobs
-            : result.jobs.filter((j) => j.status === historyFilter);
+      {result && (
+        <HistoryResults
+          result={result}
+          language={language}
+          historyFilter={historyFilter}
+          onFilterChange={setHistoryFilter}
+          searchType={type}
+          searchQuery={query.trim()}
+          onOpenCustomer={openCustomer}
+        />
+      )}
+      </PullToRefresh>
+    </DashboardPageShell>
+  );
+}
 
-        // Only show filter pills when there are multiple statuses present
-        const statuses = Array.from(new Set(result.jobs.map((j) => j.status)));
-        const showFilter = statuses.length > 1;
+/* ── Search results ─────────────────────────────────────────────────────── */
 
-        return (
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              {result.customer_name}
-              <span className="font-normal text-slate-400"> · {result.total_jobs} {t("history.jobsCount")}</span>
-            </p>
+function HistoryResults({
+  result,
+  language,
+  historyFilter,
+  onFilterChange,
+  searchType,
+  searchQuery,
+  onOpenCustomer,
+}: {
+  result: HistoryResult;
+  language: Language;
+  historyFilter: HistoryStatusFilter;
+  onFilterChange: (f: HistoryStatusFilter) => void;
+  searchType: SearchType;
+  searchQuery: string;
+  onOpenCustomer: (phone: string) => void;
+}) {
+  const t = useT();
 
-            {/* Status filter pills */}
-            {showFilter && (
-              <div className="flex gap-2 flex-wrap mb-3">
-                {(["all", ...statuses] as HistoryStatusFilter[])
-                  .filter((f, i, arr) => arr.indexOf(f) === i)
-                  .map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setHistoryFilter(f)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-full transition active:scale-95 ${
-                        historyFilter === f
-                          ? "bg-[var(--brand)] text-white shadow-sm"
-                          : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
-                      }`}
-                    >
-                      {t(HISTORY_STATUS_KEYS[f])}
-                    </button>
-                  ))}
-              </div>
-            )}
+  const filteredJobs =
+    historyFilter === "all"
+      ? result.jobs
+      : result.jobs.filter((j) => j.status === historyFilter);
 
-            {filteredJobs.length === 0 ? (
-              <EmptyState
-                icon={<SearchX size={40} />}
-                title={t("history.noFilterJobs")}
-                description={t("history.tryFilter")}
-              />
-            ) : (
-              filteredJobs.map((j) => (
-                <div
-                  key={j.id}
-                  className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700"
-                >
-                  <div className="flex items-center justify-between">
-                    <VehiclePlate number={j.vehicle_number} size="sm" />
-                    <span className="text-xs text-slate-400 dark:text-slate-500">
-                      {formatLocaleDateStr(j.created_at, language, {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between mt-2 text-sm">
-                    <span className="text-slate-500 dark:text-slate-400 capitalize">{t(`status.${j.status}` as "status.pending")}</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100">
-                      PKR {j.total_amount.toLocaleString()}
-                    </span>
-                  </div>
-                  {j.invoice_url && (
-                    <a
-                      href={j.invoice_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-[var(--brand)] font-medium hover:underline mt-2"
-                    >
-                      {t("history.viewInvoice")} →
-                    </a>
-                  )}
-                </div>
-              ))
-            )}
+  const statuses = Array.from(new Set(result.jobs.map((j) => j.status)));
+  const showFilter = statuses.length > 1;
+
+  const filterOptions: HistoryStatusFilter[] = ["all", ...statuses].filter(
+    (f, i, arr) => arr.indexOf(f) === i
+  ) as HistoryStatusFilter[];
+
+  return (
+    <div className="space-y-4">
+      <CustomerSummaryCard
+        customerName={result.customer_name}
+        totalJobs={result.total_jobs}
+        totalSpent={computeTotalSpent(result.jobs)}
+        language={language}
+        profileAction={
+          searchType === "phone" && searchQuery
+            ? { label: t("customer.profile"), onClick: () => onOpenCustomer(searchQuery) }
+            : undefined
+        }
+      />
+
+      {showFilter && (
+        <div className="relative">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
+            {filterOptions.map((f) => (
+              <FilterPill
+                key={f}
+                active={historyFilter === f}
+                onClick={() => onFilterChange(f)}
+              >
+                {t(HISTORY_STATUS_KEYS[f])}
+              </FilterPill>
+            ))}
           </div>
-        );
-      })()}
+          <div className="absolute end-0 top-0 h-full w-8 bg-gradient-to-l rtl:bg-gradient-to-r from-[var(--page)] to-transparent pointer-events-none" />
+        </div>
+      )}
+
+      {filteredJobs.length === 0 ? (
+        <EmptyState
+          icon={<SearchX size={40} />}
+          title={t("history.noFilterJobs")}
+          description={t("history.tryFilter")}
+        />
+      ) : (
+        <CustomerJobList jobs={filteredJobs} language={language} showSectionHeader />
+      )}
+    </div>
+  );
+}
+
+/* ── Discovery helpers ──────────────────────────────────────────────────── */
+
+function InsightPanel({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-[var(--surface)] rounded-[var(--r-card)] ring-1 ring-[var(--border)] overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[var(--border)] bg-[var(--surface-2)]">
+        {icon}
+        <h3 className="text-sm font-bold text-[var(--text-strong)]">{title}</h3>
+      </div>
+      <div className="divide-y divide-[var(--border)]">{children}</div>
+    </div>
+  );
+}
+
+function InsightRow({
+  rank,
+  name,
+  meta,
+  amount,
+  amountClass,
+  onClick,
+}: {
+  rank: number;
+  name: string;
+  meta: string;
+  amount: string;
+  amountClass?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-5 py-3.5 text-start hover:bg-[var(--surface-2)] transition group"
+    >
+      <span
+        className="w-6 text-xs font-bold text-[var(--text-faint)] shrink-0 tnum text-center"
+        data-keep-ltr
+      >
+        {rank}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-[var(--text-strong)] truncate">{name}</p>
+        <p className="text-xs text-[var(--text-faint)] truncate mt-0.5" data-keep-ltr>
+          {meta}
+        </p>
+      </div>
+      <p
+        className={cn("text-sm font-bold shrink-0 tnum", amountClass ?? "text-[var(--text-strong)]")}
+        data-keep-ltr
+      >
+        {amount}
+      </p>
+      <ChevronRight
+        size={14}
+        className="shrink-0 text-[var(--text-faint)] opacity-0 group-hover:opacity-100 transition-opacity"
+      />
+    </button>
+  );
+}
+
+function InsightError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const t = useT();
+  return (
+    <div
+      className="bg-[var(--danger-bg)] ring-1 ring-[var(--border)] text-[var(--danger-fg)] text-sm rounded-[var(--r-card)] px-4 py-3 mb-4"
+      role="alert"
+    >
+      <p>{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-2 text-xs font-semibold text-[var(--brand)] hover:underline"
+      >
+        {t("common.retry")}
+      </button>
     </div>
   );
 }

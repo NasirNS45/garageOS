@@ -31,6 +31,8 @@ import { useToast } from "../../context/ToastContext";
 import BottomSheet from "../../components/BottomSheet";
 import JobCardSkeleton from "../../components/JobCardSkeleton";
 import ThemePicker from "../../components/ThemePicker";
+import DashboardPageShell from "../../components/DashboardPageShell";
+import EmptyState from "../../components/EmptyState";
 import { useThemeStore } from "../../stores/themeStore";
 import PhoneInputField from "../../components/PhoneInputField";
 import { api } from "../../api/axios";
@@ -40,6 +42,7 @@ import { todayStr, shiftDate } from "../../utils/dates";
 import { inputClass, fieldClass } from "./formStyles";
 import { useT } from "../../i18n/useT";
 import type { TKey } from "../../i18n/translations";
+import { Card, Button, Badge, IconTile, FilterPill, PageHeader } from "../../components/ui";
 
 // ── Settings tab ──────────────────────────────────────────────────────────────
 const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? "1.0.0";
@@ -77,32 +80,59 @@ function SettingsSectionNav({
   const t = useT();
 
   return (
-    <div
-      role="tablist"
-      aria-label={t("settings.title")}
-      className="sticky top-0 z-10 bg-[#F1F5F9] dark:bg-slate-900 flex gap-1.5 mb-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
-    >
-      {SETTINGS_SECTIONS.map(({ id, labelKey, icon: Icon }) => {
-        const selected = active === id;
-        return (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            onClick={() => onChange(id)}
-            className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition active:scale-95 whitespace-nowrap ${
-              selected
-                ? "bg-[var(--brand)] text-white shadow-sm"
-                : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
-            }`}
-          >
-            <Icon size={14} />
-            {t(labelKey)}
-          </button>
-        );
-      })}
-    </div>
+    <>
+      {/* Mobile: horizontal pill tabs */}
+      <div
+        role="tablist"
+        aria-label={t("settings.title")}
+        className="lg:hidden sticky top-0 z-10 -mx-[var(--page-pad-x)] px-[var(--page-pad-x)] py-2 mb-4 bg-[var(--page)]/95 backdrop-blur-sm border-b border-[var(--border)] lg:border-0 lg:mx-0 lg:px-0 lg:py-0 lg:mb-4 lg:bg-transparent lg:backdrop-blur-none"
+      >
+        <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
+        {SETTINGS_SECTIONS.map(({ id, labelKey, icon: Icon }) => {
+          const selected = active === id;
+          return (
+            <FilterPill
+              key={id}
+              active={selected}
+              onClick={() => onChange(id)}
+              className="flex items-center gap-1.5"
+            >
+              <Icon size={14} />
+              {t(labelKey)}
+            </FilterPill>
+          );
+        })}
+        </div>
+      </div>
+
+      {/* Desktop: vertical sidebar nav */}
+      <nav
+        role="tablist"
+        aria-label={t("settings.title")}
+        className="hidden lg:flex flex-col gap-0.5"
+      >
+        {SETTINGS_SECTIONS.map(({ id, labelKey, icon: Icon }) => {
+          const selected = active === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => onChange(id)}
+              className={`w-full flex items-center gap-2.5 text-sm font-semibold px-3 py-2.5 rounded-[var(--r-control)] text-start transition ${
+                selected
+                  ? "bg-[var(--surface-2)] text-[var(--text-strong)] ring-1 ring-[var(--border)]"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--surface-2)]"
+              }`}
+            >
+              <Icon size={15} className={selected ? "text-[var(--brand)]" : ""} />
+              {t(labelKey)}
+            </button>
+          );
+        })}
+      </nav>
+    </>
   );
 }
 
@@ -143,29 +173,24 @@ function SettingCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+    <Card padding="none" className="overflow-hidden">
       <div
-        className={`flex items-center justify-between border-b border-slate-100 dark:border-slate-700 ${
+        className={`flex items-center justify-between border-b border-[var(--border)] ${
           compact ? "px-4 py-2.5" : "px-5 py-3.5"
         }`}
       >
         <div className="flex items-center gap-2.5">
-          <div
-            className={`rounded-lg flex items-center justify-center shrink-0 ${
-              compact ? "w-6 h-6" : "w-7 h-7"
-            }`}
-            style={{ background: "color-mix(in srgb, var(--brand) 12%, transparent)" }}
-          >
-            <div style={{ color: "var(--brand)" }}>{icon}</div>
-          </div>
-          <span className={`font-semibold text-slate-900 dark:text-slate-100 ${compact ? "text-xs" : "text-sm"}`}>
+          <IconTile tone="brand" size="sm" className={compact ? "w-6 h-6" : "w-7 h-7"}>
+            {icon}
+          </IconTile>
+          <span className={`font-semibold text-[var(--text-strong)] ${compact ? "text-xs" : "text-sm"}`}>
             {title}
           </span>
         </div>
         {action}
       </div>
       <div className={compact ? "px-4 py-3" : "p-5"}>{children}</div>
-    </div>
+    </Card>
   );
 }
 
@@ -179,18 +204,18 @@ function RemindersList() {
   if (isLoading || reminders.length === 0) return null;
 
   return (
-    <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
-      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2.5 uppercase tracking-wide">
+    <div className="mt-5 pt-5 border-t border-[var(--border)]">
+      <p className="text-xs font-semibold text-[var(--text-muted)] mb-2.5 uppercase tracking-wide">
         {t("reminders.upcoming")} ({reminders.length})
       </p>
       <div className="space-y-2">
         {reminders.map((r) => (
           <div key={r.id} className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+              <p className="text-sm font-semibold text-[var(--text-strong)] truncate">
                 {r.vehicle_number} · {r.customer_name}
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-[var(--text-faint)]">
                 {t("reminders.due")} {r.due_date}
               </p>
             </div>
@@ -202,7 +227,7 @@ function RemindersList() {
                 })
               }
               aria-label={t("reminders.cancelAria")}
-              className="text-slate-300 hover:text-red-500 transition p-1 active:scale-95 shrink-0"
+              className="text-[var(--text-faint)] hover:text-[var(--danger)] transition p-1 active:scale-95 shrink-0"
             >
               <Trash2 size={15} />
             </button>
@@ -308,50 +333,53 @@ export default function SettingsTab() {
   };
 
   const settingInput =
-    "w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition";
+    "w-full bg-[var(--surface-2)] ring-1 ring-[var(--border)] rounded-[var(--r-control)] px-4 py-2.5 text-sm text-[var(--text-strong)] placeholder:text-[var(--text-faint)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] transition";
 
   if (!loaded) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("settings.title")}</h2>
+      <DashboardPageShell>
+        <PageHeader title={t("settings.title")} />
         <JobCardSkeleton count={3} />
-      </div>
+      </DashboardPageShell>
     );
   }
 
   if (loadError) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("settings.title")}</h2>
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-2xl p-6 text-center">
-          <p className="font-semibold text-sm mb-3">{t("settings.loadFailed")}</p>
-          <button onClick={loadSettings} className="text-sm font-semibold underline hover:no-underline">
-            {t("settings.tryAgain")}
-          </button>
-        </div>
-      </div>
+      <DashboardPageShell>
+        <PageHeader title={t("settings.title")} />
+        <EmptyState
+          icon={<Building2 size={48} />}
+          title={t("settings.loadFailed")}
+          action={{ label: t("settings.tryAgain"), onClick: loadSettings }}
+        />
+      </DashboardPageShell>
     );
   }
 
   return (
-    <div className="pb-4">
-      <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t("settings.title")}</h2>
+    <DashboardPageShell>
+      <PageHeader title={t("settings.title")} />
 
-      <div className="mb-3 max-w-2xl">
+      <div className="mb-4 max-w-2xl">
         <SettingCard compact icon={<Palette size={13} />} title={t("settings.appearance")}>
           <ThemePicker compact />
         </SettingCard>
       </div>
 
-      <SettingsSectionNav active={section} onChange={setSection} />
+      {/* 2-column on desktop: sidebar nav + content */}
+      <div className="lg:flex lg:gap-6 lg:items-start">
+        <div className="lg:w-48 lg:shrink-0">
+          <SettingsSectionNav active={section} onChange={setSection} />
+        </div>
 
-      <div role="tabpanel" className="space-y-4 max-w-2xl">
+        <div role="tabpanel" className="flex-1 min-w-0 space-y-4 max-w-2xl">
       {section === "general" && (
       <SettingCard icon={<Building2 size={15} />} title={t("settings.workshop")}>
         <form onSubmit={save} className="space-y-3.5">
           <div className="grid grid-cols-1 gap-3.5">
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
                 {t("settings.workshopName")}
               </label>
               <input
@@ -363,7 +391,7 @@ export default function SettingsTab() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
                 {t("settings.address")}
               </label>
               <input
@@ -375,7 +403,7 @@ export default function SettingsTab() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
                 {t("settings.ownerContact")}
               </label>
               <PhoneInputField
@@ -383,30 +411,33 @@ export default function SettingsTab() {
                 onChange={(val) => setForm((prev) => ({ ...prev, owner_contact: val }))}
               />
             </div>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-900/40 p-3.5 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                WhatsApp
+            <div className="rounded-[var(--r-control)] ring-1 ring-[var(--border)] bg-[var(--surface-2)] p-3.5 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-faint)]">
+                {t("settings.whatsappNumber")}
               </p>
               <div>
-                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
                   {t("settings.whatsappNumber")}
                 </label>
                 <PhoneInputField
                   value={form.whatsapp_number}
                   onChange={(val) => setForm((prev) => ({ ...prev, whatsapp_number: val }))}
                 />
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="secondary"
                   onClick={testWhatsApp}
-                  disabled={testingWa || !form.whatsapp_number.trim()}
-                  className="mt-2 text-xs font-semibold text-[var(--brand)] border border-[var(--brand)] bg-transparent hover:bg-[var(--brand)] hover:text-white px-3 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  loading={testingWa}
+                  disabled={!form.whatsapp_number.trim()}
+                  className="mt-2"
                 >
                   {testingWa ? t("settings.sending") : t("settings.sendTest")}
-                </button>
+                </Button>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
                 {t("settings.invoiceFooter")}
               </label>
               <textarea
@@ -416,12 +447,12 @@ export default function SettingsTab() {
                 onChange={(e) => setForm((prev) => ({ ...prev, invoice_footer: e.target.value }))}
                 className={`${settingInput} resize-none`}
               />
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              <p className="text-xs text-[var(--text-faint)] mt-1">
                 {t("settings.invoiceFooterHint")}
               </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
                 {t("settings.bankDetails")}
               </label>
               <textarea
@@ -431,18 +462,14 @@ export default function SettingsTab() {
                 onChange={(e) => setForm((prev) => ({ ...prev, bank_details: e.target.value }))}
                 className={`${settingInput} resize-none`}
               />
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              <p className="text-xs text-[var(--text-faint)] mt-1">
                 {t("settings.bankDetailsHint")}
               </p>
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-2.5 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
-          >
+          <Button type="submit" loading={saving} fullWidth>
             {saving ? t("settings.saving") : t("settings.saveChanges")}
-          </button>
+          </Button>
         </form>
       </SettingCard>
       )}
@@ -451,7 +478,7 @@ export default function SettingsTab() {
       <SettingCard icon={<BellRing size={15} />} title={t("settings.automation")}>
         <form onSubmit={save} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
               {t("settings.reminderInterval")}
             </label>
             <input
@@ -467,13 +494,13 @@ export default function SettingsTab() {
               }
               className={settingInput}
             />
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            <p className="text-xs text-[var(--text-faint)] mt-1">
               {t("settings.reminderIntervalHint")}
             </p>
           </div>
 
           <label className="flex items-center justify-between gap-3 cursor-pointer select-none">
-            <span className="text-sm text-slate-700 dark:text-slate-300">
+            <span className="text-sm text-[var(--text-strong)]">
               {t("settings.dailyDigest")}
             </span>
             <div className="relative shrink-0">
@@ -487,7 +514,7 @@ export default function SettingsTab() {
               />
               <div
                 className={`w-10 h-5 rounded-full transition-colors ${
-                  form.digest_enabled ? "bg-[var(--brand)]" : "bg-slate-200 dark:bg-slate-600"
+                  form.digest_enabled ? "bg-[var(--brand)]" : "bg-[var(--surface-2)] ring-1 ring-[var(--border)]"
                 }`}
               />
               <div
@@ -497,17 +524,13 @@ export default function SettingsTab() {
               />
             </div>
           </label>
-          <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
+          <p className="text-xs text-[var(--text-faint)] -mt-2">
             {t("settings.dailyDigestHint")}
           </p>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-2.5 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
-          >
+          <Button type="submit" loading={saving} fullWidth>
             {saving ? t("settings.saving") : t("settings.saveChanges")}
-          </button>
+          </Button>
         </form>
 
         <RemindersList />
@@ -527,10 +550,11 @@ export default function SettingsTab() {
       )}
 
       {section === "data" && <ExportSection />}
+        </div>
       </div>
 
       {/* App footer */}
-      <p className="text-center text-xs text-slate-400 dark:text-slate-500 pt-5 pb-1">
+      <p className="text-center text-xs text-[var(--text-faint)] pt-5 pb-1">
         GarageOS v{APP_VERSION}
         <span className="mx-1.5">·</span>
         <a
@@ -542,7 +566,7 @@ export default function SettingsTab() {
           {t("settings.sendFeedback")}
         </a>
       </p>
-    </div>
+    </DashboardPageShell>
   );
 }
 
@@ -637,33 +661,34 @@ function MechanicsSection() {
         {isLoading && <JobCardSkeleton count={1} />}
 
         {!isLoading && mechanics.length === 0 && (
-          <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-            {t("settings.noMechanics")}
-          </p>
+          <SettingsEmpty
+            icon={<Users size={28} />}
+            message={t("settings.noMechanics")}
+            actionLabel={t("common.add")}
+            onAction={() => setShowAddSheet(true)}
+          />
         )}
 
         <div className="space-y-3">
           {mechanics.map((m) => (
             <div key={m.id} className="flex items-center gap-2">
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold truncate ${m.is_active ? "text-slate-800 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"}`}>
+                <p className={`text-sm font-semibold truncate ${m.is_active ? "text-[var(--text-strong)]" : "text-[var(--text-faint)]"}`}>
                   {m.full_name}
                 </p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-0.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${m.is_available ? "bg-emerald-500" : "bg-amber-400"}`} />
+                <p className="text-xs text-[var(--text-faint)] flex items-center gap-1 mt-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${m.is_available ? "bg-[var(--success)]" : "bg-[var(--warning)]"}`} />
                   {m.mobile} · {m.is_available ? t("settings.available") : t("settings.busy")}
                 </p>
               </div>
               <button
                 onClick={() => handleToggle(m)}
                 disabled={toggleMechanic.isPending}
-                className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full transition disabled:opacity-60 ${
-                  m.is_active
-                    ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
-                    : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
-                }`}
+                className="shrink-0 rounded-[var(--r-pill)] transition active:scale-95 disabled:opacity-60"
               >
-                {m.is_active ? t("settings.active") : t("settings.inactive")}
+                <Badge tone={m.is_active ? "success" : "neutral"} size="sm">
+                  {m.is_active ? t("settings.active") : t("settings.inactive")}
+                </Badge>
               </button>
             </div>
           ))}
@@ -680,12 +705,12 @@ function MechanicsSection() {
       >
         <form onSubmit={handleAdd} className="space-y-4" noValidate>
           {mechErrors._form && (
-            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-xl px-4 py-3">
+            <div className="bg-[var(--danger-bg)] ring-1 ring-[var(--border)] text-[var(--danger-fg)] text-sm rounded-[var(--r-control)] px-4 py-3">
               {mechErrors._form}
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.fullName")}
             </label>
             <input
@@ -695,11 +720,11 @@ function MechanicsSection() {
               className={fieldClass(!!mechErrors.full_name)}
             />
             {mechErrors.full_name && (
-              <p className="text-xs text-red-500 mt-1">{mechErrors.full_name}</p>
+              <p className="text-xs text-[var(--danger)] mt-1">{mechErrors.full_name}</p>
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.mobile")}
             </label>
             <PhoneInputField
@@ -708,11 +733,11 @@ function MechanicsSection() {
               error={!!mechErrors.mobile}
             />
             {mechErrors.mobile && (
-              <p className="text-xs text-red-500 mt-1">{mechErrors.mobile}</p>
+              <p className="text-xs text-[var(--danger)] mt-1">{mechErrors.mobile}</p>
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.password")}
             </label>
             <input
@@ -723,16 +748,12 @@ function MechanicsSection() {
               className={fieldClass(!!mechErrors.password)}
             />
             {mechErrors.password && (
-              <p className="text-xs text-red-500 mt-1">{mechErrors.password}</p>
+              <p className="text-xs text-[var(--danger)] mt-1">{mechErrors.password}</p>
             )}
           </div>
-          <button
-            type="submit"
-            disabled={addMechanic.isPending}
-            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
-          >
+          <Button type="submit" loading={addMechanic.isPending} fullWidth>
             {addMechanic.isPending ? t("settings.adding") : t("settings.addMechanic")}
-          </button>
+          </Button>
         </form>
       </BottomSheet>
     </>
@@ -814,22 +835,25 @@ function PresetsSection() {
         {isLoading && <JobCardSkeleton count={1} />}
 
         {!isLoading && presets.length === 0 && (
-          <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-            {t("settings.noPresets")}
-          </p>
+          <SettingsEmpty
+            icon={<Wrench size={28} />}
+            message={t("settings.noPresets")}
+            actionLabel={t("common.add")}
+            onAction={() => setShowAddSheet(true)}
+          />
         )}
 
         <div className="space-y-0">
           {presets.map((p) => (
-            <div key={p.id} className="flex items-center gap-2 py-2.5 border-b border-slate-100 dark:border-slate-700 last:border-b-0">
+            <div key={p.id} className="flex items-center gap-2 py-2.5 border-b border-[var(--border)] last:border-b-0">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{p.name}</p>
+                <p className="text-sm font-semibold text-[var(--text-strong)] truncate">{p.name}</p>
                 {p.description && (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{p.description}</p>
+                  <p className="text-xs text-[var(--text-faint)] truncate mt-0.5">{p.description}</p>
                 )}
               </div>
               {p.default_labour > 0 && (
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+                <span className="text-xs font-semibold text-[var(--text-muted)] shrink-0 tnum" data-keep-ltr>
                   PKR {p.default_labour.toLocaleString()}
                 </span>
               )}
@@ -838,7 +862,7 @@ function PresetsSection() {
                   <button
                     type="button"
                     onClick={() => handleDelete(p)}
-                    className="text-[11px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95"
+                    className="text-[11px] font-semibold text-[var(--danger-fg)] bg-[var(--danger-bg)] px-2 py-1 rounded-[var(--r-control)] active:scale-95"
                   >
                     {t("common.delete")}
                   </button>
@@ -846,7 +870,7 @@ function PresetsSection() {
                     type="button"
                     onClick={() => setConfirmId(null)}
                     aria-label={t("common.cancel")}
-                    className="text-slate-400 hover:text-slate-600 p-1 active:scale-95"
+                    className="text-[var(--text-faint)] hover:text-[var(--text-strong)] p-1 active:scale-95"
                   >
                     <X size={14} />
                   </button>
@@ -857,7 +881,7 @@ function PresetsSection() {
                   onClick={() => setConfirmId(p.id)}
                   disabled={deletePreset.isPending}
                   aria-label={t("settings.deletePreset")}
-                  className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
+                  className="shrink-0 text-[var(--text-faint)] hover:text-[var(--danger)] transition disabled:opacity-50"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -877,7 +901,7 @@ function PresetsSection() {
       >
         <form onSubmit={handleAdd} className="space-y-4" noValidate>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.presetName")}
             </label>
             <input
@@ -887,11 +911,11 @@ function PresetsSection() {
               className={fieldClass(!!presetErrors.name)}
             />
             {presetErrors.name && (
-              <p className="text-xs text-red-500 mt-1">{presetErrors.name}</p>
+              <p className="text-xs text-[var(--danger)] mt-1">{presetErrors.name}</p>
             )}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.presetDescription")}
             </label>
             <input
@@ -902,7 +926,7 @@ function PresetsSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.defaultLabour")}
             </label>
             <input
@@ -913,13 +937,9 @@ function PresetsSection() {
               className={inputClass}
             />
           </div>
-          <button
-            type="submit"
-            disabled={createPreset.isPending}
-            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
-          >
+          <Button type="submit" loading={createPreset.isPending} fullWidth>
             {createPreset.isPending ? t("settings.adding") : t("settings.addPreset")}
-          </button>
+          </Button>
         </form>
       </BottomSheet>
     </>
@@ -983,25 +1003,28 @@ function PartsCatalogSection() {
           </button>
         }
       >
-        <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+        <p className="text-xs text-[var(--text-faint)] mb-3">
           {t("settings.partsCatalogHint")}
         </p>
 
         {isLoading && <JobCardSkeleton count={1} />}
 
         {!isLoading && items.length === 0 && (
-          <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-2">
-            {t("settings.noParts")}
-          </p>
+          <SettingsEmpty
+            icon={<Package size={28} />}
+            message={t("settings.noParts")}
+            actionLabel={t("common.add")}
+            onAction={() => setShowAddSheet(true)}
+          />
         )}
 
         <div className="space-y-0">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-2 py-2.5 border-b border-slate-100 dark:border-slate-700 last:border-b-0">
-              <span className="flex-1 text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+            <div key={item.id} className="flex items-center gap-2 py-2.5 border-b border-[var(--border)] last:border-b-0">
+              <span className="flex-1 text-sm font-medium text-[var(--text-strong)] truncate">
                 {item.name}
               </span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+              <span className="text-xs font-semibold text-[var(--text-muted)] shrink-0 tnum" data-keep-ltr>
                 PKR {item.default_price.toLocaleString()}
               </span>
               {confirmId === item.id ? (
@@ -1009,7 +1032,7 @@ function PartsCatalogSection() {
                   <button
                     type="button"
                     onClick={() => handleDelete(item)}
-                    className="text-[11px] font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95"
+                    className="text-[11px] font-semibold text-[var(--danger-fg)] bg-[var(--danger-bg)] px-2 py-1 rounded-[var(--r-control)] active:scale-95"
                   >
                     {t("common.delete")}
                   </button>
@@ -1017,7 +1040,7 @@ function PartsCatalogSection() {
                     type="button"
                     onClick={() => setConfirmId(null)}
                     aria-label={t("common.cancel")}
-                    className="text-slate-400 hover:text-slate-600 p-1 active:scale-95"
+                    className="text-[var(--text-faint)] hover:text-[var(--text-strong)] p-1 active:scale-95"
                   >
                     <X size={14} />
                   </button>
@@ -1028,7 +1051,7 @@ function PartsCatalogSection() {
                   onClick={() => setConfirmId(item.id)}
                   disabled={deleteItem.isPending}
                   aria-label={t("settings.removePart")}
-                  className="shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 transition disabled:opacity-50"
+                  className="shrink-0 text-[var(--text-faint)] hover:text-[var(--danger)] transition disabled:opacity-50"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -1045,7 +1068,7 @@ function PartsCatalogSection() {
       >
         <form onSubmit={handleAdd} className="space-y-4" noValidate>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.partName")}
             </label>
             <input
@@ -1056,7 +1079,7 @@ function PartsCatalogSection() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("settings.defaultPrice")}
             </label>
             <input
@@ -1069,14 +1092,10 @@ function PartsCatalogSection() {
               className={fieldClass(!!itemError && !!itemName)}
             />
           </div>
-          {itemError && <p className="text-xs text-red-500 -mt-2">{itemError}</p>}
-          <button
-            type="submit"
-            disabled={createItem.isPending}
-            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
-          >
+          {itemError && <p className="text-xs text-[var(--danger)] -mt-2">{itemError}</p>}
+          <Button type="submit" loading={createItem.isPending} fullWidth>
             {createItem.isPending ? t("settings.adding") : t("settings.addToCatalog")}
-          </button>
+          </Button>
         </form>
       </BottomSheet>
     </>
@@ -1117,31 +1136,56 @@ function ExportSection() {
   };
 
   const dateInput =
-    "w-full bg-slate-50 dark:bg-slate-900 dark:[color-scheme:dark] border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition";
+    "w-full bg-[var(--surface-2)] dark:[color-scheme:dark] ring-1 ring-[var(--border)] rounded-[var(--r-control)] px-3 py-2 text-sm text-[var(--text-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] transition";
 
   return (
     <SettingCard icon={<Download size={15} />} title={t("settings.exportData")}>
-      <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+      <p className="text-xs text-[var(--text-faint)] mb-3">
         {t("settings.exportHint")}
       </p>
       <div className="flex gap-2 mb-3">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t("settings.from")}</label>
+          <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t("settings.from")}</label>
           <input type="date" value={exportStart} max={exportEnd} onChange={(e) => setExportStart(e.target.value)} className={dateInput} />
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t("settings.to")}</label>
+          <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t("settings.to")}</label>
           <input type="date" value={exportEnd} min={exportStart} max={today} onChange={(e) => setExportEnd(e.target.value)} className={dateInput} />
         </div>
       </div>
-      <button
+      <Button
         onClick={handleExport}
-        disabled={exporting}
-        className="w-full flex items-center justify-center gap-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-semibold rounded-xl py-2.5 text-sm transition active:scale-95 disabled:opacity-60 shadow-sm"
+        loading={exporting}
+        variant="secondary"
+        fullWidth
+        leftIcon={<Download size={15} />}
       >
-        <Download size={15} />
         {exporting ? t("settings.exporting") : t("settings.downloadCsv")}
-      </button>
+      </Button>
     </SettingCard>
+  );
+}
+
+function SettingsEmpty({
+  icon,
+  message,
+  actionLabel,
+  onAction,
+}: {
+  icon: React.ReactNode;
+  message: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <div className="text-center py-6">
+      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--neutral-bg)] text-[var(--text-faint)] ring-1 ring-inset ring-[var(--ring-subtle)] mx-auto mb-3">
+        {icon}
+      </div>
+      <p className="text-sm text-[var(--text-muted)] max-w-xs mx-auto">{message}</p>
+      <Button size="sm" onClick={onAction} className="mt-3">
+        {actionLabel}
+      </Button>
+    </div>
   );
 }

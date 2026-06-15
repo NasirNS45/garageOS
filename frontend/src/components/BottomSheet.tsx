@@ -1,129 +1,115 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useT } from "../i18n/useT";
+import { cn } from "./ui/cn";
+
+type SheetSize = "sm" | "md" | "lg";
 
 interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  size?: SheetSize;
 }
 
-const FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const SIZE_CLASS: Record<SheetSize, string> = {
+  sm: "lg:max-w-sm",
+  md: "lg:max-w-md",
+  lg: "lg:max-w-lg",
+};
 
-export default function BottomSheet({ open, onClose, title, children }: BottomSheetProps) {
+const overlayVariants = {
+  hidden:  { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const sheetVariants = {
+  hidden:  { y: "100%", opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { type: "spring" as const, damping: 30, stiffness: 300 },
+  },
+  exit: { y: "100%", opacity: 0, transition: { duration: 0.22, ease: "easeIn" as const } },
+};
+
+export default function BottomSheet({
+  open,
+  onClose,
+  title,
+  children,
+  size = "md",
+}: BottomSheetProps) {
   const t = useT();
-  const [mounted, setMounted] = useState(false);
-  const [visible, setVisible] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<Element | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      triggerRef.current = document.activeElement;
-      setMounted(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setVisible(true));
-      });
-      document.body.style.overflow = "hidden";
-    } else {
-      setVisible(false);
-      closeTimer.current = setTimeout(() => setMounted(false), 320);
-      document.body.style.overflow = "";
-    }
-    return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if (e.key !== "Tab" || !sheetRef.current) return;
-
-      const focusables = Array.from(sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
-      if (focusables.length === 0) return;
-
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
-
-  useEffect(() => {
-    if (!visible || !sheetRef.current) return;
-    const focusables = sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
-    focusables[0]?.focus();
-  }, [visible]);
-
-  useEffect(() => {
-    if (open) return;
-    const trigger = triggerRef.current;
-    if (trigger instanceof HTMLElement) {
-      trigger.focus();
-    }
-  }, [open]);
-
-  if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end lg:items-center justify-center p-0 lg:px-4">
-      <div
-        className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
-          visible ? "opacity-100" : "opacity-0"
-        }`}
-        onClick={onClose}
-        aria-hidden
-      />
+    <Dialog.Root open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <AnimatePresence>
+        {open && (
+          <Dialog.Portal forceMount>
+            <Dialog.Overlay asChild forceMount>
+              <motion.div
+                className="fixed inset-0 z-40 bg-black/50"
+                variants={overlayVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                transition={{ duration: 0.2 }}
+              />
+            </Dialog.Overlay>
 
-      <div
-        ref={sheetRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="bs-title"
-        className={`relative w-full max-w-2xl lg:max-w-md mx-auto bg-white dark:bg-slate-800 rounded-t-3xl lg:rounded-2xl shadow-2xl transition-[transform,opacity] duration-300 ease-out ${
-          visible
-            ? "translate-y-0 lg:translate-y-0 opacity-100"
-            : "translate-y-full lg:translate-y-3 opacity-0"
-        }`}
-      >
-        <div className="flex justify-center pt-3 pb-1 lg:hidden">
-          <div className="w-10 h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full" />
-        </div>
+            <Dialog.Content asChild forceMount>
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                className={cn(
+                  "fixed z-40 w-full mx-auto",
+                  "bottom-0 left-0 right-0 max-w-full",
+                  "lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
+                  SIZE_CLASS[size],
+                  "bg-[var(--surface)] rounded-t-3xl lg:rounded-[var(--r-card)]",
+                  "shadow-[var(--shadow-lg)] ring-1 ring-[var(--border)]",
+                  "outline-none"
+                )}
+                variants={sheetVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                style={{ originX: "50%", originY: "50%" }}
+              >
+                <div className="flex justify-center pt-3 pb-1 lg:hidden">
+                  <div className="w-10 h-1.5 bg-[var(--border-strong)] rounded-full" />
+                </div>
 
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-700">
-          <h2 id="bs-title" className="text-base font-bold text-slate-900 dark:text-slate-100 truncate">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("common.close")}
-            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
-          >
-            <X size={20} />
-          </button>
-        </div>
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border)]">
+                  <Dialog.Title
+                    className="text-lg font-bold text-[var(--text-strong)] truncate"
+                    style={{ fontSize: "var(--text-section)" }}
+                  >
+                    {title}
+                  </Dialog.Title>
+                  <Dialog.Close asChild>
+                    <button
+                      type="button"
+                      aria-label={t("common.close")}
+                      className="text-[var(--text-faint)] hover:text-[var(--text-muted)] transition p-1.5 rounded-lg hover:bg-[var(--surface-2)]"
+                    >
+                      <X size={18} />
+                    </button>
+                  </Dialog.Close>
+                </div>
 
-        <div className="overflow-y-auto max-h-[80vh] overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-10 pt-4">{children}</div>
-      </div>
-    </div>
+                <div className="overflow-y-auto max-h-[80vh] overscroll-contain px-5 pb-10 pt-4">
+                  {children}
+                </div>
+              </motion.div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        )}
+      </AnimatePresence>
+    </Dialog.Root>
   );
 }

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/axios";
-import AuthLanguageToggle from "../components/AuthLanguageToggle";
-import Logo from "../components/Logo";
+import AuthLayout from "../components/auth/AuthLayout";
 import PhoneInputField from "../components/PhoneInputField";
 import { isValidPhone } from "../utils/validation";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useT } from "../i18n/useT";
+import { Button, FormField } from "../components/ui";
 
 export default function ForgotPassword() {
   const t = useT();
@@ -42,57 +42,52 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-[#F1F5F9] dark:bg-slate-900">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <Logo variant="full" size="md" to="/" />
-          <AuthLanguageToggle />
-        </div>
-
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
-          {t("auth.forgotTitle")}
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("auth.forgotDesc")}</p>
-
-        {success && (
-          <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-sm rounded-xl px-4 py-3 mb-5" role="status">
-            {t("auth.forgotSuccess")}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <div className="min-w-0">
-            <label htmlFor={mobileId} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-              {t("auth.mobileNumber")}
-            </label>
-            <PhoneInputField
-              id={mobileId}
-              ariaLabel={t("auth.mobileNumber")}
-              ariaDescribedBy={fieldError ? mobileErrorId : undefined}
-              value={mobile}
-              onChange={(val) => { setMobile(val); setFieldError(""); }}
-              error={!!fieldError}
-            />
-            {fieldError && (
-              <p id={mobileErrorId} role="alert" className="text-xs text-red-500 mt-1">{fieldError}</p>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold rounded-xl py-3 text-sm transition shadow-sm disabled:opacity-60"
-          >
-            {loading ? t("auth.forgotSending") : t("auth.forgotSubmit")}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+    <AuthLayout
+      heroHeadlineKey="auth.heroForgotHeadline"
+      heroSubtextKey="auth.heroForgotSubtext"
+      title={t("auth.forgotTitle")}
+      subtitle={t("auth.forgotDesc")}
+      footer={
+        <p className="text-sm text-[var(--text-muted)]">
           <Link to="/login" className="text-[var(--brand)] font-semibold hover:underline">
             {t("auth.backToLogin")}
           </Link>
         </p>
-      </div>
-    </div>
+      }
+    >
+      {success && (
+        <div
+          className="bg-[var(--success-bg)] ring-1 ring-[var(--success)]/25 text-[var(--success-fg)] text-sm rounded-[var(--r-control)] px-4 py-3 mb-4"
+          role="status"
+        >
+          {t("auth.forgotSuccess")}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <FormField
+          label={t("auth.mobileNumber")}
+          htmlFor={mobileId}
+          error={fieldError}
+          errorId={mobileErrorId}
+        >
+          <PhoneInputField
+            id={mobileId}
+            ariaLabel={t("auth.mobileNumber")}
+            ariaDescribedBy={fieldError ? mobileErrorId : undefined}
+            value={mobile}
+            onChange={(val) => {
+              setMobile(val);
+              setFieldError("");
+            }}
+            error={!!fieldError}
+          />
+        </FormField>
+
+        <Button type="submit" loading={loading} fullWidth>
+          {loading ? t("auth.forgotSending") : t("auth.forgotSubmit")}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

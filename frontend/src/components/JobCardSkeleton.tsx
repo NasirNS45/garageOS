@@ -8,7 +8,7 @@ function SkeletonBlock({ className }: { className: string }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-4 space-y-3">
+    <div className="bg-[var(--surface)] rounded-[var(--r-card)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--border)] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <SkeletonBlock className="h-7 w-24" />
         <SkeletonBlock className="h-6 w-20 rounded-full" />

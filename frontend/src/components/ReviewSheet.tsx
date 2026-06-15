@@ -19,8 +19,11 @@ interface Props {
   mechanics: Mechanic[];
 }
 
-const inputClass =
-  "w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition";
+const inputBase =
+  "w-full bg-[var(--surface-2)] ring-1 rounded-[var(--r-control)] px-3 py-2 text-sm text-[var(--text-strong)] placeholder:text-[var(--text-faint)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] transition";
+
+const labelClass =
+  "text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wide mb-1";
 
 export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
   const [labourInput, setLabourInput] = useState(card.labour_charge);
@@ -41,7 +44,6 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
   const isBusy = complete.isPending || update.isPending;
 
   const handleConfirm = async () => {
-    // Client-side: labour must not be negative
     if (labourInput < 0) {
       setLabourError(t("review.labourNegative"));
       return;
@@ -88,40 +90,36 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
         <div className="flex items-center gap-3">
           <VehiclePlate number={card.vehicle_number} size="md" />
           <div>
-            <p className="text-sm font-semibold text-slate-800">{card.customer_name}</p>
-            <p className="text-xs text-slate-400">{card.customer_phone}</p>
+            <p className="text-sm font-semibold text-[var(--text-strong)]">{card.customer_name}</p>
+            <p className="text-xs text-[var(--text-faint)]">{card.customer_phone}</p>
           </div>
         </div>
 
         {mechanic && (
-          <div className="text-sm text-slate-600">
+          <div className="text-sm text-[var(--text-muted)]">
             <span className="font-medium">{t("review.mechanic")}:</span> {mechanic.full_name}
           </div>
         )}
 
         {card.description && (
           <div>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">
-              {t("review.description")}
-            </p>
-            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{card.description}</p>
+            <p className={labelClass}>{t("review.description")}</p>
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed">{card.description}</p>
           </div>
         )}
 
         {/* Parts list */}
         {card.parts.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">
-              {t("review.parts")}
-            </p>
+            <p className={labelClass}>{t("review.parts")}</p>
             <div className="space-y-1">
               {card.parts.map((p) => (
                 <div key={p.id} className="flex items-center gap-2 text-sm">
-                  <span className="flex-1 text-slate-700">{p.name}</span>
-                  <span className="text-slate-400 text-xs shrink-0">
+                  <span className="flex-1 text-[var(--text-muted)]">{p.name}</span>
+                  <span className="text-[var(--text-faint)] text-xs shrink-0 tnum" data-keep-ltr>
                     {p.quantity} × PKR {p.unit_price.toLocaleString()}
                   </span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 shrink-0 text-xs">
+                  <span className="font-semibold text-[var(--text-strong)] shrink-0 text-xs tnum" data-keep-ltr>
                     PKR {p.line_total.toLocaleString()}
                   </span>
                 </div>
@@ -132,22 +130,20 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
 
         {/* Editable notes */}
         <div>
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">
-            {t("review.notes")}
-          </p>
+          <p className={labelClass}>{t("review.notes")}</p>
           <textarea
             rows={2}
             placeholder={t("review.notesPlaceholder")}
             value={notesInput}
             onChange={(e) => setNotesInput(e.target.value)}
-            className={`${inputClass} resize-none`}
+            className={`${inputBase} resize-none`}
           />
         </div>
 
         {/* Charges summary with editable labour */}
-        <div className="border-t border-slate-100 dark:border-slate-700 pt-3 space-y-2">
+        <div className="border-t border-[var(--border)] pt-3 space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-slate-600 dark:text-slate-400 shrink-0">{t("review.labour")}</span>
+            <span className="text-sm text-[var(--text-muted)] shrink-0">{t("review.labour")}</span>
             <div className="flex flex-col items-end gap-1">
               <input
                 type="number"
@@ -158,26 +154,26 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
                   setLabourInput(Number(e.target.value));
                   setLabourError("");
                 }}
-                className={`w-32 border rounded-lg px-2.5 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:border-transparent bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 ${
+                className={`w-32 ring-1 rounded-[var(--r-control)] px-2.5 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:border-transparent bg-[var(--surface-2)] text-[var(--text-strong)] tnum transition ${
                   labourError
-                    ? "border-red-400 dark:border-red-500 focus:ring-red-400"
-                    : "border-slate-200 dark:border-slate-600 focus:ring-[var(--brand)]"
+                    ? "ring-[var(--danger)] focus:ring-[var(--danger)]"
+                    : "ring-[var(--border)] focus:ring-[var(--brand)]"
                 }`}
               />
               {labourError && (
-                <p className="text-xs text-red-500">{labourError}</p>
+                <p className="text-xs text-[var(--danger-fg)]">{labourError}</p>
               )}
             </div>
           </div>
           {partsTotal > 0 && (
-            <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between text-sm text-[var(--text-muted)]">
               <span>{t("review.parts")}</span>
-              <span>PKR {partsTotal.toLocaleString()}</span>
+              <span className="tnum" data-keep-ltr>PKR {partsTotal.toLocaleString()}</span>
             </div>
           )}
-          <div className="flex justify-between text-base font-bold text-slate-900 dark:text-slate-100 pt-1 border-t border-slate-100 dark:border-slate-700">
+          <div className="flex justify-between text-base font-bold text-[var(--text-strong)] pt-1 border-t border-[var(--border)]">
             <span>{t("review.total")}</span>
-            <span>PKR {total.toLocaleString()}</span>
+            <span className="tnum" data-keep-ltr>PKR {total.toLocaleString()}</span>
           </div>
         </div>
 
@@ -192,7 +188,7 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
             />
             <div
               className={`w-11 h-6 rounded-full transition-colors ${
-                notifyCustomer ? "bg-[var(--brand)]" : "bg-slate-200 dark:bg-slate-600"
+                notifyCustomer ? "bg-[var(--brand)]" : "bg-[var(--border-strong)]"
               }`}
             />
             <div
@@ -202,10 +198,10 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
             />
           </div>
           <span>
-            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium block">
+            <span className="text-sm text-[var(--text-strong)] font-medium block">
               {t("review.notify")}
             </span>
-            <span className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 block">
+            <span className="text-xs text-[var(--text-faint)] mt-0.5 block">
               {t("review.notifySub")} <span data-keep-ltr>{card.customer_phone}</span>
             </span>
           </span>
@@ -215,7 +211,7 @@ export default function ReviewSheet({ card, open, onClose, mechanics }: Props) {
         <button
           onClick={handleConfirm}
           disabled={isBusy}
-          className={`w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-base rounded-2xl py-3.5 transition active:scale-[0.98] disabled:opacity-60 shadow-sm ${isBusy ? "animate-pulse" : ""}`}
+          className={`w-full bg-[var(--success)] hover:opacity-90 active:opacity-80 text-white font-bold text-base rounded-[var(--r-control)] py-3.5 transition u-press disabled:opacity-60 shadow-[var(--shadow-sm)] ${isBusy ? "animate-pulse" : ""}`}
         >
           {isBusy ? t("review.saving") : t("review.confirm")}
         </button>

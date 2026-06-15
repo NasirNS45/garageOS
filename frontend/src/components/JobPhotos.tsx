@@ -40,22 +40,22 @@ export default function JobPhotos({
   };
 
   return (
-    <div className="mt-3 border-t border-slate-100 dark:border-slate-700 pt-3">
+    <div className="mt-3 border-t border-[var(--border)] pt-3">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[var(--brand)] transition"
+        className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--brand)] transition"
       >
         <ImageIcon size={13} />
         {open ? t("photos.hide") : t("photos.show")}
         {open && photos.length > 0 && (
-          <span className="text-slate-400">({photos.length})</span>
+          <span className="text-[var(--text-faint)]">({photos.length})</span>
         )}
       </button>
 
       {open && (
         <div className="mt-2">
           {isLoading ? (
-            <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
+            <div className="flex items-center gap-2 text-xs text-[var(--text-faint)] py-2">
               <Loader2 size={14} className="animate-spin" />
               {t("photos.loading")}
             </div>
@@ -68,7 +68,7 @@ export default function JobPhotos({
                       src={p.url}
                       alt={p.caption ?? "Job photo"}
                       loading="lazy"
-                      className="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-600"
+                      className="w-16 h-16 object-cover rounded-lg ring-1 ring-[var(--border)]"
                     />
                   </button>
                   {canEdit && confirmId !== p.id && (
@@ -110,7 +110,7 @@ export default function JobPhotos({
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={upload.isPending}
-                  className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:border-[var(--brand)] hover:text-[var(--brand)] transition active:scale-95 disabled:opacity-50"
+                  className="w-16 h-16 rounded-lg border-2 border-dashed border-[var(--border-strong)] flex items-center justify-center text-[var(--text-faint)] hover:border-[var(--brand)] hover:text-[var(--brand)] transition active:scale-95 disabled:opacity-50"
                   aria-label="Add photo"
                 >
                   {upload.isPending ? (
@@ -122,7 +122,7 @@ export default function JobPhotos({
               )}
 
               {!canEdit && photos.length === 0 && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 py-2">{t("photos.none")}</p>
+                <p className="text-xs text-[var(--text-faint)] py-2">{t("photos.none")}</p>
               )}
             </div>
           )}

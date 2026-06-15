@@ -18,6 +18,7 @@ import { useLanguageStore } from "../../stores/languageStore";
 import { formatLocaleDateStr } from "../../utils/dates";
 import { trackPilotEvent } from "../../utils/trackPilotEvent";
 import { inputClass, fieldClass } from "./formStyles";
+import { Button, FormField, TextInput, Toggle } from "../../components/ui";
 
 // ── Create Job Form (used inside BottomSheet) ─────────────────────────────────
 export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) {
@@ -148,45 +149,43 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       {/* Step indicator */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            {t("form.step")} {step}/2 · {step === 1 ? t("form.stepVehicle") : t("form.stepWork")}
-          </p>
-        </div>
+      <div className="mb-1">
+        <p className="text-[length:var(--text-label)] font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2">
+          {t("form.step")} {step}/2 · {step === 1 ? t("form.stepVehicle") : t("form.stepWork")}
+        </p>
         <div className="flex gap-1.5">
-          <span className="flex-1 h-1 rounded-full bg-[var(--brand)]" />
-          <span className={`flex-1 h-1 rounded-full ${step === 2 ? "bg-[var(--brand)]" : "bg-slate-200 dark:bg-slate-600"}`} />
+          <span className="flex-1 h-1 rounded-[var(--r-pill)] bg-[var(--brand)] transition-colors" />
+          <span
+            className={`flex-1 h-1 rounded-[var(--r-pill)] transition-colors ${
+              step === 2 ? "bg-[var(--brand)]" : "bg-[var(--surface-2)] ring-1 ring-[var(--border)]"
+            }`}
+          />
         </div>
       </div>
 
       {step === 1 && (
         <>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              {t("form.vehicleNumber")}
-            </label>
-            <input
+          <FormField
+            label={t("form.vehicleNumber")}
+            error={errors.vehicle_number}
+          >
+            <TextInput
               type="text"
               placeholder="ABC-123"
               value={vehicleNumber}
               onChange={(e) => { setVehicleNumber(e.target.value); clearError("vehicle_number"); }}
-              className={fieldClass(!!errors.vehicle_number)}
+              hasError={!!errors.vehicle_number}
             />
-            {errors.vehicle_number && (
-              <p className="text-xs text-red-500 mt-1">{errors.vehicle_number}</p>
-            )}
-            {/* Repeat vehicle banner */}
             {vehicleHistory && vehicleHistory.total_jobs > 0 && (
-              <div className="mt-1.5 text-xs bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-lg px-2.5 py-2 space-y-1">
-                <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-200 font-semibold">
+              <div className="mt-1.5 text-xs bg-[var(--success-bg)] ring-1 ring-[var(--border)] rounded-[var(--r-control)] px-2.5 py-2 space-y-1">
+                <div className="flex items-center gap-1.5 text-[var(--success-fg)] font-semibold">
                   <Clock size={11} className="shrink-0" />
                   {t("form.repeatCustomer")}
                   {" · "}
                   {vehicleHistory.total_jobs} {t("form.visitsCount")}
                 </div>
                 {lastVisit && (
-                  <p className="text-emerald-700 dark:text-emerald-300">
+                  <p className="text-[var(--success-fg)]">
                     {t("form.lastVisit")}{" "}
                     {formatLocaleDateStr(lastVisit.created_at, language, {
                       day: "numeric",
@@ -195,7 +194,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
                     {" · "}
                     {t(`status.${lastVisit.status}` as "status.pending")}
                     {" · "}
-                    PKR {lastVisit.total_amount.toLocaleString()}
+                    <span className="tnum" data-keep-ltr>PKR {lastVisit.total_amount.toLocaleString()}</span>
                   </p>
                 )}
                 {vehicleHistory.customer_name && !customerName && (
@@ -213,12 +212,12 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
                 )}
               </div>
             )}
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              {t("form.vehicleMake")}
-            </label>
+          <FormField
+            label={t("form.vehicleMake")}
+            error={errors.vehicle_make}
+          >
             <select
               value={vehicleMake}
               onChange={(e) => {
@@ -239,57 +238,45 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
               <option value="Other">{t("form.makeOther")}</option>
             </select>
             {vehicleMake === "Other" && (
-              <input
+              <TextInput
                 type="text"
                 placeholder={t("form.makeManual")}
                 value={customMake}
                 onChange={(e) => { setCustomMake(e.target.value); clearError("vehicle_make"); }}
-                className={`${fieldClass(!!errors.vehicle_make)} mt-2`}
+                hasError={!!errors.vehicle_make}
+                className="mt-2"
               />
             )}
-            {errors.vehicle_make && (
-              <p className="text-xs text-red-500 mt-1">{errors.vehicle_make}</p>
-            )}
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              {t("form.customerName")}
-            </label>
-            <input
+          <FormField
+            label={t("form.customerName")}
+            error={errors.customer_name}
+          >
+            <TextInput
               type="text"
               placeholder="Muhammad Ali"
               value={customerName}
               onChange={(e) => { setCustomerName(e.target.value); clearError("customer_name"); }}
-              className={fieldClass(!!errors.customer_name)}
+              hasError={!!errors.customer_name}
             />
-            {errors.customer_name && (
-              <p className="text-xs text-red-500 mt-1">{errors.customer_name}</p>
-            )}
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              {t("form.customerPhone")}
-            </label>
+          <FormField
+            label={t("form.customerPhone")}
+            error={errors.customer_phone}
+          >
             <PhoneInputField
               value={customerPhone}
               onChange={(val) => { setCustomerPhone(val); clearError("customer_phone"); }}
               error={!!errors.customer_phone}
             />
-            {errors.customer_phone && (
-              <p className="text-xs text-red-500 mt-1">{errors.customer_phone}</p>
-            )}
-          </div>
+          </FormField>
 
-          <button
-            type="button"
-            onClick={goNext}
-            className="w-full inline-flex items-center justify-center gap-1.5 bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 shadow-sm"
-          >
+          <Button type="button" onClick={goNext} fullWidth>
             {t("form.continue")}
             <ArrowRight size={16} className="rtl:rotate-180" />
-          </button>
+          </Button>
         </>
       )}
 
@@ -298,7 +285,7 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
           {/* Preset quick-fill */}
           {presets.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
                 {t("form.presetLabel")}
               </label>
               <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar mb-2">
@@ -307,45 +294,24 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
                     key={p.id}
                     type="button"
                     onClick={() => applyPreset(p.id)}
-                    className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[var(--brand)] hover:text-white transition active:scale-95"
+                    className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-[var(--r-pill)] bg-[var(--surface-2)] ring-1 ring-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--brand)] hover:text-white transition active:scale-95"
                   >
                     {p.name}
                     {p.default_labour > 0 ? ` · ${p.default_labour.toLocaleString()}` : ""}
                   </button>
                 ))}
               </div>
-              <select
-                defaultValue=""
-                onChange={(e) => {
-                  if (e.target.value) applyPreset(e.target.value);
-                }}
-                className={inputClass}
-              >
-                <option value="">{t("form.presetSelect")}</option>
-                {presets.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                    {p.default_labour > 0
-                      ? ` — PKR ${p.default_labour.toLocaleString()}`
-                      : ""}
-                  </option>
-                ))}
-              </select>
             </div>
           )}
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              {t("form.description")}
-            </label>
-            <input
+          <FormField label={t("form.description")}>
+            <TextInput
               type="text"
-              placeholder="Oil change, brake pads…"
+              placeholder={t("form.placeholderDescription")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className={inputClass}
             />
-          </div>
+          </FormField>
 
           <MechanicSelector
             mechanics={mechanics}
@@ -354,83 +320,58 @@ export default function CreateJobForm({ onSuccess }: { onSuccess: () => void }) 
             disabled={createCard.isPending}
           />
           {mechanics.length === 0 && (
-            <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
+            <p className="text-xs text-[var(--text-faint)] -mt-2">
               {t("form.noMechanics")}
             </p>
           )}
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
-              {t("form.labour")}
-            </label>
-            <input
+          <FormField label={t("form.labour")}>
+            <TextInput
               type="number"
               inputMode="decimal"
               min="0"
               value={labourCharge}
               onChange={(e) => setLabourCharge(Number(e.target.value))}
-              className={inputClass}
+              className="tnum"
+              data-keep-ltr
             />
-          </div>
+          </FormField>
 
-          <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
+          <p className="text-xs text-[var(--text-faint)] -mt-2">
             {t("form.partsLater")}
           </p>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">
               {t("form.notes")}
             </label>
             <textarea
               rows={2}
-              placeholder="Mechanic observations, special requests…"
+              placeholder={t("form.placeholderNotes")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className={`${inputClass} resize-none`}
             />
           </div>
 
-          {/* Notify checkin toggle */}
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <div className="relative shrink-0">
-              <input
-                type="checkbox"
-                className="sr-only"
-                checked={notifyCheckin}
-                onChange={(e) => setNotifyCheckin(e.target.checked)}
-              />
-              <div
-                className={`w-10 h-5 rounded-full transition-colors ${
-                  notifyCheckin ? "bg-[var(--brand)]" : "bg-slate-200"
-                }`}
-              />
-              <div
-                className={`absolute top-0.5 start-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                  notifyCheckin ? "translate-x-5 rtl:-translate-x-5" : ""
-                }`}
-              />
-            </div>
-            <span className="text-sm text-slate-700">
-              {t("form.notifyCheckin")}
-            </span>
-          </label>
+          <Toggle
+            checked={notifyCheckin}
+            onChange={setNotifyCheckin}
+            label={t("form.notifyCheckin")}
+          />
 
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setStep(1)}
-              className="inline-flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded-xl py-3 px-4 text-sm transition active:scale-95 hover:bg-slate-200 dark:hover:bg-slate-600"
+              leftIcon={<ArrowLeft size={16} />}
             >
-              <ArrowLeft size={16} />
               {t("common.back")}
-            </button>
-            <button
-              type="submit"
-              disabled={createCard.isPending}
-              className="flex-1 bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-panel)] text-white font-semibold rounded-xl py-3 text-sm transition active:scale-95 shadow-sm disabled:opacity-60"
-            >
+            </Button>
+            <Button type="submit" loading={createCard.isPending} className="flex-1">
               {createCard.isPending ? t("form.saving") : t("form.submit")}
-            </button>
+            </Button>
           </div>
         </>
       )}
