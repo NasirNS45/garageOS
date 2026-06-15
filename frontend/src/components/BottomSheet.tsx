@@ -100,7 +100,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
         role="dialog"
         aria-modal="true"
         aria-labelledby="bs-title"
-        className={`relative w-full max-w-2xl lg:max-w-md mx-auto bg-white dark:bg-slate-800 rounded-t-3xl lg:rounded-2xl shadow-2xl transition-all duration-300 ease-out ${
+        className={`relative w-full max-w-2xl lg:max-w-md mx-auto bg-white dark:bg-slate-800 rounded-t-3xl lg:rounded-2xl shadow-2xl transition-[transform,opacity] duration-300 ease-out ${
           visible
             ? "translate-y-0 lg:translate-y-0 opacity-100"
             : "translate-y-full lg:translate-y-3 opacity-0"
@@ -122,7 +122,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[80vh] overscroll-contain px-5 pb-10 pt-4">{children}</div>
+        <div className="overflow-y-auto max-h-[80vh] overscroll-contain [-webkit-overflow-scrolling:touch] px-5 pb-10 pt-4">{children}</div>
       </div>
     </div>
   );
