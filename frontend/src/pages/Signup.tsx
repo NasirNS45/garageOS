@@ -172,7 +172,7 @@ export default function Signup() {
                 <input
                   id={passwordId}
                   type={showPassword ? "text" : "password"}
-                  placeholder="At least 8 characters"
+                  placeholder={t("auth.passwordPlaceholder")}
                   value={form.password}
                   onChange={set("password")}
                   className={`${fieldClass(!!errors.password)} auth-latin-input pe-10`}

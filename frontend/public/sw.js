@@ -1,25 +1,39 @@
-const CACHE = "garageos-shell-v1";
-const API_CACHE = "garageos-api-v1";
+// GarageOS service worker.
+//
+// Deliberately minimal: it ONLY provides offline fallback for the job-cards
+// list API. It does NOT cache the app shell / HTML / hashed assets — caching
+// those caused stale deploys (an old index.html referencing chunk filenames
+// that no longer exist on the CDN → blank page / 404). HTML and assets are
+// always served fresh from Vercel's CDN.
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) =>
-      cache.addAll(["/", "/manifest.webmanifest", "/favicon.svg"])
-    )
-  );
+const API_CACHE = "garageos-api-v2";
+
+self.addEventListener("install", () => {
+  // Activate immediately; we no longer precache anything.
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      // Drop every cache except the current API cache (clears the old shell cache).
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.filter((k) => k !== API_CACHE).map((k) => caches.delete(k))
+      );
+      await self.clients.claim();
+    })()
+  );
 });
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  const url = new URL(request.url);
-
   if (request.method !== "GET") return;
 
+  const url = new URL(request.url);
+
+  // Network-first with cache fallback, ONLY for the job-cards list API.
+  // Everything else (HTML, JS/CSS, other APIs) goes straight to the network.
   if (url.pathname.includes("/api/v1/job-cards")) {
     event.respondWith(
       fetch(request)
@@ -31,13 +45,6 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => caches.match(request))
-    );
-    return;
-  }
-
-  if (request.mode === "navigate" || url.origin === self.location.origin) {
-    event.respondWith(
-      fetch(request).catch(() => caches.match("/"))
     );
   }
 });

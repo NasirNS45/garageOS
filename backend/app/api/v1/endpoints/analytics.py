@@ -1,8 +1,7 @@
-from datetime import UTC, datetime
-
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 
 from app.core.dependencies import CurrentClaims, DbSession, OwnerClaims
+from app.core.ratelimit import limiter
 from app.schemas.analytics import PilotEventCreate, PilotSummaryResponse
 from app.services.pilot_analytics_service import PilotAnalyticsService
 
@@ -10,7 +9,9 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
 @router.post("/events", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("60/minute")
 async def track_event(
+    request: Request,
     payload: PilotEventCreate,
     claims: CurrentClaims,
     session: DbSession,

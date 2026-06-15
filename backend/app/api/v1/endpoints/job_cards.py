@@ -1,6 +1,7 @@
+from datetime import date
+
 from fastapi import APIRouter, Query
 from fastapi import status as http_status
-from datetime import date
 
 from app.core.dependencies import CurrentClaims, DbSession, OwnerClaims
 from app.schemas.job_card import (

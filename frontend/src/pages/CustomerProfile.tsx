@@ -44,13 +44,23 @@ export default function CustomerProfile() {
 
   useEffect(() => {
     if (!phone) return;
+    const controller = new AbortController();
     setLoading(true);
     setError(false);
+    setResult(null);
     api
-      .get<HistoryResult>(`/customers/history?phone=${encodeURIComponent(phone)}`)
+      .get<HistoryResult>(`/customers/history?phone=${encodeURIComponent(phone)}`, {
+        signal: controller.signal,
+      })
       .then(({ data }) => setResult(data))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (controller.signal.aborted) return; // superseded by a newer request
+        setError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [phone]);
 
   const totalSpent = result?.jobs

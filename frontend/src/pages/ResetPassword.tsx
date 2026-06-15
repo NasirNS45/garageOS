@@ -98,7 +98,7 @@ export default function ResetPassword() {
               <input
                 id={passwordId}
                 type={showPassword ? "text" : "password"}
-                placeholder="At least 8 characters"
+                placeholder={t("auth.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
                 className={`${fieldClass(!!errors.password)} auth-latin-input pe-10`}

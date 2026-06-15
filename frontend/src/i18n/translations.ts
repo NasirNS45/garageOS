@@ -1,6 +1,7 @@
 /**
- * Lightweight typed dictionary i18n. v1 scope: nav, jobs tab, job cards,
- * create-job form. Summary/History/Settings remain English (follow-up).
+ * Lightweight typed dictionary i18n. Full English/Urdu coverage across the
+ * authenticated app, auth pages, and public invoice/tracking pages.
+ * TypeScript enforces that `ur` has a value for every `en` key.
  */
 
 export const en = {
@@ -191,6 +192,7 @@ export const en = {
   "auth.fullName": "Full name",
   "auth.mobileNumber": "Mobile number",
   "auth.password": "Password",
+  "auth.passwordPlaceholder": "At least 8 characters",
   "auth.workshopName": "Workshop name",
   "auth.addressOptional": "Address (optional)",
   "auth.heroLoginHeadline": "Run your workshop like a professional.",
@@ -800,6 +802,7 @@ export const ur: Record<TKey, string> = {
   "auth.fullName": "پورا نام",
   "auth.mobileNumber": "موبائل نمبر",
   "auth.password": "پاس ورڈ",
+  "auth.passwordPlaceholder": "کم از کم 8 حروف",
   "auth.workshopName": "ورکشاپ کا نام",
   "auth.addressOptional": "پتہ (اختیاری)",
   "auth.heroLoginHeadline": "اپنی ورکشاپ کو پیشہ ورانہ انداز میں چلائیں۔",

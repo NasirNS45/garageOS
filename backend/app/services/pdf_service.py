@@ -1,4 +1,5 @@
 from io import BytesIO
+from xml.sax.saxutils import escape
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -37,10 +38,10 @@ def build_invoice_pdf(invoice: PublicInvoiceResponse) -> bytes:
     )
 
     story: list[object] = [
-        Paragraph(invoice.workshop_name, title_style),
+        Paragraph(escape(invoice.workshop_name), title_style),
     ]
     if invoice.workshop_address:
-        story.append(Paragraph(invoice.workshop_address, styles["Normal"]))
+        story.append(Paragraph(escape(invoice.workshop_address), styles["Normal"]))
     story.append(Spacer(1, 8))
     story.append(Paragraph(f"Invoice {invoice.invoice_number}", heading_style))
     story.append(Paragraph(f"Date: {invoice.completed_at}", styles["Normal"]))
@@ -104,13 +105,14 @@ def build_invoice_pdf(invoice: PublicInvoiceResponse) -> bytes:
     story.append(lines_table)
 
     if invoice.workshop_bank_details:
+        bank_html = escape(invoice.workshop_bank_details).replace("\n", "<br/>")
         story.append(Spacer(1, 12))
         story.append(Paragraph("Bank Details", heading_style))
-        story.append(Paragraph(invoice.workshop_bank_details.replace("\n", "<br/>"), styles["Normal"]))
+        story.append(Paragraph(bank_html, styles["Normal"]))
 
     if invoice.workshop_invoice_footer:
         story.append(Spacer(1, 12))
-        story.append(Paragraph(invoice.workshop_invoice_footer, styles["Italic"]))
+        story.append(Paragraph(escape(invoice.workshop_invoice_footer), styles["Italic"]))
 
     doc.build(story)
     return buffer.getvalue()

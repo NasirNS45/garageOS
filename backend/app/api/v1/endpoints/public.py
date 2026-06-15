@@ -1,3 +1,4 @@
+import asyncio
 from datetime import UTC
 
 from fastapi import APIRouter, HTTPException, status
@@ -89,7 +90,8 @@ async def public_invoice(invoice_number: str, session: DbSession) -> PublicInvoi
 )
 async def public_invoice_pdf(invoice_number: str, session: DbSession) -> Response:
     invoice = await public_invoice(invoice_number, session)
-    pdf_bytes = build_invoice_pdf(invoice)
+    # reportlab render is CPU-bound; keep it off the event loop
+    pdf_bytes = await asyncio.to_thread(build_invoice_pdf, invoice)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

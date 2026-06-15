@@ -10,7 +10,9 @@ class PasswordResetRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(self, user_id: str, token_hash: str, expires_at: datetime) -> PasswordResetToken:
+    async def create(
+        self, user_id: str, token_hash: str, expires_at: datetime
+    ) -> PasswordResetToken:
         await self._session.execute(
             delete(PasswordResetToken).where(PasswordResetToken.user_id == user_id)
         )
